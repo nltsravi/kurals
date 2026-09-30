@@ -31,21 +31,29 @@ describe('Document Export & Formatting', () => {
     expect(full).toContain(kural1.translation);
   });
 
-  test('generates valid HTML for PDF export with Tamil typography', () => {
+  test('generates valid HTML for PDF export with only Tamil and English Kurals', () => {
     const kural1 = KuralService.getKuralByNumber(1)!;
     const kural2 = KuralService.getKuralByNumber(2)!;
 
     const html = generatePdfHtml('My Test Collection', [kural1, kural2]);
 
     expect(html).toContain('<!DOCTYPE html>');
-    expect(html).toContain('My Test Collection');
     expect(html).toContain('size: A4;');
     expect(html).toContain('குறள் 1');
     expect(html).toContain(kural1.line1);
     expect(html).toContain(kural1.line2);
+    expect(html).toContain(kural1.transliteration1);
     expect(html).toContain('குறள் 2');
     expect(html).toContain(kural2.line1);
     expect(html).toContain('Mukta Malar');
+
+    // Verify all excluded items
+    expect(html).not.toContain('My Test Collection');
+    expect(html).not.toContain('Generated on');
+    expect(html).not.toContain(kural1.translation);
+    expect(html).not.toContain(kural1.commentaryMV);
+    expect(html).not.toContain('அறத்துப்பால்');
+    expect(html).not.toContain('கடவுள் வாழ்த்து');
   });
 
   test('generates DOCX binary document without errors', async () => {
