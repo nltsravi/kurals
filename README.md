@@ -1,0 +1,2 @@
+# kurals
+Thirukkurals
