@@ -11,6 +11,8 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.nltsravi.kurals",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#FFF2E5",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
