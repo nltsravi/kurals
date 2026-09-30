@@ -86,8 +86,8 @@ export default function HomeScreen() {
             <View style={[styles.qaIconCircle, { backgroundColor: colors.primaryLight }]}>
               <Ionicons name="search" size={20} color={colors.primary} />
             </View>
-            <Text style={[styles.qaTitle, { color: colors.text }]}>Search Kural</Text>
-            <Text style={[styles.qaSubtitle, { color: colors.textMuted }]}>தேடல்</Text>
+            <Text style={[styles.qaTitle, { color: colors.text }]} numberOfLines={1} adjustsFontSizeToFit>Search Kural</Text>
+            <Text style={[styles.qaSubtitle, { color: colors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit>தேடல்</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -97,8 +97,8 @@ export default function HomeScreen() {
             <View style={[styles.qaIconCircle, { backgroundColor: isDark ? '#3B1E08' : '#FEF3C7' }]}>
               <Ionicons name="book-outline" size={20} color={colors.accent} />
             </View>
-            <Text style={[styles.qaTitle, { color: colors.text }]}>Browse</Text>
-            <Text style={[styles.qaSubtitle, { color: colors.textMuted }]}>அதிகாரங்கள்</Text>
+            <Text style={[styles.qaTitle, { color: colors.text }]} numberOfLines={1} adjustsFontSizeToFit>Browse</Text>
+            <Text style={[styles.qaSubtitle, { color: colors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit>அதிகாரங்கள்</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -108,8 +108,8 @@ export default function HomeScreen() {
             <View style={[styles.qaIconCircle, { backgroundColor: isDark ? '#2D1220' : '#FFE4E6' }]}>
               <Ionicons name="bookmark-outline" size={20} color="#E11D48" />
             </View>
-            <Text style={[styles.qaTitle, { color: colors.text }]}>Collections</Text>
-            <Text style={[styles.qaSubtitle, { color: colors.textMuted }]}>தொகுப்புகள்</Text>
+            <Text style={[styles.qaTitle, { color: colors.text }]} numberOfLines={1} adjustsFontSizeToFit>Collections</Text>
+            <Text style={[styles.qaSubtitle, { color: colors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit>தொகுப்புகள்</Text>
           </TouchableOpacity>
         </View>
 
@@ -333,7 +333,8 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 14,
     borderWidth: 1,
-    padding: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 6,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },

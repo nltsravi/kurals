@@ -12,21 +12,29 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.tabIconDefault,
+        tabBarLabelPosition: 'below-icon',
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
-          height: Platform.OS === 'ios' ? 88 : 64,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 10,
-          paddingTop: 8,
+          height: Platform.OS === 'ios' ? 88 : 72,
+          paddingTop: 6,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.05,
           shadowRadius: 4,
           elevation: 8,
         },
+        tabBarItemStyle: {
+          paddingVertical: 2,
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
+          marginTop: 1,
+          lineHeight: 14,
         },
         headerStyle: {
           backgroundColor: colors.card,

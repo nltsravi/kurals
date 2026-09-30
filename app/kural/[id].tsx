@@ -170,7 +170,7 @@ export default function KuralDetailScreen() {
             onPress={handleCopyTamil}
           >
             <Ionicons name="copy-outline" size={14} color={colors.primary} />
-            <Text style={[styles.actionChipText, { color: colors.text }]}>Copy Tamil</Text>
+            <Text style={[styles.actionChipText, { color: colors.text }]} numberOfLines={1}>Copy Tamil</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -178,7 +178,7 @@ export default function KuralDetailScreen() {
             onPress={handleCopyTransliteration}
           >
             <Ionicons name="copy-outline" size={14} color={colors.primary} />
-            <Text style={[styles.actionChipText, { color: colors.text }]}>Translit</Text>
+            <Text style={[styles.actionChipText, { color: colors.text }]} numberOfLines={1}>Translit</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -186,7 +186,7 @@ export default function KuralDetailScreen() {
             onPress={handleCopyBoth}
           >
             <Ionicons name="copy-outline" size={14} color={colors.primary} />
-            <Text style={[styles.actionChipText, { color: colors.text }]}>Both</Text>
+            <Text style={[styles.actionChipText, { color: colors.text }]} numberOfLines={1}>Both</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -194,7 +194,7 @@ export default function KuralDetailScreen() {
             onPress={() => setShowExportModal(true)}
           >
             <Ionicons name="download-outline" size={14} color={colors.accent} />
-            <Text style={[styles.actionChipText, { color: colors.text }]}>Export</Text>
+            <Text style={[styles.actionChipText, { color: colors.text }]} numberOfLines={1}>Export</Text>
           </TouchableOpacity>
         </View>
 
@@ -461,6 +461,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 4,
     paddingVertical: 9,
+    paddingHorizontal: 4,
     borderRadius: 10,
     borderWidth: 1,
   },
