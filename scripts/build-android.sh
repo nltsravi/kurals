@@ -164,28 +164,29 @@ echo -e "${BLUE}==> [4/4] Executing EAS Build for Android...${NC}"
 
 # Check EAS CLI login status
 echo "Checking EAS credentials..."
-WHOAMI=$(npx eas-cli@latest whoami 2>&1 || true)
+WHOAMI=$(npx eas whoami 2>&1 || true)
 
 if echo "$WHOAMI" | grep -q "Not logged in"; then
   echo -e "${YELLOW}You are not logged in to Expo. Please log in to proceed with EAS Build:${NC}"
-  npx eas-cli@latest login
+  echo -e "Creating/signing in to your free Expo account allows EAS to build your Play Store .aab:"
+  npx eas login
 fi
 
 case $BUILD_MODE in
   production)
     echo -e "${CYAN}Triggering production build (.aab Android App Bundle) for Google Play Store...${NC}"
-    echo "Command: npx eas-cli@latest build --platform android --profile production"
-    npx eas-cli@latest build --platform android --profile production
+    echo "Command: npx eas build --platform android --profile production"
+    npx eas build --platform android --profile production
     ;;
   preview)
     echo -e "${CYAN}Triggering preview build (.apk) for internal testing...${NC}"
-    echo "Command: npx eas-cli@latest build --platform android --profile preview"
-    npx eas-cli@latest build --platform android --profile preview
+    echo "Command: npx eas build --platform android --profile preview"
+    npx eas build --platform android --profile preview
     ;;
   submit)
     echo -e "${CYAN}Submitting latest production build to Google Play Store...${NC}"
-    echo "Command: npx eas-cli@latest submit --platform android"
-    npx eas-cli@latest submit --platform android
+    echo "Command: npx eas submit --platform android"
+    npx eas submit --platform android
     ;;
 esac
 
