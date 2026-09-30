@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  TouchableWithoutFeedback,
+  Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
@@ -65,10 +65,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.overlay}>
-          <TouchableWithoutFeedback>
-            <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <Pressable style={styles.overlay} onPress={onClose}>
+        <Pressable onPress={(e) => e.stopPropagation()}>
+          <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <View style={styles.header}>
                 <View>
                   <Text style={[styles.title, { color: colors.text }]}>Export & Share</Text>
@@ -131,9 +130,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 </View>
               )}
             </View>
-          </TouchableWithoutFeedback>
-        </View>
-      </TouchableWithoutFeedback>
+        </Pressable>
+      </Pressable>
     </Modal>
   );
 };

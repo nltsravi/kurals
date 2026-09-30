@@ -1,5 +1,6 @@
 import * as Print from 'expo-print';
 import * as FileSystem from 'expo-file-system/legacy';
+import { Platform } from 'react-native';
 import { AlignmentType, Document, HeadingLevel, Packer, Paragraph, TextRun, UnderlineType } from 'docx';
 import { Kural } from '../types/kural';
 import { sanitizeFilename } from '../utils/text';
@@ -233,14 +234,50 @@ export function generatePdfHtml(title: string, kurals: Kural[], subtitle = 'родр
 export const ExportService = {
   /**
    * Generates a PDF file for a single Kural or an entire Collection
-   * Returns the file URI.
+   * Returns the file URI or 'web-print' on web.
    */
   async exportToPdf(title: string, kurals: Kural[]): Promise<string> {
     const html = generatePdfHtml(title, kurals);
-    const { uri } = await Print.printToFileAsync({
+
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow?.document;
+        if (doc) {
+          doc.open();
+          doc.write(html);
+          doc.close();
+          iframe.contentWindow?.focus();
+          setTimeout(() => {
+            iframe.contentWindow?.print();
+            setTimeout(() => {
+              if (document.body.contains(iframe)) {
+                document.body.removeChild(iframe);
+              }
+            }, 2000);
+          }, 400);
+        }
+      }
+      return 'web-print';
+    }
+
+    const result = await Print.printToFileAsync({
       html,
       base64: false,
     });
+
+    const uri = result?.uri;
+    if (!uri) {
+      throw new Error('PDF generation failed to produce a file');
+    }
 
     const safeTitle = sanitizeFilename(title);
     const newPath = `${FileSystem.cacheDirectory}${safeTitle}.pdf`;
@@ -365,8 +402,24 @@ export const ExportService = {
       ],
     });
 
-    const base64Data = await Packer.toBase64String(doc);
     const safeTitle = sanitizeFilename(title);
+
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+        const blob = await Packer.toBlob(doc);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${safeTitle}.docx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+      return 'web-download';
+    }
+
+    const base64Data = await Packer.toBase64String(doc);
     const filePath = `${FileSystem.cacheDirectory}${safeTitle}.docx`;
 
     await FileSystem.writeAsStringAsync(filePath, base64Data, {

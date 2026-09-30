@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   FlatList,
   TextInput,
-  TouchableWithoutFeedback,
+  Pressable,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -58,9 +58,8 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.overlay}>
-          <TouchableWithoutFeedback>
+      <Pressable style={styles.overlay} onPress={onClose}>
+        <Pressable onPress={(e) => e.stopPropagation()}>
             <KeyboardAvoidingView
               behavior={Platform.OS === 'ios' ? 'padding' : undefined}
               style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}
@@ -161,9 +160,8 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
                 </TouchableOpacity>
               )}
             </KeyboardAvoidingView>
-          </TouchableWithoutFeedback>
-        </View>
-      </TouchableWithoutFeedback>
+        </Pressable>
+      </Pressable>
     </Modal>
   );
 };

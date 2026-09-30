@@ -8,6 +8,10 @@ export const ShareService = {
    * Supports iOS Files/iCloud and Android Google Drive/WhatsApp/Telegram etc.
    */
   async shareFile(fileUri: string, title?: string): Promise<boolean> {
+    if (fileUri === 'web-print' || fileUri === 'web-download') {
+      return true;
+    }
+
     const isAvailable = await Sharing.isAvailableAsync();
     if (!isAvailable) {
       throw new Error('Sharing is not supported on this platform');
