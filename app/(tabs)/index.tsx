@@ -14,6 +14,7 @@ import { KuralService } from '../../src/services/kuralService';
 import { Kural, Category } from '../../src/types/kural';
 import { useTheme } from '../../src/context/ThemeContext';
 import { AddToCollectionModal } from '../../src/components/AddToCollectionModal';
+import { CATEGORY_COLORS } from '../../src/constants/appConstants';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -58,7 +59,7 @@ export default function HomeScreen() {
           style={[
             styles.searchTrigger,
             {
-              backgroundColor: isDark ? colors.surface : '#FFFFFF',
+              backgroundColor: isDark ? colors.surface : colors.card,
               borderColor: colors.border,
             },
           ]}
@@ -82,7 +83,7 @@ export default function HomeScreen() {
             style={[styles.quickActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={() => router.push('/search')}
           >
-            <View style={[styles.qaIconCircle, { backgroundColor: isDark ? '#082F49' : '#E0F2FE' }]}>
+            <View style={[styles.qaIconCircle, { backgroundColor: colors.primaryLight }]}>
               <Ionicons name="search" size={20} color={colors.primary} />
             </View>
             <Text style={[styles.qaTitle, { color: colors.text }]}>Search Kural</Text>
@@ -117,8 +118,8 @@ export default function HomeScreen() {
           <View style={[styles.randomCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.randomCardHeader}>
               <View style={styles.randomBadgeRow}>
-                <View style={[styles.randomPill, { backgroundColor: isDark ? '#0369A1' : colors.primaryLight }]}>
-                  <Text style={[styles.randomPillText, { color: isDark ? '#BAE6FD' : colors.primary }]}>
+                <View style={[styles.randomPill, { backgroundColor: colors.primaryLight }]}>
+                  <Text style={[styles.randomPillText, { color: isDark ? '#FED7AA' : colors.primary }]}>
                     குறள் {randomKural.number}
                   </Text>
                 </View>
@@ -197,14 +198,19 @@ export default function HomeScreen() {
                     styles.catNumCircle,
                     {
                       backgroundColor:
-                        cat.number === 1 ? '#E0F2FE' : cat.number === 2 ? '#FEF3C7' : '#FFE4E6',
+                        (isDark
+                          ? CATEGORY_COLORS[cat.number]?.dark.bg
+                          : CATEGORY_COLORS[cat.number]?.light.bg) || colors.primaryLight,
                     },
                   ]}
                 >
                   <Text
                     style={{
                       fontWeight: '700',
-                      color: cat.number === 1 ? '#0369A1' : cat.number === 2 ? '#B45309' : '#BE123C',
+                      color:
+                        (isDark
+                          ? CATEGORY_COLORS[cat.number]?.dark.text
+                          : CATEGORY_COLORS[cat.number]?.light.text) || colors.primary,
                     }}
                   >
                     0{cat.number}

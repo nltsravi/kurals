@@ -89,7 +89,7 @@ export default function ChaptersScreen() {
           showsVerticalScrollIndicator={false}
           renderItem={({ item: group }) => (
             <View style={styles.groupSection}>
-              <View style={[styles.groupHeaderRow, { backgroundColor: isDark ? colors.surface : '#F1F5F9' }]}>
+              <View style={[styles.groupHeaderRow, { backgroundColor: colors.surface }]}>
                 <View>
                   <Text style={[styles.groupNameTamil, { color: colors.text }]}>
                     இயல் {group.number}: {group.nameTamil}

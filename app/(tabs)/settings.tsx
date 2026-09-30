@@ -46,8 +46,8 @@ export default function SettingsScreen() {
                     styles.themeBtn,
                     {
                       backgroundColor: isSelected
-                        ? (isDark ? '#082F49' : colors.primaryLight)
-                        : (isDark ? colors.surface : '#FFFFFF'),
+                        ? colors.primaryLight
+                        : (isDark ? colors.surface : colors.card),
                       borderColor: isSelected ? colors.primary : colors.border,
                     },
                   ]}

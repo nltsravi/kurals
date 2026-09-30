@@ -16,12 +16,12 @@ import { useCollections } from '../../src/context/CollectionContext';
 import { useTheme } from '../../src/context/ThemeContext';
 
 const COLOR_OPTIONS = [
-  '#0284C7', // Sky Blue
-  '#E11D48', // Rose / Red
+  '#FF7C0A', // Saffron / Orange (Brand)
   '#D97706', // Amber / Gold
+  '#E11D48', // Rose / Red
   '#10B981', // Emerald Green
   '#7C3AED', // Purple
-  '#EA580C', // Orange
+  '#2563EB', // Royal Blue
 ];
 
 export default function CreateCollectionScreen() {
@@ -60,7 +60,7 @@ export default function CreateCollectionScreen() {
               style={[
                 styles.input,
                 {
-                  backgroundColor: isDark ? colors.surface : '#FFFFFF',
+                  backgroundColor: colors.surface,
                   color: colors.text,
                   borderColor: colors.border,
                 },
@@ -79,7 +79,7 @@ export default function CreateCollectionScreen() {
               style={[
                 styles.textArea,
                 {
-                  backgroundColor: isDark ? colors.surface : '#FFFFFF',
+                  backgroundColor: colors.surface,
                   color: colors.text,
                   borderColor: colors.border,
                 },

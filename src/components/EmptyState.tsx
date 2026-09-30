@@ -29,10 +29,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       <View
         style={[
           styles.iconCircle,
-          { backgroundColor: isDark ? '#1E293B' : colors.primaryLight },
+          { backgroundColor: colors.primaryLight },
         ]}
       >
-        <Ionicons name={icon} size={40} color={isDark ? '#38BDF8' : colors.primary} />
+        <Ionicons name={icon} size={40} color={isDark ? '#FED7AA' : colors.primary} />
       </View>
 
       <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
@@ -55,7 +55,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                 style={[
                   styles.chip,
                   {
-                    backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
+                    backgroundColor: isDark ? colors.surface : colors.card,
                     borderColor: colors.border,
                   },
                 ]}

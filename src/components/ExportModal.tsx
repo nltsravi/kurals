@@ -68,7 +68,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable onPress={(e) => e.stopPropagation()}>
           <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <View style={styles.header}>
+              <View style={[styles.header, { borderBottomColor: colors.borderLight }]}>
                 <View>
                   <Text style={[styles.title, { color: colors.text }]}>Export & Share</Text>
                   <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
@@ -93,7 +93,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               ) : (
                 <View style={styles.optionsContainer}>
                   <TouchableOpacity
-                    style={[styles.formatOption, { borderColor: colors.border, backgroundColor: isDark ? colors.surface : '#FFFFFF' }]}
+                    style={[styles.formatOption, { borderColor: colors.border, backgroundColor: isDark ? colors.surface : colors.card }]}
                     onPress={() => handleExport('pdf')}
                     accessibilityRole="button"
                     accessibilityLabel="Export as PDF"
@@ -111,7 +111,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[styles.formatOption, { borderColor: colors.border, backgroundColor: isDark ? colors.surface : '#FFFFFF' }]}
+                    style={[styles.formatOption, { borderColor: colors.border, backgroundColor: isDark ? colors.surface : colors.card }]}
                     onPress={() => handleExport('docx')}
                     accessibilityRole="button"
                     accessibilityLabel="Export as Word DOCX"

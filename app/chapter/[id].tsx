@@ -83,8 +83,8 @@ export default function ChapterDetailScreen() {
           ListHeaderComponent={
             <View style={[styles.headerCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <View style={styles.badgeRow}>
-                <View style={[styles.chBadge, { backgroundColor: isDark ? '#0369A1' : colors.primaryLight }]}>
-                  <Text style={[styles.chBadgeText, { color: isDark ? '#BAE6FD' : colors.primary }]}>
+                <View style={[styles.chBadge, { backgroundColor: colors.primaryLight }]}>
+                  <Text style={[styles.chBadgeText, { color: isDark ? '#FED7AA' : colors.primary }]}>
                     அதிகாரம் {chapter.number}
                   </Text>
                 </View>

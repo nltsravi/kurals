@@ -64,7 +64,7 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
               behavior={Platform.OS === 'ios' ? 'padding' : undefined}
               style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}
             >
-              <View style={styles.header}>
+              <View style={[styles.header, { borderBottomColor: colors.borderLight }]}>
                 <View>
                   <Text style={[styles.title, { color: colors.text }]}>Add to Collection</Text>
                   <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
@@ -86,7 +86,7 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
                     <TouchableOpacity
                       style={[
                         styles.collectionItem,
-                        { borderColor: colors.borderLight, backgroundColor: isIn ? (isDark ? '#082F49' : colors.primaryLight) : 'transparent' },
+                        { borderColor: colors.borderLight, backgroundColor: isIn ? colors.primaryLight : 'transparent' },
                       ]}
                       onPress={() => handleToggle(item.id, isIn)}
                       accessibilityRole="checkbox"
@@ -121,7 +121,7 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
                     style={[
                       styles.input,
                       {
-                        backgroundColor: isDark ? colors.surface : '#FFFFFF',
+                        backgroundColor: isDark ? colors.surface : colors.card,
                         color: colors.text,
                         borderColor: colors.border,
                       },

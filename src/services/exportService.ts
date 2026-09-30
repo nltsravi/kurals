@@ -70,7 +70,7 @@ export function generatePdfHtml(title: string, kurals: Kural[]): string {
         .kural-badge {
           font-size: 13px;
           font-weight: 700;
-          color: #0284C7;
+          color: #FF7C0A;
           margin-bottom: 6px;
           letter-spacing: 0.3px;
         }
@@ -186,7 +186,7 @@ export const ExportService = {
               text: `குறள் ${kural.number} (Kural ${kural.number})`,
               bold: true,
               size: 26,
-              color: '0369A1',
+              color: 'FF7C0A',
             }),
           ],
           heading: HeadingLevel.HEADING_2,

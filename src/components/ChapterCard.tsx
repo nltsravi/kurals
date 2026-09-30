@@ -27,8 +27,8 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({ chapter, onPress }) =>
       accessibilityLabel={`அதிகாரம் ${chapter.number}: ${chapter.nameTamil}`}
     >
       <View style={styles.contentRow}>
-        <View style={[styles.numberBox, { backgroundColor: isDark ? '#1E293B' : colors.primaryLight }]}>
-          <Text style={[styles.numberText, { color: isDark ? '#38BDF8' : colors.primary }]}>
+        <View style={[styles.numberBox, { backgroundColor: colors.primaryLight }]}>
+          <Text style={[styles.numberText, { color: isDark ? '#FED7AA' : colors.primary }]}>
             {chapter.number}
           </Text>
         </View>

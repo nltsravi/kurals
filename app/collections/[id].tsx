@@ -129,7 +129,7 @@ export default function CollectionDetailScreen() {
                     style={[
                       styles.titleInput,
                       {
-                        backgroundColor: isDark ? colors.surface : '#FFFFFF',
+                        backgroundColor: colors.surface,
                         color: colors.text,
                         borderColor: colors.border,
                       },
@@ -205,8 +205,8 @@ export default function CollectionDetailScreen() {
                 activeOpacity={0.7}
               >
                 <View style={styles.cardHeader}>
-                  <View style={[styles.kuralNumBadge, { backgroundColor: isDark ? '#0369A1' : colors.primaryLight }]}>
-                    <Text style={[styles.kuralNumText, { color: isDark ? '#BAE6FD' : colors.primary }]}>
+                  <View style={[styles.kuralNumBadge, { backgroundColor: colors.primaryLight }]}>
+                    <Text style={[styles.kuralNumText, { color: isDark ? '#FED7AA' : colors.primary }]}>
                       குறள் {item.number}
                     </Text>
                   </View>

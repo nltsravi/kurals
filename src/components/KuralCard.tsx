@@ -38,8 +38,8 @@ export const KuralCard: React.FC<KuralCardProps> = ({
       accessibilityLabel={`குறள் ${kural.number}, ${kural.line1} ${kural.line2}`}
     >
       <View style={styles.topRow}>
-        <View style={[styles.numberBadge, { backgroundColor: isDark ? '#0369A1' : colors.primaryLight }]}>
-          <Text style={[styles.numberText, { color: isDark ? '#BAE6FD' : colors.primary }]}>
+        <View style={[styles.numberBadge, { backgroundColor: colors.primaryLight }]}>
+          <Text style={[styles.numberText, { color: isDark ? '#FED7AA' : colors.primary }]}>
             குறள் {kural.number}
           </Text>
         </View>

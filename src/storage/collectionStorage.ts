@@ -12,7 +12,7 @@ const INITIAL_COLLECTIONS: Collection[] = [
     kuralNumbers: [1, 2, 3],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    color: '#E11D48',
+    color: '#FF7C0A',
     icon: 'heart',
   },
   {
@@ -72,7 +72,7 @@ export const CollectionStorage = {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       icon: icon || 'bookmark',
-      color: color || '#2563EB',
+      color: color || '#FF7C0A',
     };
 
     collections.unshift(newCollection);

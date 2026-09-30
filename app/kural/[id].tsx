@@ -131,8 +131,8 @@ export default function KuralDetailScreen() {
         {/* Primary Kural Card */}
         <View style={[styles.mainCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.kuralBadgeRow}>
-            <View style={[styles.badge, { backgroundColor: isDark ? '#0369A1' : colors.primaryLight }]}>
-              <Text style={[styles.badgeText, { color: isDark ? '#BAE6FD' : colors.primary }]}>
+            <View style={[styles.badge, { backgroundColor: colors.primaryLight }]}>
+              <Text style={[styles.badgeText, { color: isDark ? '#FED7AA' : colors.primary }]}>
                 குறள் {kural.number}
               </Text>
             </View>
@@ -204,7 +204,7 @@ export default function KuralDetailScreen() {
             <Text style={[styles.sectionHeader, { color: colors.text }]}>English Translation</Text>
             <Text style={[styles.bodyText, { color: colors.textSecondary }]}>{kural.translation}</Text>
             {kural.couplet ? (
-              <View style={[styles.coupletBox, { backgroundColor: isDark ? colors.surface : '#F8FAFC' }]}>
+              <View style={[styles.coupletBox, { backgroundColor: colors.surface }]}>
                 <Text style={[styles.coupletLabel, { color: colors.textMuted }]}>G.U. Pope Couplet:</Text>
                 <Text style={[styles.coupletText, { color: colors.textSecondary }]}>
                   {kural.couplet}
