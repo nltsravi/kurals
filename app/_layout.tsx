@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
 import { ThemeProvider, useTheme } from '../src/context/ThemeContext';
 import { CollectionProvider } from '../src/context/CollectionContext';
 import { StatusBar } from 'expo-status-bar';
+import { NotificationService } from '../src/services/notificationService';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -19,6 +20,17 @@ function RootNavigation() {
 
   useEffect(() => {
     SplashScreen.hideAsync().catch(() => {});
+    NotificationService.initAsync().catch(() => {});
+
+    const sub = NotificationService.addResponseListener((kuralNumber) => {
+      if (kuralNumber) {
+        router.push(`/kural/${kuralNumber}`);
+      }
+    });
+
+    return () => {
+      sub.remove();
+    };
   }, []);
 
   return (

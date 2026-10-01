@@ -14,7 +14,7 @@
       "package": "com.nltsravi.kurals",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#FFF2E5",
+        "backgroundColor": "#EA7A00",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -35,10 +35,17 @@
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#FFF2E5"
+          "backgroundColor": "#EA7A00"
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#FF7C0A"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
@@ -47,7 +54,8 @@
       "router": {},
       "eas": {
         "projectId": "afdea11a-c55d-45ca-84f2-2ec33747d229"
-      }
+      },
+      "buildNumber": "789153014202610011.0.0"
     }
   }
 }

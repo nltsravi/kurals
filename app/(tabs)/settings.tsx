@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,14 +10,135 @@ import {
   Linking,
   Share,
   Modal,
+  Alert,
+  Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { useTheme, ThemeMode } from '../../src/context/ThemeContext';
 import { APP_CONFIG } from '../../src/constants/appConstants';
+import { NotificationService } from '../../src/services/notificationService';
 
 export default function SettingsScreen() {
   const { colors, isDark, themeMode, setThemeMode } = useTheme();
   const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
+
+  // Daily notification state
+  const [notificationEnabled, setNotificationEnabled] = useState(true);
+  const [notificationHour, setNotificationHour] = useState(8);
+  const [notificationMinute, setNotificationMinute] = useState(0);
+  const [timeModalVisible, setTimeModalVisible] = useState(false);
+
+  // Time picker modal internal state
+  const [modalHour, setModalHour] = useState(8);
+  const [modalMinute, setModalMinute] = useState(0);
+  const [modalPeriod, setModalPeriod] = useState<'AM' | 'PM'>('AM');
+
+  useEffect(() => {
+    NotificationService.getSettings().then((s) => {
+      setNotificationEnabled(s.enabled);
+      setNotificationHour(s.hour);
+      setNotificationMinute(s.minute);
+    });
+  }, []);
+
+  const openTimePicker = () => {
+    const period = notificationHour >= 12 ? 'PM' : 'AM';
+    const hr = notificationHour % 12 === 0 ? 12 : notificationHour % 12;
+    setModalPeriod(period);
+    setModalHour(hr);
+    setModalMinute(notificationMinute);
+    setTimeModalVisible(true);
+  };
+
+  const handleToggleNotifications = async (val: boolean) => {
+    if (val) {
+      const granted = await NotificationService.requestPermissionsAsync();
+      if (!granted) {
+        Alert.alert(
+          'அறிவிப்பு அனுமதி தேவை (Permission Required)',
+          'தினசரி குறள் அறிவிப்புகளைப் பெற சாதன அமைப்புகளில் அறிவிப்பை இயக்கவும் (Please enable notifications in your device settings).',
+          [
+            { text: 'சரி (OK)', style: 'cancel' },
+            {
+              text: 'அமைப்புகள் (Settings)',
+              onPress: () => {
+                if (Platform.OS === 'ios') {
+                  Linking.openURL('app-settings:');
+                } else {
+                  Linking.openSettings();
+                }
+              },
+            },
+          ]
+        );
+        return;
+      }
+      setNotificationEnabled(true);
+      await NotificationService.saveSettings({
+        enabled: true,
+        hour: notificationHour,
+        minute: notificationMinute,
+      });
+      await NotificationService.scheduleDailyNotificationsAsync(notificationHour, notificationMinute);
+      const timeInfo = NotificationService.formatTime(notificationHour, notificationMinute);
+      Alert.alert(
+        'அறிவிப்பு இயக்கப்பட்டது (Notification Enabled)',
+        `ஒவ்வொரு நாளும் ${timeInfo.periodTamil} (${timeInfo.formatted}) மணிக்கு திருக்குறள் அறிவிப்பு அனுப்பப்படும்.`
+      );
+    } else {
+      setNotificationEnabled(false);
+      await NotificationService.saveSettings({
+        enabled: false,
+        hour: notificationHour,
+        minute: notificationMinute,
+      });
+      await NotificationService.cancelNotificationsAsync();
+    }
+  };
+
+  const handleSaveModalTime = async () => {
+    let final24Hour = modalHour;
+    if (modalPeriod === 'PM') {
+      final24Hour = modalHour === 12 ? 12 : modalHour + 12;
+    } else {
+      final24Hour = modalHour === 12 ? 0 : modalHour;
+    }
+
+    setNotificationHour(final24Hour);
+    setNotificationMinute(modalMinute);
+    setTimeModalVisible(false);
+
+    await NotificationService.saveSettings({
+      enabled: notificationEnabled,
+      hour: final24Hour,
+      minute: modalMinute,
+    });
+
+    if (notificationEnabled) {
+      await NotificationService.scheduleDailyNotificationsAsync(final24Hour, modalMinute);
+      const timeInfo = NotificationService.formatTime(final24Hour, modalMinute);
+      Alert.alert(
+        'நேரம் மாற்றப்பட்டது (Time Updated)',
+        `தினசரி குறள் அறிவிப்பு நேரம் ${timeInfo.periodTamil} (${timeInfo.formatted}) ஆக மாற்றப்பட்டது.`
+      );
+    }
+  };
+
+  const handleSendTestNotification = async () => {
+    try {
+      await NotificationService.sendTestNotificationAsync();
+      Alert.alert(
+        'சோதனை அறிவிப்பு அனுப்பப்பட்டது (Test Sent)',
+        'சீரற்ற திருக்குறள் அறிவிப்பு உருவாக்கப்பட்டது! அறிவிப்புப் பட்டியில் (Notification bar) அதைச் சரிபார்க்கவும்.'
+      );
+    } catch {
+      Alert.alert(
+        'அறிவிப்பு பிழை (Error)',
+        'அறிவிப்பை அனுப்ப முடியவில்லை. அறிவிப்பு அனுமதி வழங்கப்பட்டுள்ளதா என்பதை உறுதிப்படுத்தவும்.'
+      );
+    }
+  };
 
   const THEME_OPTIONS: { id: ThemeMode; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
     { id: 'system', label: 'System', icon: 'phone-portrait-outline' },
@@ -58,6 +179,18 @@ export default function SettingsScreen() {
 
   const handleOpenGithub = () => {
     Linking.openURL('https://github.com/nltsravi/kurals');
+  };
+
+  const handleCopyBuildNumber = async () => {
+    try {
+      await Clipboard.setStringAsync(APP_CONFIG.buildNumber);
+      Alert.alert(
+        'கட்டமைப்பு எண் (Build Number)',
+        `நகலெடுக்கப்பட்டது:\n${APP_CONFIG.buildNumber}`
+      );
+    } catch {
+      // User cancelled or clipboard error
+    }
   };
 
   return (
@@ -111,6 +244,73 @@ export default function SettingsScreen() {
               );
             })}
           </View>
+        </View>
+
+        {/* Daily Notification Settings */}
+        <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.cardHeaderWithAction}>
+            <View style={{ flex: 1, marginRight: 12 }}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>தினசரி குறள் அறிவிப்பு (Daily Notification)</Text>
+              <Text style={[styles.sectionSubtitle, { color: colors.textMuted, marginBottom: 0 }]}>
+                Receive a random Thirukkural with Tamil & English commentaries daily
+              </Text>
+            </View>
+            <Switch
+              value={notificationEnabled}
+              onValueChange={handleToggleNotifications}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+
+          {notificationEnabled && (
+            <>
+              <View style={[styles.divider, { backgroundColor: colors.borderLight, marginTop: 14 }]} />
+
+              <TouchableOpacity
+                style={styles.actionRow}
+                onPress={openTimePicker}
+                accessibilityRole="button"
+                accessibilityLabel="Set notification time"
+              >
+                <View style={[styles.iconBadge, { backgroundColor: colors.primaryLight }]}>
+                  <Ionicons name="time-outline" size={20} color={colors.primary} />
+                </View>
+                <View style={styles.actionRowText}>
+                  <Text style={[styles.actionLabel, { color: colors.text }]}>அறிவிப்பு நேரம் (Scheduled Time)</Text>
+                  <Text style={[styles.actionSubtext, { color: colors.textSecondary }]}>
+                    {NotificationService.formatTime(notificationHour, notificationMinute).periodTamil} ({NotificationService.formatTime(notificationHour, notificationMinute).formatted})
+                  </Text>
+                </View>
+                <View style={[styles.timeBadge, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <Text style={[styles.timeBadgeText, { color: colors.primary }]}>
+                    {NotificationService.formatTime(notificationHour, notificationMinute).formatted}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              </TouchableOpacity>
+
+              <View style={[styles.divider, { backgroundColor: colors.borderLight }]} />
+
+              <TouchableOpacity
+                style={styles.actionRow}
+                onPress={handleSendTestNotification}
+                accessibilityRole="button"
+                accessibilityLabel="Send test notification now"
+              >
+                <View style={[styles.iconBadge, { backgroundColor: '#E0F2FE' }]}>
+                  <Ionicons name="paper-plane-outline" size={18} color="#0284C7" />
+                </View>
+                <View style={styles.actionRowText}>
+                  <Text style={[styles.actionLabel, { color: colors.text }]}>உடனடி சோதனை அறிவிப்பு (Test Notification)</Text>
+                  <Text style={[styles.actionSubtext, { color: colors.textSecondary }]}>
+                    Preview a random couplet notification right now on your device
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
         {/* Support & Share on Google Play */}
@@ -243,7 +443,7 @@ export default function SettingsScreen() {
             <View style={{ flex: 1 }}>
               <Text style={[styles.appName, { color: colors.text }]}>{APP_CONFIG.name}</Text>
               <Text style={[styles.appVersion, { color: colors.textMuted }]}>
-                Version {APP_CONFIG.version} (Build 1) • com.nltsravi.kurals
+                Version {APP_CONFIG.version} (Build {APP_CONFIG.buildNumber}) • com.nltsravi.kurals
               </Text>
             </View>
           </View>
@@ -269,6 +469,37 @@ export default function SettingsScreen() {
               </Text>
             </View>
             <Ionicons name="open-outline" size={16} color={colors.textMuted} />
+          </TouchableOpacity>
+
+          <View style={[styles.divider, { backgroundColor: colors.borderLight }]} />
+
+          <TouchableOpacity
+            style={[styles.actionRow, { paddingVertical: 10 }]}
+            onPress={handleCopyBuildNumber}
+            accessibilityRole="button"
+            accessibilityLabel="Copy Build Number"
+          >
+            <View style={[styles.iconBadge, { backgroundColor: isDark ? colors.surface : '#F3F4F6' }]}>
+              <Ionicons name="construct-outline" size={20} color={colors.primary} />
+            </View>
+            <View style={styles.actionRowText}>
+              <Text style={[styles.actionLabel, { color: colors.text }]}>கட்டமைப்பு எண் (Build Number)</Text>
+              <Text
+                style={[
+                  styles.actionSubtext,
+                  {
+                    color: colors.textSecondary,
+                    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+                    fontSize: 11.5,
+                  },
+                ]}
+                numberOfLines={1}
+                ellipsizeMode="middle"
+              >
+                {APP_CONFIG.buildNumber}
+              </Text>
+            </View>
+            <Ionicons name="copy-outline" size={16} color={colors.textMuted} />
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -349,6 +580,173 @@ export default function SettingsScreen() {
             <View style={{ height: 40 }} />
           </ScrollView>
         </SafeAreaView>
+      </Modal>
+
+      {/* Time Picker Modal */}
+      <Modal
+        visible={timeModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setTimeModalVisible(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={[styles.timeModalContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.timeModalHeader}>
+              <View>
+                <Text style={[styles.timeModalTitle, { color: colors.text }]}>அறிவிப்பு நேரம்</Text>
+                <Text style={[styles.timeModalSubtitle, { color: colors.textSecondary }]}>Set Daily Notification Time</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setTimeModalVisible(false)}
+                style={[styles.modalCloseBtn, { backgroundColor: colors.surface }]}
+                accessibilityRole="button"
+                accessibilityLabel="Close"
+              >
+                <Ionicons name="close" size={20} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Quick Presets */}
+            <Text style={[styles.presetSectionTitle, { color: colors.textSecondary }]}>விரைவுத் தேர்வுகள் (Quick Presets)</Text>
+            <View style={styles.presetsGrid}>
+              {[
+                { labelTamil: 'விடியற்காலை', label: '6:00 AM', h: 6, m: 0, p: 'AM' as const },
+                { labelTamil: 'காலை', label: '7:00 AM', h: 7, m: 0, p: 'AM' as const },
+                { labelTamil: 'காலை (பரிந்துரை)', label: '8:00 AM', h: 8, m: 0, p: 'AM' as const },
+                { labelTamil: 'காலை', label: '9:00 AM', h: 9, m: 0, p: 'AM' as const },
+                { labelTamil: 'மாலை', label: '6:00 PM', h: 6, m: 0, p: 'PM' as const },
+                { labelTamil: 'இரவு', label: '8:00 PM', h: 8, m: 0, p: 'PM' as const },
+                { labelTamil: 'இரவு', label: '9:00 PM', h: 9, m: 0, p: 'PM' as const },
+              ].map((preset, idx) => {
+                const isSelected = modalHour === preset.h && modalMinute === preset.m && modalPeriod === preset.p;
+                return (
+                  <TouchableOpacity
+                    key={idx}
+                    style={[
+                      styles.presetChip,
+                      {
+                        backgroundColor: isSelected ? colors.primaryLight : colors.surface,
+                        borderColor: isSelected ? colors.primary : colors.border,
+                      },
+                    ]}
+                    onPress={() => {
+                      setModalHour(preset.h);
+                      setModalMinute(preset.m);
+                      setModalPeriod(preset.p);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.presetChipLabel,
+                        { color: isSelected ? colors.primary : colors.text },
+                      ]}
+                    >
+                      {preset.label}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.presetChipSub,
+                        { color: isSelected ? colors.primary : colors.textMuted },
+                      ]}
+                    >
+                      {preset.labelTamil}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Custom Hours & Minutes */}
+            <Text style={[styles.presetSectionTitle, { color: colors.textSecondary, marginTop: 14 }]}>
+              நேரம் தனிப்பயனாக்கு (Custom Time)
+            </Text>
+
+            <View style={styles.customTimeRow}>
+              {/* Hour selector */}
+              <View style={styles.timeComponentBox}>
+                <Text style={[styles.timeComponentLabel, { color: colors.textMuted }]}>மணி (Hour)</Text>
+                <View style={styles.stepperRow}>
+                  <TouchableOpacity
+                    style={[styles.stepperBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                    onPress={() => setModalHour((h) => (h === 1 ? 12 : h - 1))}
+                  >
+                    <Ionicons name="remove" size={18} color={colors.text} />
+                  </TouchableOpacity>
+                  <Text style={[styles.timeDigit, { color: colors.text }]}>{String(modalHour).padStart(2, '0')}</Text>
+                  <TouchableOpacity
+                    style={[styles.stepperBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                    onPress={() => setModalHour((h) => (h === 12 ? 1 : h + 1))}
+                  >
+                    <Ionicons name="add" size={18} color={colors.text} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <Text style={[styles.timeSeparator, { color: colors.textMuted }]}>:</Text>
+
+              {/* Minute selector */}
+              <View style={styles.timeComponentBox}>
+                <Text style={[styles.timeComponentLabel, { color: colors.textMuted }]}>நிமிடம் (Minute)</Text>
+                <View style={styles.stepperRow}>
+                  <TouchableOpacity
+                    style={[styles.stepperBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                    onPress={() => setModalMinute((m) => (m === 0 ? 45 : (m === 15 ? 0 : (m === 30 ? 15 : 30))))}
+                  >
+                    <Ionicons name="remove" size={18} color={colors.text} />
+                  </TouchableOpacity>
+                  <Text style={[styles.timeDigit, { color: colors.text }]}>{String(modalMinute).padStart(2, '0')}</Text>
+                  <TouchableOpacity
+                    style={[styles.stepperBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                    onPress={() => setModalMinute((m) => (m === 45 ? 0 : (m === 30 ? 45 : (m === 15 ? 30 : 15))))}
+                  >
+                    <Ionicons name="add" size={18} color={colors.text} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* AM / PM Toggle */}
+              <View style={styles.periodToggleBox}>
+                <Text style={[styles.timeComponentLabel, { color: colors.textMuted }]}>AM / PM</Text>
+                <View style={[styles.periodToggleContainer, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+                  <TouchableOpacity
+                    style={[
+                      styles.periodBtn,
+                      modalPeriod === 'AM' && { backgroundColor: colors.primary },
+                    ]}
+                    onPress={() => setModalPeriod('AM')}
+                  >
+                    <Text style={[styles.periodBtnText, { color: modalPeriod === 'AM' ? '#FFFFFF' : colors.text }]}>AM</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.periodBtn,
+                      modalPeriod === 'PM' && { backgroundColor: colors.primary },
+                    ]}
+                    onPress={() => setModalPeriod('PM')}
+                  >
+                    <Text style={[styles.periodBtnText, { color: modalPeriod === 'PM' ? '#FFFFFF' : colors.text }]}>PM</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+
+            {/* Buttons */}
+            <View style={styles.timeModalButtonsRow}>
+              <TouchableOpacity
+                style={[styles.modalCancelBtn, { borderColor: colors.border }]}
+                onPress={() => setTimeModalVisible(false)}
+              >
+                <Text style={[styles.modalCancelBtnText, { color: colors.textSecondary }]}>ரத்துசெய் (Cancel)</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalSaveBtn, { backgroundColor: colors.primary }]}
+                onPress={handleSaveModalTime}
+              >
+                <Text style={styles.modalSaveBtnText}>சேமி (Save Time)</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
     </SafeAreaView>
   );
@@ -549,5 +947,170 @@ const styles = StyleSheet.create({
   webPolicyButtonText: {
     fontSize: 13.5,
     fontWeight: '700',
+  },
+  cardHeaderWithAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  timeBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginRight: 4,
+  },
+  timeBadgeText: {
+    fontSize: 12.5,
+    fontWeight: '700',
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  timeModalContainer: {
+    width: '100%',
+    maxWidth: 420,
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  timeModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  timeModalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  timeModalSubtitle: {
+    fontSize: 12.5,
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  presetSectionTitle: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 10,
+  },
+  presetsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  presetChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    alignItems: 'center',
+  },
+  presetChipLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  presetChipSub: {
+    fontSize: 10,
+    marginTop: 1,
+    fontWeight: '500',
+  },
+  customTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 12,
+  },
+  timeComponentBox: {
+    alignItems: 'center',
+  },
+  timeComponentLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  stepperRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  stepperBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timeDigit: {
+    fontSize: 20,
+    fontWeight: '800',
+    minWidth: 32,
+    textAlign: 'center',
+    fontVariant: ['tabular-nums'],
+  },
+  timeSeparator: {
+    fontSize: 24,
+    fontWeight: '800',
+    marginTop: 14,
+  },
+  periodToggleBox: {
+    alignItems: 'center',
+  },
+  periodToggleContainer: {
+    flexDirection: 'row',
+    borderRadius: 10,
+    borderWidth: 1,
+    overflow: 'hidden',
+    height: 36,
+  },
+  periodBtn: {
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  periodBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  timeModalButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 20,
+  },
+  modalCancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCancelBtnText: {
+    fontSize: 13.5,
+    fontWeight: '600',
+  },
+  modalSaveBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalSaveBtnText: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

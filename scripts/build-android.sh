@@ -90,10 +90,15 @@ if [ ! -f "eas.json" ]; then
   exit 1
 fi
 
-# Extract package and versionCode from app.json using node
+# Update build number automatically for this build
+echo -e "${BLUE}==> Updating build number for build...${NC}"
+node scripts/update-build-number.js
+
+# Extract package, versionCode, and build number
 PKG_NAME=$(node -e "const c = require('./app.json'); console.log(c.expo?.android?.package || '');")
 VERSION_CODE=$(node -e "const c = require('./app.json'); console.log(c.expo?.android?.versionCode || '');")
 APP_VERSION=$(node -e "const c = require('./app.json'); console.log(c.expo?.version || '1.0.0');")
+BUILD_NUMBER=$(node -e "const c = require('./src/constants/buildInfo.json'); console.log(c.buildNumber || '');")
 
 if [ -z "$PKG_NAME" ]; then
   echo -e "${RED}Error: 'android.package' is missing from app.json! Google Play Store requires a valid package name.${NC}"
@@ -107,6 +112,7 @@ fi
 
 echo -e "${GREEN}✓ Package Name: ${BOLD}${PKG_NAME}${NC}"
 echo -e "${GREEN}✓ App Version:  ${BOLD}${APP_VERSION} (code: ${VERSION_CODE})${NC}"
+echo -e "${GREEN}✓ Build Number: ${BOLD}${BUILD_NUMBER}${NC}"
 echo -e "${GREEN}✓ Target Store: ${BOLD}Google Play Store${NC}"
 
 # Step 2: Quality verification (Lint, Typecheck, Tests)
