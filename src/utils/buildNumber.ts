@@ -23,7 +23,7 @@ export interface BuildInfo {
  * @returns Formatted build number
  */
 export function generateBuildNumber(
-  version: string = '1.0.0',
+  version: string = '1.1.0',
   date: Date = new Date()
 ): string {
   const ms = String(date.getMilliseconds()).padStart(3, '0');
@@ -33,7 +33,7 @@ export function generateBuildNumber(
   const yyyy = String(date.getFullYear());
   const MM = String(date.getMonth() + 1).padStart(2, '0');
   const dd = String(date.getDate()).padStart(2, '0');
-  const appVersion = String(version || '1.0.0');
+  const appVersion = String(version || '1.1.0');
 
   return `${ms}${ss}${mm}${hh}${yyyy}${MM}${dd}${appVersion}`;
 }

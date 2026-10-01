@@ -51,11 +51,11 @@ describe('Build Number Generation & Formatting', () => {
     expect(buildNumber).toBe('045595923202612311.0.0');
   });
 
-  test('defaults to version 1.0.0 and current date when not specified', () => {
+  test('defaults to version 1.1.0 and current date when not specified', () => {
     const buildNumber = generateBuildNumber();
     expect(typeof buildNumber).toBe('string');
     // 3 digits (ms) + 2 digits (s) + 2 digits (m) + 2 digits (h) + 4 digits (y) + 2 digits (mo) + 2 digits (d) + version
-    const buildRegex = /^\d{3}\d{2}\d{2}\d{2}\d{4}\d{2}\d{2}1\.0\.0$/;
+    const buildRegex = /^\d{3}\d{2}\d{2}\d{2}\d{4}\d{2}\d{2}1\.1\.0$/;
     expect(buildRegex.test(buildNumber)).toBe(true);
   });
 

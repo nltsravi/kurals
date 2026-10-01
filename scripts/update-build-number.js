@@ -21,7 +21,7 @@ const path = require('path');
  * @param {Date} [date] - Date object to extract timestamp components from (defaults to now)
  * @returns {string} Formatted build number
  */
-function generateBuildNumber(version = '1.0.0', date = new Date()) {
+function generateBuildNumber(version = '1.1.0', date = new Date()) {
   const ms = String(date.getMilliseconds()).padStart(3, '0');
   const ss = String(date.getSeconds()).padStart(2, '0');
   const mm = String(date.getMinutes()).padStart(2, '0');
@@ -29,7 +29,7 @@ function generateBuildNumber(version = '1.0.0', date = new Date()) {
   const yyyy = String(date.getFullYear());
   const MM = String(date.getMonth() + 1).padStart(2, '0');
   const dd = String(date.getDate()).padStart(2, '0');
-  const appVersion = String(version || '1.0.0');
+  const appVersion = String(version || '1.1.0');
 
   return `${ms}${ss}${mm}${hh}${yyyy}${MM}${dd}${appVersion}`;
 }
@@ -46,7 +46,7 @@ function updateBuildNumber(customDate = new Date()) {
   const appJsonPath = path.join(rootDir, 'app.json');
   const buildInfoPath = path.join(rootDir, 'src/constants/buildInfo.json');
 
-  let version = '1.0.0';
+  let version = '1.1.0';
 
   // Read current version from app.json first, fallback to package.json
   if (fs.existsSync(appJsonPath)) {

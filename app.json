@@ -2,7 +2,7 @@
   "expo": {
     "name": "திருக்குறள் - Thirukkural",
     "slug": "thirukkural",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "thirukkural",
@@ -55,7 +55,7 @@
       "eas": {
         "projectId": "afdea11a-c55d-45ca-84f2-2ec33747d229"
       },
-      "buildNumber": "789153014202610011.0.0"
+      "buildNumber": "789153014202610011.1.0"
     }
   }
 }
