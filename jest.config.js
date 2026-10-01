@@ -10,6 +10,8 @@ module.exports = {
     '^expo-notifications$': '<rootDir>/tests/__mocks__/expo-notifications.ts',
     '^expo-constants$': '<rootDir>/tests/__mocks__/expo-constants.ts',
     '^expo-file-system/legacy$': '<rootDir>/tests/__mocks__/expo-file-system/legacy.ts',
+    '^expo-clipboard$': '<rootDir>/tests/__mocks__/expo-clipboard.ts',
+    '^expo-sharing$': '<rootDir>/tests/__mocks__/expo-sharing.ts',
     '^@react-native-async-storage/async-storage$': '<rootDir>/tests/__mocks__/@react-native-async-storage/async-storage.ts',
     '^react-native$': '<rootDir>/tests/__mocks__/react-native.ts',
   },

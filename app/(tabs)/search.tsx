@@ -13,6 +13,7 @@ import { SearchBar } from '../../src/components/SearchBar';
 import { KuralCard } from '../../src/components/KuralCard';
 import { EmptyState } from '../../src/components/EmptyState';
 import { AddToCollectionModal } from '../../src/components/AddToCollectionModal';
+import { ShareModal } from '../../src/components/ShareModal';
 import { useKuralSearch } from '../../src/hooks/useKuralSearch';
 import { useCollections } from '../../src/context/CollectionContext';
 import { useTheme } from '../../src/context/ThemeContext';
@@ -36,6 +37,7 @@ export default function SearchScreen() {
   const { query, setQuery, results, isSearching, clearQuery } = useKuralSearch('', 200);
   const { isKuralInCollection, collections } = useCollections();
   const [modalKural, setModalKural] = useState<Kural | null>(null);
+  const [shareKural, setShareKural] = useState<Kural | null>(null);
 
   const renderContent = () => {
     if (isSearching) {
@@ -84,6 +86,7 @@ export default function SearchScreen() {
               kural={item}
               onPress={() => router.push(`/kural/${item.number}`)}
               onAddToCollection={() => setModalKural(item)}
+              onShare={() => setShareKural(item)}
               isSaved={isSaved}
             />
           );
@@ -123,6 +126,12 @@ export default function SearchScreen() {
         visible={!!modalKural}
         onClose={() => setModalKural(null)}
         kural={modalKural}
+      />
+
+      <ShareModal
+        visible={!!shareKural}
+        onClose={() => setShareKural(null)}
+        kural={shareKural}
       />
     </SafeAreaView>
   );

@@ -14,6 +14,7 @@ import { KuralService } from '../../src/services/kuralService';
 import { Kural, Category } from '../../src/types/kural';
 import { useTheme } from '../../src/context/ThemeContext';
 import { AddToCollectionModal } from '../../src/components/AddToCollectionModal';
+import { ShareModal } from '../../src/components/ShareModal';
 import { CATEGORY_COLORS } from '../../src/constants/appConstants';
 
 export default function HomeScreen() {
@@ -22,6 +23,7 @@ export default function HomeScreen() {
   const [randomKural, setRandomKural] = useState<Kural | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [modalKural, setModalKural] = useState<Kural | null>(null);
+  const [shareKural, setShareKural] = useState<Kural | null>(null);
 
   useEffect(() => {
     setRandomKural(KuralService.getRandomKural());
@@ -168,6 +170,14 @@ export default function HomeScreen() {
 
               <TouchableOpacity
                 style={[styles.iconActionBtn, { borderColor: colors.border }]}
+                onPress={() => setShareKural(randomKural)}
+                accessibilityLabel="Share Kural to Social Media"
+              >
+                <Ionicons name="share-social-outline" size={18} color={colors.primary} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.iconActionBtn, { borderColor: colors.border }]}
                 onPress={() => setModalKural(randomKural)}
                 accessibilityLabel="Add to Collection"
               >
@@ -239,6 +249,12 @@ export default function HomeScreen() {
         visible={!!modalKural}
         onClose={() => setModalKural(null)}
         kural={modalKural}
+      />
+
+      <ShareModal
+        visible={!!shareKural}
+        onClose={() => setShareKural(null)}
+        kural={shareKural}
       />
     </SafeAreaView>
   );

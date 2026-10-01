@@ -15,6 +15,7 @@ import { useTheme } from '../../src/context/ThemeContext';
 import { useCollections } from '../../src/context/CollectionContext';
 import { AddToCollectionModal } from '../../src/components/AddToCollectionModal';
 import { ExportModal } from '../../src/components/ExportModal';
+import { ShareModal } from '../../src/components/ShareModal';
 import { formatKuralText } from '../../src/utils/text';
 
 export default function KuralDetailScreen() {
@@ -25,6 +26,7 @@ export default function KuralDetailScreen() {
 
   const [showAddToCollection, setShowAddToCollection] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [copiedNotice, setCopiedNotice] = useState<string | null>(null);
 
   const kuralNumber = parseInt(id || '1', 10);
@@ -69,9 +71,8 @@ export default function KuralDetailScreen() {
     showNotice('Tamil & Transliteration copied!');
   };
 
-  const handleShare = async () => {
-    const text = formatKuralText(kural, 'full');
-    await ShareService.shareText(text, `குறள் ${kural.number}`);
+  const handleShare = () => {
+    setShowShareModal(true);
   };
 
   const goToPrev = () => {
@@ -163,8 +164,18 @@ export default function KuralDetailScreen() {
           ) : null}
         </View>
 
-        {/* Quick Copy / Export Action Bar */}
+        {/* Quick Copy / Share / Export Action Bar */}
         <View style={styles.actionsBar}>
+          <TouchableOpacity
+            style={[styles.actionChip, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}
+            onPress={() => setShowShareModal(true)}
+          >
+            <Ionicons name="share-social-outline" size={14} color={colors.primary} />
+            <Text style={[styles.actionChipText, { color: colors.primary, fontWeight: '700' }]} numberOfLines={1}>
+              Share
+            </Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={[styles.actionChip, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={handleCopyTamil}
@@ -332,6 +343,12 @@ export default function KuralDetailScreen() {
         onClose={() => setShowExportModal(false)}
         title={`குறள் ${kural.number} - ${kural.chapterNameTamil}`}
         kurals={[kural]}
+      />
+
+      <ShareModal
+        visible={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        kural={kural}
       />
     </>
   );

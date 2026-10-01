@@ -16,6 +16,7 @@ import { useCollections } from '../../src/context/CollectionContext';
 import { KuralCard } from '../../src/components/KuralCard';
 import { ExportModal } from '../../src/components/ExportModal';
 import { AddToCollectionModal } from '../../src/components/AddToCollectionModal';
+import { ShareModal } from '../../src/components/ShareModal';
 import { Kural } from '../../src/types/kural';
 
 export default function ChapterDetailScreen() {
@@ -26,6 +27,7 @@ export default function ChapterDetailScreen() {
 
   const [showExportModal, setShowExportModal] = useState(false);
   const [modalKural, setModalKural] = useState<Kural | null>(null);
+  const [shareKural, setShareKural] = useState<Kural | null>(null);
 
   const chapterNum = parseInt(id || '1', 10);
   const chapter = KuralService.getChapterByNumber(chapterNum);
@@ -122,6 +124,7 @@ export default function ChapterDetailScreen() {
                 kural={item}
                 onPress={() => router.push(`/kural/${item.number}`)}
                 onAddToCollection={() => setModalKural(item)}
+                onShare={() => setShareKural(item)}
                 isSaved={isSaved}
                 showChapter={false}
               />
@@ -175,6 +178,12 @@ export default function ChapterDetailScreen() {
           onClose={() => setShowExportModal(false)}
           title={`அதிகாரம் ${chapter.number} - ${chapter.nameTamil}`}
           kurals={kurals}
+        />
+
+        <ShareModal
+          visible={!!shareKural}
+          onClose={() => setShareKural(null)}
+          kural={shareKural}
         />
       </SafeAreaView>
     </>

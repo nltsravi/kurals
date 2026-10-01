@@ -8,6 +8,7 @@ interface KuralCardProps {
   kural: Kural;
   onPress: () => void;
   onAddToCollection?: () => void;
+  onShare?: () => void;
   isSaved?: boolean;
   showTransliteration?: boolean;
   showChapter?: boolean;
@@ -17,6 +18,7 @@ export const KuralCard: React.FC<KuralCardProps> = ({
   kural,
   onPress,
   onAddToCollection,
+  onShare,
   isSaved = false,
   showTransliteration = true,
   showChapter = true,
@@ -50,23 +52,43 @@ export const KuralCard: React.FC<KuralCardProps> = ({
           </Text>
         )}
 
-        {onAddToCollection && (
-          <TouchableOpacity
-            onPress={(e) => {
-              e.stopPropagation();
-              onAddToCollection();
-            }}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            accessibilityLabel={isSaved ? 'In collection' : 'Add to collection'}
-            style={styles.bookmarkButton}
-          >
-            <Ionicons
-              name={isSaved ? 'bookmark' : 'bookmark-outline'}
-              size={20}
-              color={isSaved ? colors.accent : colors.textMuted}
-            />
-          </TouchableOpacity>
-        )}
+        <View style={styles.topActionsRow}>
+          {onShare && (
+            <TouchableOpacity
+              onPress={(e) => {
+                e.stopPropagation();
+                onShare();
+              }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityLabel="Share Kural"
+              style={styles.actionButton}
+            >
+              <Ionicons
+                name="share-social-outline"
+                size={18}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+          )}
+
+          {onAddToCollection && (
+            <TouchableOpacity
+              onPress={(e) => {
+                e.stopPropagation();
+                onAddToCollection();
+              }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityLabel={isSaved ? 'In collection' : 'Add to collection'}
+              style={styles.actionButton}
+            >
+              <Ionicons
+                name={isSaved ? 'bookmark' : 'bookmark-outline'}
+                size={19}
+                color={isSaved ? colors.accent : colors.textMuted}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <View style={styles.tamilContainer}>
@@ -119,6 +141,14 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 10,
     marginRight: 6,
+  },
+  topActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  actionButton: {
+    padding: 4,
   },
   bookmarkButton: {
     padding: 4,

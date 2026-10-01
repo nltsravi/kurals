@@ -9,7 +9,14 @@ export const Share = {
   dismissedAction: 'dismissedAction',
 };
 
+export const Linking = {
+  canOpenURL: jest.fn(async () => true),
+  openURL: jest.fn(async () => {}),
+  openSettings: jest.fn(async () => {}),
+};
+
 export const StyleSheet = {
   create: (styles: any) => styles,
   hairlineWidth: 1,
 };
+

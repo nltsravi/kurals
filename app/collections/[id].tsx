@@ -16,6 +16,7 @@ import { useCollections } from '../../src/context/CollectionContext';
 import { useTheme } from '../../src/context/ThemeContext';
 import { KuralService } from '../../src/services/kuralService';
 import { ExportModal } from '../../src/components/ExportModal';
+import { ShareModal } from '../../src/components/ShareModal';
 import { EmptyState } from '../../src/components/EmptyState';
 import { Kural } from '../../src/types/kural';
 
@@ -29,6 +30,7 @@ export default function CollectionDetailScreen() {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState('');
   const [showExportModal, setShowExportModal] = useState(false);
+  const [shareKural, setShareKural] = useState<Kural | null>(null);
 
   const collection = collections.find((c) => c.id === id);
 
@@ -249,15 +251,27 @@ export default function CollectionDetailScreen() {
                   </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity
-                  onPress={() => handleRemoveKural(item.number)}
-                  style={styles.removeBtn}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  accessibilityLabel="Remove from collection"
-                >
-                  <Ionicons name="close-circle-outline" size={16} color={colors.danger} />
-                  <Text style={[styles.removeText, { color: colors.danger }]}>Remove</Text>
-                </TouchableOpacity>
+                <View style={styles.cardActionsRow}>
+                  <TouchableOpacity
+                    onPress={() => setShareKural(item)}
+                    style={styles.shareBtn}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    accessibilityLabel="Share Kural"
+                  >
+                    <Ionicons name="share-social-outline" size={16} color={colors.primary} />
+                    <Text style={[styles.shareText, { color: colors.primary }]}>Share</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => handleRemoveKural(item.number)}
+                    style={styles.removeBtn}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    accessibilityLabel="Remove from collection"
+                  >
+                    <Ionicons name="close-circle-outline" size={16} color={colors.danger} />
+                    <Text style={[styles.removeText, { color: colors.danger }]}>Remove</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           )}
@@ -277,6 +291,12 @@ export default function CollectionDetailScreen() {
           onClose={() => setShowExportModal(false)}
           title={collection.name}
           kurals={kurals}
+        />
+
+        <ShareModal
+          visible={!!shareKural}
+          onClose={() => setShareKural(null)}
+          kural={shareKural}
         />
       </SafeAreaView>
     </>
@@ -460,6 +480,21 @@ const styles = StyleSheet.create({
   },
   arrowBtn: {
     padding: 6,
+  },
+  cardActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  shareBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    padding: 6,
+  },
+  shareText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   removeBtn: {
     flexDirection: 'row',
