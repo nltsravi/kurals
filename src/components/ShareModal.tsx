@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   Modal,
   View,
@@ -8,8 +8,10 @@ import {
   ScrollView,
   Pressable,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { captureRef } from 'react-native-view-shot';
 import { Kural } from '../types/kural';
 import { useTheme } from '../context/ThemeContext';
 import {
@@ -22,6 +24,7 @@ import {
   SocialShareOptions,
   formatKuralForSocialShare,
 } from '../utils/text';
+import { KuralImageCard } from './KuralImageCard';
 
 interface ShareModalProps {
   visible: boolean;
@@ -49,11 +52,14 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   kural,
 }) => {
   const { colors, isDark } = useTheme();
+  const imageCardRef = useRef<View>(null);
 
+  const [shareTab, setShareTab] = useState<'image' | 'text'>('image');
   const [meaningType, setMeaningType] = useState<MeaningType>('mv');
   const [includeTransliteration, setIncludeTransliteration] = useState(false);
   const [includeHashtags, setIncludeHashtags] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const shareOptions: SocialShareOptions = useMemo(
     () => ({
@@ -80,10 +86,91 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     }, 3500);
   };
 
+  /**
+   * Captures the KuralImageCard component as a high-resolution PNG image
+   */
+  const captureImageUri = async (): Promise<string | null> => {
+    if (!imageCardRef.current) return null;
+    try {
+      setIsProcessing(true);
+      const uri = await captureRef(imageCardRef, {
+        format: 'png',
+        quality: 1.0,
+        result: 'tmpfile',
+      });
+      return uri;
+    } catch (error) {
+      console.error('Error capturing image card:', error);
+      return null;
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  /**
+   * Primary action: Share the generated image card via the system share sheet
+   */
+  const handleShareImage = async () => {
+    if (!kural) return;
+
+    try {
+      showToast('Creating image card...');
+      const uri = await captureImageUri();
+      if (!uri) {
+        showToast('Could not create image. Sharing text instead...');
+        await ShareService.shareText(formattedShareText);
+        return;
+      }
+
+      // Also copy text to clipboard for convenience
+      await ShareService.copyToClipboard(formattedShareText);
+      await ShareService.shareImage(uri, `குறள் ${kural.number} | Thirukkural`);
+      showToast('Image shared!');
+    } catch (err) {
+      console.error('Failed to share image:', err);
+      await ShareService.shareText(formattedShareText);
+    }
+  };
+
+  /**
+   * Shares image or text to a specific social platform
+   */
   const handleSharePlatform = async (platform: SocialPlatform) => {
     if (!kural) return;
 
     try {
+      if (shareTab === 'image') {
+        showToast('Preparing image card...');
+        const uri = await captureImageUri();
+
+        // Copy text to clipboard so it can be pasted in WhatsApp/Instagram/Facebook
+        await ShareService.copyToClipboard(formattedShareText);
+
+        if (uri) {
+          if (platform === 'whatsapp_status') {
+            await ShareService.shareImage(uri, `குறள் ${kural.number}`);
+            showToast('Opening WhatsApp! Select "My Status" to set as status.');
+            return;
+          } else if (platform === 'instagram') {
+            await ShareService.shareImage(uri, `குறள் ${kural.number}`);
+            showToast('Opening Instagram! Choose Story or Feed.');
+            return;
+          } else if (platform === 'facebook') {
+            await ShareService.shareImage(uri, `குறள் ${kural.number}`);
+            showToast('Opening Facebook! Caption copied to clipboard.');
+            return;
+          } else if (platform === 'twitter' || platform === 'threads') {
+            await ShareService.shareImage(uri, `குறள் ${kural.number}`);
+            showToast('Image ready to post!');
+            return;
+          } else {
+            await ShareService.shareImage(uri, `குறள் ${kural.number}`);
+            return;
+          }
+        }
+      }
+
+      // Text fallback
       const result: SocialShareResult = await ShareService.shareToPlatform(
         platform,
         formattedShareText,
@@ -96,12 +183,15 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         showToast('Shared successfully!');
       }
     } catch {
-      showToast('Could not open app. Copied to clipboard instead.');
+      showToast('Could not open app. Copied text to clipboard instead.');
       await ShareService.copyToClipboard(formattedShareText);
     }
   };
 
-  const handleCopy = async () => {
+  /**
+   * Copies formatted Kural text and meaning to clipboard
+   */
+  const handleCopyText = async () => {
     await ShareService.copyToClipboard(formattedShareText);
     showToast('குறள் மற்றும் பொருள் நகலெடுக்கப்பட்டது! (Copied to clipboard!)');
   };
@@ -151,6 +241,61 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             </TouchableOpacity>
           </View>
 
+          {/* Mode Switcher Tabs (Image Card vs Text) */}
+          <View style={[styles.tabBar, { backgroundColor: colors.surface }]}>
+            <TouchableOpacity
+              style={[
+                styles.tabBtn,
+                shareTab === 'image' && [
+                  styles.tabBtnActive,
+                  { backgroundColor: colors.card, shadowColor: '#000' },
+                ],
+              ]}
+              onPress={() => setShareTab('image')}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name="image"
+                size={16}
+                color={shareTab === 'image' ? colors.primary : colors.textMuted}
+              />
+              <Text
+                style={[
+                  styles.tabBtnText,
+                  { color: shareTab === 'image' ? colors.primary : colors.textSecondary },
+                ]}
+              >
+                படம் (Image Card)
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.tabBtn,
+                shareTab === 'text' && [
+                  styles.tabBtnActive,
+                  { backgroundColor: colors.card, shadowColor: '#000' },
+                ],
+              ]}
+              onPress={() => setShareTab('text')}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name="document-text-outline"
+                size={16}
+                color={shareTab === 'text' ? colors.primary : colors.textMuted}
+              />
+              <Text
+                style={[
+                  styles.tabBtnText,
+                  { color: shareTab === 'text' ? colors.primary : colors.textSecondary },
+                ]}
+              >
+                உரை (Text Format)
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           {/* Toast Notification Banner */}
           {toastMessage && (
             <View style={[styles.toastBanner, { backgroundColor: colors.primary }]}>
@@ -163,10 +308,10 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            {/* Meaning Selector */}
+            {/* Meaning Selector (Live-updates Image and Text) */}
             <View style={styles.sectionBlock}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                பொருள் / உரை (Meaning)
+                பொருள் / உரை தேர்வு (Select Meaning)
               </Text>
               <ScrollView
                 horizontal
@@ -210,112 +355,142 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               </ScrollView>
             </View>
 
-            {/* Formatting Options (Transliteration & Hashtags) */}
-            <View style={styles.optionsRow}>
-              <TouchableOpacity
-                style={[
-                  styles.optionChip,
-                  {
-                    backgroundColor: includeTransliteration ? colors.primaryLight : colors.card,
-                    borderColor: includeTransliteration ? colors.primary : colors.border,
-                  },
-                ]}
-                onPress={() => setIncludeTransliteration(!includeTransliteration)}
-              >
-                <Ionicons
-                  name={includeTransliteration ? 'checkbox' : 'square-outline'}
-                  size={16}
-                  color={includeTransliteration ? colors.primary : colors.textMuted}
-                />
-                <Text
-                  style={[
-                    styles.optionChipText,
-                    { color: includeTransliteration ? colors.primary : colors.textSecondary },
-                  ]}
-                >
-                  English Translit
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.optionChip,
-                  {
-                    backgroundColor: includeHashtags ? colors.primaryLight : colors.card,
-                    borderColor: includeHashtags ? colors.primary : colors.border,
-                  },
-                ]}
-                onPress={() => setIncludeHashtags(!includeHashtags)}
-              >
-                <Ionicons
-                  name={includeHashtags ? 'checkbox' : 'square-outline'}
-                  size={16}
-                  color={includeHashtags ? colors.primary : colors.textMuted}
-                />
-                <Text
-                  style={[
-                    styles.optionChipText,
-                    { color: includeHashtags ? colors.primary : colors.textSecondary },
-                  ]}
-                >
-                  Hashtags (#)
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Live Preview Card */}
-            <View style={[styles.previewCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <View style={styles.previewHeader}>
+            {/* Main Preview Area: Image Card or Text Card */}
+            {shareTab === 'image' ? (
+              <View style={styles.imagePreviewContainer}>
                 <View style={styles.previewTagRow}>
-                  <Ionicons name="eye-outline" size={14} color={colors.textMuted} />
-                  <Text style={[styles.previewLabel, { color: colors.textMuted }]}>
-                    LIVE PREVIEW
+                  <Ionicons name="sparkles" size={14} color={colors.primary} />
+                  <Text style={[styles.previewLabel, { color: colors.primary }]}>
+                    HD IMAGE CARD PREVIEW (1:1 SQUARE)
                   </Text>
                 </View>
 
-                <View
-                  style={[
-                    styles.charBadge,
-                    {
-                      backgroundColor: isWithinTwitterLimit
-                        ? (isDark ? '#064E3B' : '#D1FAE5')
-                        : (isDark ? '#451A03' : '#FEF3C7'),
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.charBadgeText,
-                      { color: isWithinTwitterLimit ? '#10B981' : '#D97706' },
-                    ]}
-                  >
-                    {charCount} chars {isWithinTwitterLimit ? '• X ✓' : ''}
-                  </Text>
+                {/* The Captured Image Card */}
+                <View style={styles.imageCardWrapper}>
+                  <KuralImageCard
+                    ref={imageCardRef}
+                    kural={kural}
+                    meaningType={meaningType}
+                  />
                 </View>
-              </View>
 
-              <Text style={[styles.previewText, { color: colors.textSecondary }]} numberOfLines={9}>
-                {formattedShareText}
-              </Text>
-
-              <View style={[styles.previewFooter, { borderTopColor: colors.borderLight }]}>
+                {/* Primary Share Image Button */}
                 <TouchableOpacity
-                  style={styles.quickCopyBtn}
-                  onPress={handleCopy}
-                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                  style={[styles.heroShareImageBtn, { backgroundColor: colors.primary }]}
+                  onPress={handleShareImage}
+                  disabled={isProcessing}
+                  activeOpacity={0.85}
                 >
-                  <Ionicons name="copy-outline" size={14} color={colors.primary} />
-                  <Text style={[styles.quickCopyText, { color: colors.primary }]}>
-                    Copy Text
+                  {isProcessing ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Ionicons name="share-social" size={20} color="#FFFFFF" />
+                  )}
+                  <Text style={styles.heroShareImageBtnText}>
+                    {isProcessing ? 'படம் உருவாக்கப்படுகிறது...' : 'படம் பகிர் (Share Image Card)'}
                   </Text>
                 </TouchableOpacity>
               </View>
-            </View>
+            ) : (
+              /* Text Mode Preview */
+              <View>
+                {/* Options Row (Translit & Hashtags) */}
+                <View style={styles.optionsRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.optionChip,
+                      {
+                        backgroundColor: includeTransliteration ? colors.primaryLight : colors.card,
+                        borderColor: includeTransliteration ? colors.primary : colors.border,
+                      },
+                    ]}
+                    onPress={() => setIncludeTransliteration(!includeTransliteration)}
+                  >
+                    <Ionicons
+                      name={includeTransliteration ? 'checkbox' : 'square-outline'}
+                      size={16}
+                      color={includeTransliteration ? colors.primary : colors.textMuted}
+                    />
+                    <Text
+                      style={[
+                        styles.optionChipText,
+                        { color: includeTransliteration ? colors.primary : colors.textSecondary },
+                      ]}
+                    >
+                      English Translit
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.optionChip,
+                      {
+                        backgroundColor: includeHashtags ? colors.primaryLight : colors.card,
+                        borderColor: includeHashtags ? colors.primary : colors.border,
+                      },
+                    ]}
+                    onPress={() => setIncludeHashtags(!includeHashtags)}
+                  >
+                    <Ionicons
+                      name={includeHashtags ? 'checkbox' : 'square-outline'}
+                      size={16}
+                      color={includeHashtags ? colors.primary : colors.textMuted}
+                    />
+                    <Text
+                      style={[
+                        styles.optionChipText,
+                        { color: includeHashtags ? colors.primary : colors.textSecondary },
+                      ]}
+                    >
+                      Hashtags (#)
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Text Preview Card */}
+                <View style={[styles.previewCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                  <View style={styles.previewHeader}>
+                    <View style={styles.previewTagRow}>
+                      <Ionicons name="eye-outline" size={14} color={colors.textMuted} />
+                      <Text style={[styles.previewLabel, { color: colors.textMuted }]}>
+                        LIVE TEXT PREVIEW
+                      </Text>
+                    </View>
+
+                    <View
+                      style={[
+                        styles.charBadge,
+                        {
+                          backgroundColor: isWithinTwitterLimit
+                            ? (isDark ? '#064E3B' : '#D1FAE5')
+                            : (isDark ? '#451A03' : '#FEF3C7'),
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.charBadgeText,
+                          { color: isWithinTwitterLimit ? '#10B981' : '#D97706' },
+                        ]}
+                      >
+                        {charCount} chars {isWithinTwitterLimit ? '• X ✓' : ''}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <Text style={[styles.previewText, { color: colors.textSecondary }]} numberOfLines={9}>
+                    {formattedShareText}
+                  </Text>
+                </View>
+              </View>
+            )}
 
             {/* Social Share Grid */}
             <View style={styles.sectionBlock}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                சமூக வலைத்தளங்கள் (Social Sites)
+                {shareTab === 'image'
+                  ? 'படத்தை சமூக வலைத்தளங்களில் பகிர (Share Image to Apps)'
+                  : 'உரையை சமூக வலைத்தளங்களில் பகிர (Share Text to Apps)'}
               </Text>
 
               <View style={styles.socialGrid}>
@@ -343,63 +518,15 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                       </View>
                     </View>
                     <Text style={[styles.socialDesc, { color: colors.textMuted }]}>
-                      Set as status or share to chat
+                      {shareTab === 'image'
+                        ? 'Set image card as your WhatsApp status'
+                        : 'Set text status or share to chat'}
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
                 </TouchableOpacity>
 
-                {/* 2. Twitter / X */}
-                <TouchableOpacity
-                  style={[
-                    styles.socialCard,
-                    { backgroundColor: colors.card, borderColor: colors.border },
-                  ]}
-                  onPress={() => handleSharePlatform('twitter')}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.socialIconCircle, { backgroundColor: '#0F1419' }]}>
-                    <Ionicons name="logo-twitter" size={22} color="#FFFFFF" />
-                  </View>
-                  <View style={styles.socialCardContent}>
-                    <View style={styles.socialTitleRow}>
-                      <Text style={[styles.socialName, { color: colors.text }]}>
-                        X (Twitter)
-                      </Text>
-                    </View>
-                    <Text style={[styles.socialDesc, { color: colors.textMuted }]}>
-                      Post tweet with Kural & meaning
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                </TouchableOpacity>
-
-                {/* 3. Threads */}
-                <TouchableOpacity
-                  style={[
-                    styles.socialCard,
-                    { backgroundColor: colors.card, borderColor: colors.border },
-                  ]}
-                  onPress={() => handleSharePlatform('threads')}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.socialIconCircle, { backgroundColor: '#101010' }]}>
-                    <Ionicons name="at" size={24} color="#FFFFFF" />
-                  </View>
-                  <View style={styles.socialCardContent}>
-                    <View style={styles.socialTitleRow}>
-                      <Text style={[styles.socialName, { color: colors.text }]}>
-                        Threads
-                      </Text>
-                    </View>
-                    <Text style={[styles.socialDesc, { color: colors.textMuted }]}>
-                      Share post to Threads
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                </TouchableOpacity>
-
-                {/* 4. Instagram */}
+                {/* 2. Instagram */}
                 <TouchableOpacity
                   style={[
                     styles.socialCard,
@@ -423,7 +550,63 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                       </View>
                     </View>
                     <Text style={[styles.socialDesc, { color: colors.textMuted }]}>
-                      Copy & open Instagram
+                      {shareTab === 'image'
+                        ? 'Share image card to Instagram Story or Feed'
+                        : 'Copy text & open Instagram'}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                </TouchableOpacity>
+
+                {/* 3. Twitter / X */}
+                <TouchableOpacity
+                  style={[
+                    styles.socialCard,
+                    { backgroundColor: colors.card, borderColor: colors.border },
+                  ]}
+                  onPress={() => handleSharePlatform('twitter')}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.socialIconCircle, { backgroundColor: '#0F1419' }]}>
+                    <Ionicons name="logo-twitter" size={22} color="#FFFFFF" />
+                  </View>
+                  <View style={styles.socialCardContent}>
+                    <View style={styles.socialTitleRow}>
+                      <Text style={[styles.socialName, { color: colors.text }]}>
+                        X (Twitter)
+                      </Text>
+                    </View>
+                    <Text style={[styles.socialDesc, { color: colors.textMuted }]}>
+                      {shareTab === 'image'
+                        ? 'Tweet with Kural image card'
+                        : 'Post tweet with Kural & meaning'}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                </TouchableOpacity>
+
+                {/* 4. Threads */}
+                <TouchableOpacity
+                  style={[
+                    styles.socialCard,
+                    { backgroundColor: colors.card, borderColor: colors.border },
+                  ]}
+                  onPress={() => handleSharePlatform('threads')}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.socialIconCircle, { backgroundColor: '#101010' }]}>
+                    <Ionicons name="at" size={24} color="#FFFFFF" />
+                  </View>
+                  <View style={styles.socialCardContent}>
+                    <View style={styles.socialTitleRow}>
+                      <Text style={[styles.socialName, { color: colors.text }]}>
+                        Threads
+                      </Text>
+                    </View>
+                    <Text style={[styles.socialDesc, { color: colors.textMuted }]}>
+                      {shareTab === 'image'
+                        ? 'Share image card to Threads'
+                        : 'Share post to Threads'}
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
@@ -448,7 +631,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                       </Text>
                     </View>
                     <Text style={[styles.socialDesc, { color: colors.textMuted }]}>
-                      Share or paste into Facebook post
+                      {shareTab === 'image'
+                        ? 'Share image card to Facebook Feed / Story'
+                        : 'Copy & post to Facebook'}
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
@@ -460,7 +645,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                     styles.socialCard,
                     { backgroundColor: colors.card, borderColor: colors.border },
                   ]}
-                  onPress={() => handleSharePlatform('native')}
+                  onPress={() => (shareTab === 'image' ? handleShareImage() : handleSharePlatform('native'))}
                   activeOpacity={0.7}
                 >
                   <View style={[styles.socialIconCircle, { backgroundColor: colors.primary }]}>
@@ -469,11 +654,11 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                   <View style={styles.socialCardContent}>
                     <View style={styles.socialTitleRow}>
                       <Text style={[styles.socialName, { color: colors.text }]}>
-                        More Options
+                        More Options (அனைத்தும்)
                       </Text>
                     </View>
                     <Text style={[styles.socialDesc, { color: colors.textMuted }]}>
-                      Device share sheet (Telegram, SMS, Mail)
+                      Device share sheet (Telegram, SMS, Save Image)
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
@@ -482,16 +667,19 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             </View>
           </ScrollView>
 
-          {/* Bottom Full-Width Copy Action */}
+          {/* Bottom Bar: Quick Copy Kural Text Button */}
           <View style={[styles.footer, { borderTopColor: colors.borderLight }]}>
             <TouchableOpacity
-              style={[styles.primaryActionBtn, { backgroundColor: colors.primary }]}
-              onPress={handleCopy}
+              style={[
+                styles.copyTextBtn,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+              onPress={handleCopyText}
               activeOpacity={0.8}
             >
-              <Ionicons name="copy-outline" size={18} color="#FFFFFF" />
-              <Text style={styles.primaryActionBtnText}>
-                முழு உரையை நகலெடு (Copy Formatted Text)
+              <Ionicons name="copy-outline" size={18} color={colors.primary} />
+              <Text style={[styles.copyTextBtnTitle, { color: colors.text }]}>
+                குறள் உரையை நகலெடு (Copy Kural Text)
               </Text>
             </TouchableOpacity>
           </View>
@@ -511,7 +699,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderTopWidth: 1,
-    maxHeight: '90%',
+    maxHeight: '92%',
     width: '100%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
@@ -524,8 +712,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 14,
+    paddingTop: 16,
+    paddingBottom: 12,
     borderBottomWidth: 1,
   },
   headerLeft: {
@@ -560,6 +748,33 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 10,
   },
+  tabBar: {
+    flexDirection: 'row',
+    marginHorizontal: 18,
+    marginTop: 10,
+    marginBottom: 4,
+    padding: 3,
+    borderRadius: 12,
+  },
+  tabBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    borderRadius: 9,
+  },
+  tabBtnActive: {
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  tabBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
   toastBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -567,8 +782,8 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 9,
     paddingHorizontal: 16,
-    marginHorizontal: 16,
-    marginTop: 10,
+    marginHorizontal: 18,
+    marginTop: 8,
     borderRadius: 10,
   },
   toastBannerText: {
@@ -586,7 +801,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: '700',
     marginBottom: 10,
     letterSpacing: 0.2,
@@ -612,10 +827,53 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontWeight: '500',
   },
+  imagePreviewContainer: {
+    marginBottom: 20,
+  },
+  previewTagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 8,
+  },
+  previewLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  imageCardWrapper: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+    marginBottom: 14,
+  },
+  heroShareImageBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  heroShareImageBtnText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
   optionsRow: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   optionChip: {
     flex: 1,
@@ -649,16 +907,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  previewTagRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  previewLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
   charBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -672,24 +920,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-  },
-  previewFooter: {
-    marginTop: 10,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  quickCopyBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 2,
-    paddingHorizontal: 6,
-  },
-  quickCopyText: {
-    fontSize: 12,
-    fontWeight: '600',
   },
   socialGrid: {
     gap: 10,
@@ -741,20 +971,20 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: 18,
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderTopWidth: 1,
   },
-  primaryActionBtn: {
+  copyTextBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 13,
+    paddingVertical: 12,
     borderRadius: 12,
+    borderWidth: 1,
   },
-  primaryActionBtnText: {
-    color: '#FFFFFF',
-    fontSize: 14.5,
+  copyTextBtnTitle: {
+    fontSize: 14,
     fontWeight: '700',
   },
 });

@@ -12,6 +12,7 @@ module.exports = {
     '^expo-file-system/legacy$': '<rootDir>/tests/__mocks__/expo-file-system/legacy.ts',
     '^expo-clipboard$': '<rootDir>/tests/__mocks__/expo-clipboard.ts',
     '^expo-sharing$': '<rootDir>/tests/__mocks__/expo-sharing.ts',
+    '^react-native-view-shot$': '<rootDir>/tests/__mocks__/react-native-view-shot.ts',
     '^@react-native-async-storage/async-storage$': '<rootDir>/tests/__mocks__/@react-native-async-storage/async-storage.ts',
     '^react-native$': '<rootDir>/tests/__mocks__/react-native.ts',
   },

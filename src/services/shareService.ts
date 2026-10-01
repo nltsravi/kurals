@@ -53,6 +53,28 @@ export const ShareService = {
   },
 
   /**
+   * Shares a captured Kural image card via the native share sheet
+   * Supports WhatsApp Status, Instagram Stories/Feed, Facebook, Twitter, Photos, etc.
+   */
+  async shareImage(imageUri: string, title = 'திருக்குறள் | Thirukkural'): Promise<boolean> {
+    if (Platform.OS === 'web') {
+      return true;
+    }
+
+    const isAvailable = await Sharing.isAvailableAsync();
+    if (!isAvailable) {
+      throw new Error('Sharing is not supported on this platform');
+    }
+
+    await Sharing.shareAsync(imageUri, {
+      mimeType: 'image/png',
+      dialogTitle: title,
+      UTI: 'public.png',
+    });
+    return true;
+  },
+
+  /**
    * Shares text content using the native OS share dialog
    */
   async shareText(message: string, title = 'திருக்குறள் | Thirukkural'): Promise<boolean> {

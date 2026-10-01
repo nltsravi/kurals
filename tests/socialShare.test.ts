@@ -185,5 +185,20 @@ describe('Social Media Sharing Features', () => {
         expect.anything()
       );
     });
+
+    test('shares image file using expo-sharing', async () => {
+      const Sharing = require('expo-sharing');
+      const result = await ShareService.shareImage('file:///tmp/kural-card.png', 'Test Title');
+
+      expect(result).toBe(true);
+      expect(Sharing.shareAsync).toHaveBeenCalledWith(
+        'file:///tmp/kural-card.png',
+        expect.objectContaining({
+          mimeType: 'image/png',
+          dialogTitle: 'Test Title',
+        })
+      );
+    });
   });
 });
+
