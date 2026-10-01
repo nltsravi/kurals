@@ -1,7 +1,57 @@
 import { Platform } from 'react-native';
-import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { KuralService } from './kuralService';
+
+type NotificationsModule = typeof import('expo-notifications');
+
+let _notifications: NotificationsModule | null = null;
+
+/**
+ * Checks whether the app is currently running inside the Expo Go client app.
+ */
+function isExpoGo(): boolean {
+  try {
+    const Constants = require('expo-constants').default;
+    if (Constants?.appOwnership === 'expo') {
+      return true;
+    }
+  } catch {
+    // Ignore
+  }
+
+  try {
+    const { requireNativeModule } = require('expo-modules-core');
+    if (typeof requireNativeModule === 'function' && requireNativeModule('ExpoGo') != null) {
+      return true;
+    }
+  } catch {
+    // Ignore
+  }
+
+  return false;
+}
+
+/**
+ * Safely resolves the expo-notifications module.
+ * Remote notifications were removed from Expo Go on Android with SDK 53+.
+ * Top-level import in Expo Go on Android throws an unhandled fatal error on app launch.
+ * This helper lazily requires the module only when not running in Expo Go on Android.
+ */
+function getNotifications(): NotificationsModule | null {
+  if (Platform.OS === 'android' && isExpoGo()) {
+    return null;
+  }
+
+  if (!_notifications) {
+    try {
+      _notifications = require('expo-notifications');
+    } catch (e) {
+      console.warn('[NotificationService] expo-notifications unavailable:', e);
+      return null;
+    }
+  }
+  return _notifications;
+}
 
 export interface NotificationSettings {
   enabled: boolean;
@@ -22,23 +72,42 @@ let isHandlerConfigured = false;
 
 function ensureNotificationHandler() {
   if (isHandlerConfigured) return;
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowBanner: true,
-      shouldShowList: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-    }),
-  });
-  isHandlerConfigured = true;
+  const Notifications = getNotifications();
+  if (!Notifications) return;
+
+  try {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
+    isHandlerConfigured = true;
+  } catch (e) {
+    console.warn('[NotificationService] Failed to set notification handler:', e);
+  }
 }
 
 export const NotificationService = {
+  /**
+   * Returns whether notifications are supported in the current runtime environment.
+   */
+  isAvailable(): boolean {
+    return getNotifications() !== null;
+  },
+
   /**
    * Initializes the notification handler, creates Android notification channel,
    * and refreshes the schedule if notifications are currently enabled.
    */
   async initAsync(): Promise<void> {
+    const Notifications = getNotifications();
+    if (!Notifications) {
+      return;
+    }
+
     ensureNotificationHandler();
 
     if (Platform.OS === 'android') {
@@ -46,7 +115,7 @@ export const NotificationService = {
         await Notifications.setNotificationChannelAsync(NOTIFICATION_CHANNEL_ID, {
           name: 'தினசரி திருக்குறள் (Daily Thirukkural)',
           description: 'Daily Thirukkural couplets in Tamil and English',
-          importance: Notifications.AndroidImportance.HIGH,
+          importance: Notifications.AndroidImportance?.HIGH ?? 4,
           vibrationPattern: [0, 250, 250, 250],
           lightColor: '#FF7C0A',
         });
@@ -103,6 +172,10 @@ export const NotificationService = {
    * Checks current permission status or requests permission from the OS.
    */
   async requestPermissionsAsync(): Promise<boolean> {
+    const Notifications = getNotifications();
+    if (!Notifications) {
+      return false;
+    }
     try {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
@@ -122,6 +195,11 @@ export const NotificationService = {
    * plus a daily repeating trigger as an indefinite fallback.
    */
   async scheduleDailyNotificationsAsync(hour: number, minute: number): Promise<boolean> {
+    const Notifications = getNotifications();
+    if (!Notifications) {
+      return false;
+    }
+
     ensureNotificationHandler();
 
     const hasPermission = await this.requestPermissionsAsync();
@@ -158,7 +236,7 @@ export const NotificationService = {
             sound: true,
           },
           trigger: {
-            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            type: Notifications.SchedulableTriggerInputTypes?.DATE ?? ('date' as any),
             date: targetDate,
             channelId: NOTIFICATION_CHANNEL_ID,
           },
@@ -179,7 +257,7 @@ export const NotificationService = {
           sound: true,
         },
         trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DAILY,
+          type: Notifications.SchedulableTriggerInputTypes?.DAILY ?? ('daily' as any),
           hour,
           minute,
           channelId: NOTIFICATION_CHANNEL_ID,
@@ -196,6 +274,10 @@ export const NotificationService = {
    * Cancels all scheduled Thirukkural notifications.
    */
   async cancelNotificationsAsync(): Promise<void> {
+    const Notifications = getNotifications();
+    if (!Notifications) {
+      return;
+    }
     try {
       await Notifications.cancelAllScheduledNotificationsAsync();
     } catch (e) {
@@ -207,6 +289,13 @@ export const NotificationService = {
    * Immediately delivers a test notification with a random Thirukkural in Tamil & English.
    */
   async sendTestNotificationAsync(): Promise<string> {
+    const Notifications = getNotifications();
+    if (!Notifications) {
+      throw new Error(
+        'Android notifications in Expo Go require a development build. Use a development build (npx expo run:android) or EAS Build.'
+      );
+    }
+
     ensureNotificationHandler();
 
     const hasPermission = await this.requestPermissionsAsync();
@@ -234,6 +323,11 @@ export const NotificationService = {
    * opens the specific Kural.
    */
   addResponseListener(onKuralSelected: (kuralNumber: number) => void): { remove: () => void } {
+    const Notifications = getNotifications();
+    if (!Notifications) {
+      return { remove: () => {} };
+    }
+
     ensureNotificationHandler();
 
     // Check if the app was launched by tapping a notification
@@ -242,16 +336,19 @@ export const NotificationService = {
       if (typeof kuralNum === 'number') {
         onKuralSelected(kuralNum);
       }
-    });
+    }).catch(() => {});
 
-    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      const kuralNum = response?.notification?.request?.content?.data?.kuralNumber;
-      if (typeof kuralNum === 'number') {
-        onKuralSelected(kuralNum);
-      }
-    });
-
-    return subscription;
+    try {
+      const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+        const kuralNum = response?.notification?.request?.content?.data?.kuralNumber;
+        if (typeof kuralNum === 'number') {
+          onKuralSelected(kuralNum);
+        }
+      });
+      return subscription;
+    } catch {
+      return { remove: () => {} };
+    }
   },
 
   /**
