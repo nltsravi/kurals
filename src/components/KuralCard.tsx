@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-nativ
 import { Ionicons } from '@expo/vector-icons';
 import { Kural } from '../types/kural';
 import { useTheme } from '../context/ThemeContext';
+import { KuralCoupletText } from './KuralCoupletText';
 
 interface KuralCardProps {
   kural: Kural;
@@ -91,10 +92,15 @@ export const KuralCard: React.FC<KuralCardProps> = ({
         </View>
       </View>
 
-      <View style={styles.tamilContainer}>
-        <Text style={[styles.tamilLine, { color: colors.text }]}>{kural.line1}</Text>
-        <Text style={[styles.tamilLine, { color: colors.text }]}>{kural.line2}</Text>
-      </View>
+      <KuralCoupletText
+        line1={kural.line1}
+        line2={kural.line2}
+        tamil={kural.tamil}
+        color={colors.text}
+        baseFontSize={16.5}
+        fontWeight="600"
+        containerStyle={styles.tamilContainer}
+      />
 
       {showTransliteration && kural.transliteration ? (
         <View style={[styles.transliterationContainer, { borderTopColor: colors.borderLight }]}>

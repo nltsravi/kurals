@@ -7,6 +7,8 @@ import {
   RawThirukkuralDataset,
 } from '../types/kural';
 
+import { formatKuralCouplet } from '../utils/text';
+
 // Load static bundled JSON datasets
 const rawDataset: RawThirukkuralDataset = require('../../assets/data/thirukkural.json');
 const rawDetailData: RawDetailRoot[] = require('../../assets/data/detail.json');
@@ -92,11 +94,13 @@ function initData() {
     const chNum = raw.chapterNumber || Math.floor((num - 1) / 10) + 1;
     const chapter = chapterMap.get(chNum);
 
+    const { line1, line2, tamil } = formatKuralCouplet(raw.Line1, raw.Line2);
+
     const kural: Kural = {
       number: num,
-      line1: raw.Line1 || '',
-      line2: raw.Line2 || '',
-      tamil: `${raw.Line1 || ''}\n${raw.Line2 || ''}`,
+      line1,
+      line2,
+      tamil,
       transliteration1: raw.transliteration1 || '',
       transliteration2: raw.transliteration2 || '',
       transliteration: `${raw.transliteration1 || ''}\n${raw.transliteration2 || ''}`.trim(),

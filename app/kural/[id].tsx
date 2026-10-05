@@ -17,6 +17,7 @@ import { AddToCollectionModal } from '../../src/components/AddToCollectionModal'
 import { ExportModal } from '../../src/components/ExportModal';
 import { ShareModal } from '../../src/components/ShareModal';
 import { formatKuralText } from '../../src/utils/text';
+import { KuralCoupletText } from '../../src/components/KuralCoupletText';
 
 export default function KuralDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -147,10 +148,15 @@ export default function KuralDetailScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.tamilTextContainer}>
-            <Text style={[styles.tamilLine, { color: colors.text }]}>{kural.line1}</Text>
-            <Text style={[styles.tamilLine, { color: colors.text }]}>{kural.line2}</Text>
-          </View>
+          <KuralCoupletText
+            line1={kural.line1}
+            line2={kural.line2}
+            tamil={kural.tamil}
+            color={colors.text}
+            baseFontSize={18.5}
+            fontWeight="700"
+            containerStyle={styles.tamilTextContainer}
+          />
 
           {kural.transliteration ? (
             <View style={[styles.transliterationContainer, { borderTopColor: colors.borderLight }]}>

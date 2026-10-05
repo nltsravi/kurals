@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Kural } from '../types/kural';
 import { MeaningType } from '../utils/text';
+import { KuralCoupletText } from './KuralCoupletText';
 
 export interface KuralImageCardProps {
   kural: Kural;
@@ -111,10 +112,20 @@ export const KuralImageCard = React.forwardRef<View, KuralImageCardProps>(
             </View>
           </View>
 
-          {/* Main Hero Kural Box */}
+          {/* Main Hero Kural Box: Line 1 (4 words) & Line 2 (3 words) with adjusted font */}
           <View style={styles.heroKuralBox}>
-            <Text style={styles.kuralLine1}>{kural.line1}</Text>
-            <Text style={styles.kuralLine2}>{kural.line2}</Text>
+            <KuralCoupletText
+              line1={kural.line1}
+              line2={kural.line2}
+              tamil={kural.tamil}
+              color="#341A06"
+              baseFontSize={width ? Math.round(19.5 * Math.min(1.2, Math.max(0.85, width / 400))) : 19.5}
+              containerWidth={width ? width - 76 : undefined}
+              align="center"
+              fontWeight="800"
+              letterSpacing={0.2}
+              containerStyle={styles.heroKuralTextContainer}
+            />
           </View>
 
           {/* Tamil Commentary Section */}
@@ -372,12 +383,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2D7C2',
     borderRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
     marginBottom: 14,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
+    width: '100%',
+  },
+  heroKuralTextContainer: {
+    width: '100%',
+    alignItems: 'center',
   },
   kuralLine1: {
     fontSize: 19.5,

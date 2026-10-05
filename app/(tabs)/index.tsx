@@ -16,6 +16,7 @@ import { useTheme } from '../../src/context/ThemeContext';
 import { AddToCollectionModal } from '../../src/components/AddToCollectionModal';
 import { ShareModal } from '../../src/components/ShareModal';
 import { CATEGORY_COLORS } from '../../src/constants/appConstants';
+import { KuralCoupletText } from '../../src/components/KuralCoupletText';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -140,14 +141,15 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.kuralTextContainer}>
-              <Text style={[styles.kuralTamilLine, { color: colors.text }]}>
-                {randomKural.line1}
-              </Text>
-              <Text style={[styles.kuralTamilLine, { color: colors.text }]}>
-                {randomKural.line2}
-              </Text>
-            </View>
+            <KuralCoupletText
+              line1={randomKural.line1}
+              line2={randomKural.line2}
+              tamil={randomKural.tamil}
+              color={colors.text}
+              baseFontSize={17}
+              fontWeight="600"
+              containerStyle={styles.kuralTextContainer}
+            />
 
             {randomKural.transliteration ? (
               <View style={[styles.kuralTranslitContainer, { borderTopColor: colors.borderLight }]}>

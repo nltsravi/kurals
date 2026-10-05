@@ -478,7 +478,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                     </View>
                   </View>
 
-                  <Text style={[styles.previewText, { color: colors.textSecondary }]} numberOfLines={9}>
+                  <Text style={[styles.previewText, { color: colors.textSecondary }]}>
                     {formattedShareText}
                   </Text>
                 </View>

@@ -19,6 +19,7 @@ import { ExportModal } from '../../src/components/ExportModal';
 import { ShareModal } from '../../src/components/ShareModal';
 import { EmptyState } from '../../src/components/EmptyState';
 import { Kural } from '../../src/types/kural';
+import { KuralCoupletText } from '../../src/components/KuralCoupletText';
 
 export default function CollectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -217,8 +218,15 @@ export default function CollectionDetailScreen() {
                   </Text>
                 </View>
 
-                <Text style={[styles.tamilLine, { color: colors.text }]}>{item.line1}</Text>
-                <Text style={[styles.tamilLine, { color: colors.text }]}>{item.line2}</Text>
+                <KuralCoupletText
+                  line1={item.line1}
+                  line2={item.line2}
+                  tamil={item.tamil}
+                  color={colors.text}
+                  baseFontSize={16}
+                  fontWeight="600"
+                  containerStyle={{ marginVertical: 4 }}
+                />
 
                 {item.transliteration ? (
                   <Text style={[styles.translitText, { color: colors.textSecondary }]}>
