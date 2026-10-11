@@ -4,10 +4,10 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  SafeAreaView,
   ActivityIndicator,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { SearchBar } from '../../src/components/SearchBar';
 import { KuralCard } from '../../src/components/KuralCard';
@@ -105,7 +105,7 @@ export default function SearchScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: colors.text }]}>தேடல்</Text>
         <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
@@ -140,7 +140,6 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? 24 : 0,
   },
   header: {
     paddingHorizontal: 20,

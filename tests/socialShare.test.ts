@@ -200,5 +200,110 @@ describe('Social Media Sharing Features', () => {
       );
     });
   });
+
+  describe('KuralImageCard social status image card', () => {
+    test('KuralImageCard is defined and configured for left alignment', () => {
+      const { KuralImageCard } = require('../src/components/KuralImageCard');
+      expect(KuralImageCard).toBeDefined();
+      expect(KuralImageCard.displayName).toBe('KuralImageCard');
+    });
+
+    test('renders status card container with rounded border', () => {
+      const { KuralImageCard } = require('../src/components/KuralImageCard');
+      const cardElement = KuralImageCard.render({ kural: kural1 }, null);
+      const cardContainer = cardElement.props.children;
+
+      const flatStyle = Array.isArray(cardContainer.props.style)
+        ? Object.assign({}, ...cardContainer.props.style.filter(Boolean))
+        : cardContainer.props.style;
+      expect(flatStyle.borderWidth).toBe(1.5);
+      expect(flatStyle.borderColor).toBe('#DFD4BD');
+    });
+
+    test('renders KuralCoupletText with left alignment by default in image card', () => {
+      const { KuralImageCard } = require('../src/components/KuralImageCard');
+      const cardElement = KuralImageCard.render({ kural: kural1 }, null);
+      expect(cardElement).toBeDefined();
+
+      // Find heroKuralBox in card children (child 1)
+      const cardContainer = cardElement.props.children;
+      const heroKuralBox = cardContainer.props.children[1];
+      const coupletComponent = heroKuralBox.props.children;
+
+      expect(coupletComponent.props.align).toBe('left');
+      expect(coupletComponent.props.line1Style).toEqual(
+        expect.arrayContaining([expect.objectContaining({ textAlign: 'left' })])
+      );
+      expect(coupletComponent.props.line2Style).toEqual(
+        expect.arrayContaining([expect.objectContaining({ textAlign: 'left' })])
+      );
+    });
+
+    test('allows customizing alignment to right or center if needed', () => {
+      const { KuralImageCard } = require('../src/components/KuralImageCard');
+      const cardElement = KuralImageCard.render({ kural: kural1, align: 'center' }, null);
+      const cardContainer = cardElement.props.children;
+      const heroKuralBox = cardContainer.props.children[1];
+      const coupletComponent = heroKuralBox.props.children;
+
+      expect(coupletComponent.props.align).toBe('center');
+    });
+
+    test('renders header with app icon on left, Tamil title in center, and Kural number on right', () => {
+      const { KuralImageCard } = require('../src/components/KuralImageCard');
+      const cardElement = KuralImageCard.render({ kural: kural1 }, null);
+      const cardContainer = cardElement.props.children;
+      const headerRow = cardContainer.props.children[0];
+
+      // Header has 3 columns: left (app icon), center (title), right (kural number)
+      const [headerLeft, headerCenter, headerRight] = headerRow.props.children;
+
+      // Left: App icon image
+      const appIconImage = headerLeft.props.children;
+      expect(appIconImage).toBeDefined();
+
+      // Center: "திருக்குறள்"
+      const centerTitle = headerCenter.props.children;
+      expect(centerTitle.props.children).toBe('திருக்குறள்');
+
+      // Right: Kural number badge
+      const numberBadge = headerRight.props.children;
+      const numberText = numberBadge.props.children;
+      expect(numberText.props.children).toEqual(['குறள் ', 1]);
+    });
+
+    test('renders body with bold and highlighted Thirukkural couplet', () => {
+      const { KuralImageCard } = require('../src/components/KuralImageCard');
+      const cardElement = KuralImageCard.render({ kural: kural1 }, null);
+      const cardContainer = cardElement.props.children;
+      const heroKuralBox = cardContainer.props.children[1];
+      const coupletComponent = heroKuralBox.props.children;
+
+      // Highlighted styling on container
+      const flatHeroBoxStyle = Array.isArray(heroKuralBox.props.style)
+        ? Object.assign({}, ...heroKuralBox.props.style.filter(Boolean))
+        : heroKuralBox.props.style;
+      expect(flatHeroBoxStyle.backgroundColor).toBe('#F5EBD9');
+      expect(flatHeroBoxStyle.borderLeftColor).toBe('#D97706');
+
+      // Bold couplet text (fontWeight 900)
+      expect(coupletComponent.props.fontWeight).toBe('900');
+    });
+
+    test('renders footer with category and chapter name on the right and no copyright text', () => {
+      const { KuralImageCard } = require('../src/components/KuralImageCard');
+      const cardElement = KuralImageCard.render({ kural: kural1 }, null);
+      const cardContainer = cardElement.props.children;
+      const footerRow = cardContainer.props.children[4];
+
+      expect(footerRow).toBeDefined();
+      const footerText = footerRow.props.children;
+      expect(footerText.props.children).toBe('அறத்துப்பால் | கடவுள் வாழ்த்து');
+      expect(footerText.props.children).not.toContain('Neolumina');
+      expect(footerText.props.children).not.toContain('©');
+    });
+  });
 });
+
+
 

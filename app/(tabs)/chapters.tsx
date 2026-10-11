@@ -5,9 +5,9 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  SafeAreaView,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { KuralService } from '../../src/services/kuralService';
 import { Category, Chapter } from '../../src/types/kural';
@@ -36,7 +36,7 @@ export default function ChaptersScreen() {
   const activeCategory = categories.find((c) => c.number === selectedCategoryNum) || categories[0];
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={[]} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       {/* Category Pills Header */}
       <View style={[styles.pillsContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         {categories.map((cat) => {
@@ -118,7 +118,6 @@ export default function ChaptersScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? 24 : 0,
   },
   pillsContainer: {
     flexDirection: 'row',

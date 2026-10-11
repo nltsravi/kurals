@@ -5,6 +5,7 @@ import 'react-native-reanimated';
 import { ThemeProvider, useTheme } from '../src/context/ThemeContext';
 import { CollectionProvider } from '../src/context/CollectionContext';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { NotificationService } from '../src/services/notificationService';
 
 export { ErrorBoundary } from 'expo-router';
@@ -88,10 +89,12 @@ function RootNavigation() {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <CollectionProvider>
-        <RootNavigation />
-      </CollectionProvider>
-    </ThemeProvider>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <ThemeProvider>
+        <CollectionProvider>
+          <RootNavigation />
+        </CollectionProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

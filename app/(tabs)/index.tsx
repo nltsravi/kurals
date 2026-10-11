@@ -5,9 +5,9 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { KuralService } from '../../src/services/kuralService';
@@ -36,7 +36,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -44,9 +44,6 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.headerContainer}>
           <View style={styles.headerTitleRow}>
-            <View style={[styles.valluvarBadge, { backgroundColor: colors.primaryLight }]}>
-              <Text style={[styles.valluvarIcon, { color: colors.primary }]}>ௐ</Text>
-            </View>
             <View style={styles.titleColumn}>
               <Text style={[styles.mainTitle, { color: colors.text }]}>திருக்குறள்</Text>
               <Text style={[styles.subTitle, { color: colors.textSecondary }]}>Thirukkural</Text>
@@ -265,7 +262,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? 24 : 0,
   },
   scrollContent: {
     paddingBottom: 40,
@@ -278,18 +274,6 @@ const styles = StyleSheet.create({
   headerTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-  },
-  valluvarBadge: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  valluvarIcon: {
-    fontSize: 26,
-    fontWeight: '700',
   },
   titleColumn: {
     flex: 1,

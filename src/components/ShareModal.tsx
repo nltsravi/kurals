@@ -205,13 +205,17 @@ export const ShareModal: React.FC<ShareModalProps> = ({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <Pressable style={styles.overlay} onPress={onClose}>
+      <View style={styles.overlay}>
         <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={onClose}
+          accessibilityLabel="Close share modal"
+        />
+        <View
           style={[
             styles.modalContainer,
             { backgroundColor: colors.background, borderColor: colors.border },
           ]}
-          onPress={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <View style={[styles.header, { borderBottomColor: colors.borderLight }]}>
@@ -305,7 +309,11 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           )}
 
           <ScrollView
-            showsVerticalScrollIndicator={false}
+            style={styles.scrollView}
+            showsVerticalScrollIndicator={true}
+            nestedScrollEnabled={true}
+            keyboardShouldPersistTaps="handled"
+            bounces={true}
             contentContainerStyle={styles.scrollContent}
           >
             {/* Meaning Selector (Live-updates Image and Text) */}
@@ -316,6 +324,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
+                nestedScrollEnabled={true}
                 contentContainerStyle={styles.meaningPillsContainer}
               >
                 {MEANING_OPTIONS.map((item) => {
@@ -683,8 +692,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               </Text>
             </TouchableOpacity>
           </View>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 };
@@ -699,6 +708,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderTopWidth: 1,
+    height: '90%',
     maxHeight: '92%',
     width: '100%',
     shadowColor: '#000',
@@ -706,6 +716,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 10,
+    overflow: 'hidden',
+  },
+  scrollView: {
+    flex: 1,
+    width: '100%',
   },
   header: {
     flexDirection: 'row',
@@ -795,7 +810,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 18,
-    paddingBottom: 24,
+    paddingBottom: 36,
   },
   sectionBlock: {
     marginBottom: 16,

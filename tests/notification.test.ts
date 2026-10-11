@@ -88,4 +88,47 @@ describe('NotificationService', () => {
     await NotificationService.cancelNotificationsAsync();
     expect(Notifications.cancelAllScheduledNotificationsAsync).toHaveBeenCalled();
   });
+
+  test('does not schedule duplicate notifications for the same day or repeating fallback triggers', async () => {
+    await NotificationService.scheduleDailyNotificationsAsync(8, 0);
+
+    const calls = (Notifications.scheduleNotificationAsync as jest.Mock).mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+
+    // Ensure NO daily repeating trigger is scheduled alongside date triggers (which caused duplicates)
+    for (const call of calls) {
+      const trigger = call[0].trigger;
+      expect(trigger.type).not.toBe('daily');
+      expect(trigger.type).toBe('date');
+      expect(trigger.date).toBeInstanceOf(Date);
+    }
+
+    // Ensure all scheduled trigger dates are unique
+    const scheduledTimestamps = calls.map((call) => (call[0].trigger.date as Date).getTime());
+    const uniqueTimestamps = new Set(scheduledTimestamps);
+    expect(uniqueTimestamps.size).toBe(scheduledTimestamps.length);
+  });
+
+  test('schedules distinct kurals across the rolling batch', async () => {
+    await NotificationService.scheduleDailyNotificationsAsync(8, 0);
+
+    const calls = (Notifications.scheduleNotificationAsync as jest.Mock).mock.calls;
+    const kuralNumbers = calls.map((call) => call[0].content.data.kuralNumber);
+    const uniqueKuralNumbers = new Set(kuralNumbers);
+    expect(uniqueKuralNumbers.size).toBe(kuralNumbers.length);
+  });
+
+  test('cancels notifications on initAsync if notifications are disabled', async () => {
+    await NotificationService.saveSettings({
+      enabled: false,
+      hour: 8,
+      minute: 0,
+    });
+
+    jest.clearAllMocks();
+    await NotificationService.initAsync();
+
+    expect(Notifications.cancelAllScheduledNotificationsAsync).toHaveBeenCalled();
+    expect(Notifications.scheduleNotificationAsync).not.toHaveBeenCalled();
+  });
 });

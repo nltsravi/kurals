@@ -202,4 +202,20 @@ describe('Status update text and social sharing word counts', () => {
     expect(lines[0].split(' ')).toHaveLength(4);
     expect(lines[1].split(' ')).toHaveLength(3);
   });
+
+  test('verifies Kural 233 strictly has 4 words in line 1 and 3 words in line 2', () => {
+    const kural233 = KuralService.getKuralByNumber(233)!;
+    expect(kural233).toBeDefined();
+    const words1 = kural233.line1.trim().split(/\s+/);
+    const words2 = kural233.line2.trim().split(/\s+/);
+    expect(words1).toHaveLength(4);
+    expect(words2).toHaveLength(3);
+    expect(kural233.line1).toBe('ஒன்றா உலகத்து உயர்ந்த புகழல்லால்');
+    expect(kural233.line2).toBe('பொன்றாது நிற்பதொன் றில்.');
+
+    // Font size should properly scale down so all 4 words fit in standard card containers
+    const { fontSize } = calculateCoupletFontSizes(kural233.line1, kural233.line2, 17, 300);
+    expect(fontSize).toBeLessThan(16);
+    expect(fontSize).toBeGreaterThanOrEqual(13);
+  });
 });

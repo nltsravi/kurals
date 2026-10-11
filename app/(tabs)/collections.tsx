@@ -5,10 +5,10 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  SafeAreaView,
   Alert,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useCollections } from '../../src/context/CollectionContext';
@@ -62,7 +62,7 @@ export default function CollectionsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={[]} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <View>
           <Text style={[styles.headerTitle, { color: colors.text }]}>என் தொகுப்புகள்</Text>
@@ -119,7 +119,6 @@ export default function CollectionsScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    paddingTop: Platform.OS === 'android' ? 24 : 0,
   },
   header: {
     flexDirection: 'row',

@@ -3,9 +3,23 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/context/ThemeContext';
 import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
+
+  // On devices with on-screen navigation buttons (such as Samsung 3-button nav, e.g. Samsung M47),
+  // insets.bottom accounts for the system navigation bar (typically ~48dp).
+  // Dynamically calculate paddingBottom and height using safe area insets to prevent the system nav bar
+  // from overlapping tab icons and labels.
+  const tabBottomPadding = Platform.OS === 'ios'
+    ? (insets.bottom > 0 ? insets.bottom : 8)
+    : (insets.bottom > 0 ? insets.bottom + 6 : 8);
+
+  const tabBarHeight = Platform.OS === 'ios'
+    ? (insets.bottom > 0 ? 56 + insets.bottom : 64)
+    : (58 + tabBottomPadding);
 
   return (
     <Tabs
@@ -13,12 +27,13 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.tabIconDefault,
         tabBarLabelPosition: 'below-icon',
+        tabBarHideOnKeyboard: Platform.OS === 'android',
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
-          height: Platform.OS === 'ios' ? 88 : 72,
+          height: tabBarHeight,
           paddingTop: 6,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+          paddingBottom: tabBottomPadding,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.05,
@@ -31,7 +46,7 @@ export default function TabLayout() {
           alignItems: 'center',
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10.5,
           fontWeight: '600',
           marginTop: 1,
           lineHeight: 14,

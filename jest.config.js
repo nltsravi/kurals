@@ -15,6 +15,7 @@ module.exports = {
     '^react-native-view-shot$': '<rootDir>/tests/__mocks__/react-native-view-shot.ts',
     '^@react-native-async-storage/async-storage$': '<rootDir>/tests/__mocks__/@react-native-async-storage/async-storage.ts',
     '^react-native$': '<rootDir>/tests/__mocks__/react-native.ts',
+    '\\.(png|jpg|jpeg|gif|webp|svg)$': '<rootDir>/tests/__mocks__/fileMock.js',
   },
   testMatch: ['**/tests/**/*.test.(ts|tsx|js)'],
 };

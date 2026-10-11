@@ -75,7 +75,7 @@ export function formatKuralCouplet(
   // Clean any trailing ellipsis from individual words
   allWords = allWords.map((w) => w.replace(/(\.{3}|…)+$/g, ''));
 
-  if (allWords.length === 7) {
+  if (allWords.length >= 7) {
     const line1 = allWords.slice(0, 4).join(' ');
     const line2 = allWords.slice(4).join(' ');
     return {

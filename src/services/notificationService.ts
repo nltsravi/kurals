@@ -69,6 +69,7 @@ const NOTIFICATION_SETTINGS_KEY = '@thirukkural_notification_settings_v1';
 const NOTIFICATION_CHANNEL_ID = 'daily-thirukkural';
 
 let isHandlerConfigured = false;
+let scheduleQueue: Promise<boolean> = Promise.resolve(true);
 
 function ensureNotificationHandler() {
   if (isHandlerConfigured) return;
@@ -131,6 +132,8 @@ export const NotificationService = {
         if (status === 'granted') {
           await this.scheduleDailyNotificationsAsync(settings.hour, settings.minute);
         }
+      } else {
+        await this.cancelNotificationsAsync();
       }
     } catch (e) {
       console.warn('Failed to initialize notification schedule:', e);
@@ -190,11 +193,21 @@ export const NotificationService = {
   },
 
   /**
-   * Schedules daily notifications with a random Thirukkural in Tamil & English.
-   * Schedules the next 14 upcoming days with distinct random Kurals,
-   * plus a daily repeating trigger as an indefinite fallback.
+   * Schedules daily notifications with distinct Thirukkural couplets in Tamil & English.
+   * Schedules a 30-day rolling window of future notifications (exactly one per day).
+   * Automatically serializes calls to prevent race conditions and duplicate schedules.
    */
   async scheduleDailyNotificationsAsync(hour: number, minute: number): Promise<boolean> {
+    scheduleQueue = scheduleQueue
+      .then(() => this._scheduleDailyNotificationsInternal(hour, minute))
+      .catch((err) => {
+        console.warn('[NotificationService] Failed to schedule daily notifications:', err);
+        return false;
+      });
+    return scheduleQueue;
+  },
+
+  async _scheduleDailyNotificationsInternal(hour: number, minute: number): Promise<boolean> {
     const Notifications = getNotifications();
     if (!Notifications) {
       return false;
@@ -207,23 +220,31 @@ export const NotificationService = {
       return false;
     }
 
-    // Cancel previously scheduled notifications
+    // Cancel previously scheduled notifications to ensure no duplicates
     await this.cancelNotificationsAsync();
 
     const now = new Date();
-    const DAYS_TO_SCHEDULE = 14;
+    const DAYS_TO_SCHEDULE = 30;
+    const usedKuralNumbers = new Set<number>();
+    let scheduledCount = 0;
 
-    for (let dayOffset = 0; dayOffset < DAYS_TO_SCHEDULE; dayOffset++) {
-      const targetDate = new Date();
-      targetDate.setDate(now.getDate() + dayOffset);
-      targetDate.setHours(hour, minute, 0, 0);
+    for (let dayOffset = 0; scheduledCount < DAYS_TO_SCHEDULE && dayOffset < DAYS_TO_SCHEDULE + 2; dayOffset++) {
+      const targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + dayOffset, hour, minute, 0, 0);
 
       // If target time for today has already passed, schedule starting from tomorrow
       if (targetDate.getTime() <= now.getTime()) {
         continue;
       }
 
-      const kural = KuralService.getRandomKural();
+      // Pick a distinct random Kural for each day
+      let kural = KuralService.getRandomKural();
+      let attempts = 0;
+      while (usedKuralNumbers.has(kural.number) && attempts < 30) {
+        kural = KuralService.getRandomKural();
+        attempts++;
+      }
+      usedKuralNumbers.add(kural.number);
+
       const title = `குறள் ${kural.number} • Thirukkural #${kural.number}`;
       const body = `${kural.line1}\n${kural.line2}\n\n${kural.translation}`;
 
@@ -241,33 +262,13 @@ export const NotificationService = {
             channelId: NOTIFICATION_CHANNEL_ID,
           },
         });
+        scheduledCount++;
       } catch (err) {
         console.warn(`Failed to schedule notification for day +${dayOffset}:`, err);
       }
     }
 
-    // Schedule fallback daily repeating trigger for day 15 onwards
-    try {
-      const fallbackKural = KuralService.getRandomKural();
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: `குறள் ${fallbackKural.number} • Thirukkural #${fallbackKural.number}`,
-          body: `${fallbackKural.line1}\n${fallbackKural.line2}\n\n${fallbackKural.translation}`,
-          data: { kuralNumber: fallbackKural.number },
-          sound: true,
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes?.DAILY ?? ('daily' as any),
-          hour,
-          minute,
-          channelId: NOTIFICATION_CHANNEL_ID,
-        },
-      });
-    } catch (err) {
-      console.warn('Failed to schedule repeating daily notification trigger:', err);
-    }
-
-    return true;
+    return scheduledCount > 0;
   },
 
   /**
