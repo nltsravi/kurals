@@ -177,9 +177,6 @@ export default function SettingsScreen() {
     Linking.openURL('https://nltsravi.github.io/kurals/');
   };
 
-  const handleOpenGithub = () => {
-    Linking.openURL('https://github.com/nltsravi/kurals');
-  };
 
   const handleCopyBuildNumber = async () => {
     try {
@@ -437,15 +434,10 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>செயலி பற்றி (About App)</Text>
 
           <View style={styles.aboutHeader}>
-            <View style={[styles.appLogo, { backgroundColor: colors.primaryLight }]}>
-              <Text style={{ fontSize: 24, color: colors.primary, fontWeight: '700' }}>குறள்</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.appName, { color: colors.text }]}>{APP_CONFIG.name}</Text>
-              <Text style={[styles.appVersion, { color: colors.textMuted }]}>
-                Version {APP_CONFIG.version} (Build {APP_CONFIG.buildNumber}) • com.nltsravi.kurals
-              </Text>
-            </View>
+            <Text style={[styles.appName, { color: colors.text }]}>{APP_CONFIG.name}</Text>
+            <Text style={[styles.appVersion, { color: colors.textMuted }]}>
+              Version {APP_CONFIG.version} (Build {APP_CONFIG.buildNumber}) • com.nltsravi.kurals
+            </Text>
           </View>
 
           <Text style={[styles.aboutDescription, { color: colors.textSecondary }]}>
@@ -453,25 +445,6 @@ export default function SettingsScreen() {
           </Text>
 
           <View style={[styles.divider, { backgroundColor: colors.borderLight, marginTop: 14 }]} />
-
-          <TouchableOpacity
-            style={[styles.actionRow, { paddingVertical: 10 }]}
-            onPress={handleOpenGithub}
-            accessibilityRole="button"
-          >
-            <View style={[styles.iconBadge, { backgroundColor: isDark ? colors.surface : '#F3F4F6' }]}>
-              <Ionicons name="logo-github" size={20} color={colors.text} />
-            </View>
-            <View style={styles.actionRowText}>
-              <Text style={[styles.actionLabel, { color: colors.text }]}>GitHub Repository</Text>
-              <Text style={[styles.actionSubtext, { color: colors.textSecondary }]}>
-                Open-source on GitHub (nltsravi/kurals)
-              </Text>
-            </View>
-            <Ionicons name="open-outline" size={16} color={colors.textMuted} />
-          </TouchableOpacity>
-
-          <View style={[styles.divider, { backgroundColor: colors.borderLight }]} />
 
           <TouchableOpacity
             style={[styles.actionRow, { paddingVertical: 10 }]}
@@ -501,6 +474,27 @@ export default function SettingsScreen() {
             </View>
             <Ionicons name="copy-outline" size={16} color={colors.textMuted} />
           </TouchableOpacity>
+
+          <View style={[styles.divider, { backgroundColor: colors.borderLight }]} />
+
+          <View style={[styles.actionRow, { paddingVertical: 10 }]}>
+            <View style={[styles.iconBadge, { backgroundColor: isDark ? colors.surface : '#F3F4F6' }]}>
+              <Ionicons name="shield-checkmark-outline" size={20} color={colors.primary} />
+            </View>
+            <View style={styles.actionRowText}>
+              <Text style={[styles.actionLabel, { color: colors.text }]}>பதிப்புரிமை (Copyright)</Text>
+              <Text style={[styles.actionSubtext, { color: colors.textSecondary }]}>
+                {APP_CONFIG.copyright}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Footer Copyright */}
+        <View style={styles.footerContainer}>
+          <Text style={[styles.footerCopyrightText, { color: colors.textMuted }]}>
+            {APP_CONFIG.copyright}
+          </Text>
         </View>
       </ScrollView>
 
@@ -573,7 +567,7 @@ export default function SettingsScreen() {
             >
               <Ionicons name="globe-outline" size={18} color={colors.primary} />
               <Text style={[styles.webPolicyButtonText, { color: colors.primary }]}>
-                View Online Privacy Policy (GitHub Pages)
+                View Online Privacy Policy
               </Text>
             </TouchableOpacity>
 
@@ -860,26 +854,16 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   aboutHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
     marginTop: 8,
     marginBottom: 12,
   },
-  appLogo: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   appName: {
-    fontSize: 17,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '800',
   },
   appVersion: {
     fontSize: 12,
-    marginTop: 2,
+    marginTop: 4,
   },
   aboutDescription: {
     fontSize: 13,
@@ -1111,5 +1095,15 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  footerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 10,
+    paddingBottom: 24,
+  },
+  footerCopyrightText: {
+    fontSize: 12,
+    fontWeight: '500',
   },
 });

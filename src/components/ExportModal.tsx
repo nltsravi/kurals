@@ -45,7 +45,17 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       }
 
       onClose();
-      await ShareService.shareFile(fileUri, `${title}.${format}`);
+      setTimeout(async () => {
+        try {
+          await ShareService.shareFile(fileUri, `${title}.${format}`);
+        } catch (shareErr) {
+          console.error('Share dialog error:', shareErr);
+          Alert.alert(
+            'Share Failed',
+            'Unable to open the share dialog. Please try again.'
+          );
+        }
+      }, 250);
     } catch (error) {
       console.error('Export error:', error);
       Alert.alert(

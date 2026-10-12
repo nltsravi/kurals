@@ -1,13 +1,30 @@
 import * as Print from 'expo-print';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
-import { AlignmentType, Document, HeadingLevel, Packer, Paragraph, TextRun, UnderlineType } from 'docx';
+import {
+  AlignmentType,
+  BorderStyle,
+  Document,
+  Footer,
+  Header,
+  HeadingLevel,
+  Packer,
+  Paragraph,
+  PageNumber,
+  TabStopPosition,
+  TabStopType,
+  TextRun,
+} from 'docx';
 import { Kural } from '../types/kural';
 import { sanitizeFilename } from '../utils/text';
+import { APP_ICON_BASE64, THIRUVALLUVAR_OUTLINE_BASE64 } from '../constants/exportAssets';
 
 /**
- * Generates an HTML document optimized for printing/PDF with only Tamil and English Kural text
- * Excludes header, date, collection name, translation, commentary, and metadata
+ * Generates an HTML document optimized for printing/PDF
+ * Includes header with app icon, Tamil title, and collection name;
+ * footer with copyright and page numbering;
+ * standing Thiruvalluvar outline watermark in each page;
+ * and structured Tamil/English Kurals.
  */
 export function generatePdfHtml(title: string, kurals: Kural[]): string {
   const kuralCardsHtml = kurals
@@ -40,15 +57,37 @@ export function generatePdfHtml(title: string, kurals: Kural[]): string {
   <html>
     <head>
       <meta charset="utf-8">
-      <title>Thirukkural</title>
+      <title>Thirukkuralkal</title>
       <style>
         @import url('https://fonts.googleapis.com/css2?family=Mukta+Malar:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
         @page {
           size: A4;
-          margin: 20mm 18mm 20mm 18mm;
+          margin: 16mm 16mm 18mm 16mm;
+          @bottom-left {
+            content: "© Neolumina Technology Solutions";
+            font-family: 'Mukta Malar', 'Noto Sans Tamil', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 10px;
+            font-weight: 500;
+            color: #64748B;
+            vertical-align: top;
+            padding-top: 8px;
+            border-top: 1px solid #E2E8F0;
+          }
+          @bottom-center {
+            content: "";
+            vertical-align: top;
+            border-top: 1px solid #E2E8F0;
+          }
           @bottom-right {
-            content: counter(page);
+            content: "Page " counter(page);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 10px;
+            font-weight: 500;
+            color: #64748B;
+            vertical-align: top;
+            padding-top: 8px;
+            border-top: 1px solid #E2E8F0;
           }
         }
 
@@ -61,26 +100,99 @@ export function generatePdfHtml(title: string, kurals: Kural[]): string {
           line-height: 1.6;
         }
 
+        /* Standing Thiruvalluvar outline watermark in each page without disturbing foreground text */
+        .watermark-container {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 52%;
+          max-width: 320px;
+          opacity: 0.06;
+          z-index: -1;
+          pointer-events: none;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .watermark-image {
+          width: 100%;
+          height: auto;
+          display: block;
+        }
+
+        table.doc-layout {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        thead.doc-header {
+          display: table-header-group;
+        }
+
+        .header-inner {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding-bottom: 8px;
+          border-bottom: 1.5px solid #E2E8F0;
+          margin-bottom: 4px;
+        }
+
+        .header-left {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .app-icon {
+          width: 22px;
+          height: 22px;
+          border-radius: 5px;
+          object-fit: cover;
+          vertical-align: middle;
+        }
+
+        .app-title {
+          font-size: 15px;
+          font-weight: 700;
+          color: #1E293B;
+          letter-spacing: 0.2px;
+        }
+
+        .header-right {
+          display: flex;
+          align-items: center;
+        }
+
+        .collection-name {
+          font-size: 13.5px;
+          font-weight: 600;
+          color: #D97706;
+          letter-spacing: 0.2px;
+        }
+
         .kural-card {
-          padding: 14px 0 16px 0;
+          padding: 13px 0 15px 0;
           border-bottom: 1px solid #E2E8F0;
           page-break-inside: avoid;
         }
 
         .kural-badge {
-          font-size: 13px;
+          font-size: 12.5px;
           font-weight: 700;
           color: #FF7C0A;
-          margin-bottom: 6px;
+          margin-bottom: 5px;
           letter-spacing: 0.3px;
         }
 
         .tamil-text {
-          margin: 4px 0 6px 0;
+          margin: 4px 0 5px 0;
         }
 
         .tamil-line {
-          font-size: 18px;
+          font-size: 17.5px;
           font-weight: 600;
           color: #0F172A;
           margin: 3px 0;
@@ -88,11 +200,11 @@ export function generatePdfHtml(title: string, kurals: Kural[]): string {
         }
 
         .english-text {
-          margin: 6px 0 0 0;
+          margin: 5px 0 0 0;
         }
 
         .english-line {
-          font-size: 14.5px;
+          font-size: 14px;
           font-style: italic;
           color: #475569;
           margin: 2px 0;
@@ -101,9 +213,34 @@ export function generatePdfHtml(title: string, kurals: Kural[]): string {
       </style>
     </head>
     <body>
-      <div class="content">
-        ${kuralCardsHtml}
+      <div class="watermark-container">
+        <img class="watermark-image" src="data:image/png;base64,${THIRUVALLUVAR_OUTLINE_BASE64}" alt="" />
       </div>
+
+      <table class="doc-layout">
+        <thead class="doc-header">
+          <tr>
+            <td>
+              <div class="header-inner">
+                <div class="header-left">
+                  <img class="app-icon" src="data:image/png;base64,${APP_ICON_BASE64}" alt="App Icon" />
+                  <span class="app-title">திருக்குறள்கள்</span>
+                </div>
+                ${title ? `<div class="header-right"><span class="collection-name">${title}</span></div>` : ''}
+              </div>
+            </td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="content">
+                ${kuralCardsHtml}
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </body>
   </html>
   `;
@@ -149,23 +286,30 @@ export const ExportService = {
 
     const result = await Print.printToFileAsync({
       html,
-      base64: false,
+      base64: true,
     });
+
+    const safeTitle = sanitizeFilename(title);
+    const targetPath = `${FileSystem.cacheDirectory}${safeTitle}.pdf`;
+
+    if (result?.base64) {
+      await FileSystem.writeAsStringAsync(targetPath, result.base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      return targetPath;
+    }
 
     const uri = result?.uri;
     if (!uri) {
       throw new Error('PDF generation failed to produce a file');
     }
 
-    const safeTitle = sanitizeFilename(title);
-    const newPath = `${FileSystem.cacheDirectory}${safeTitle}.pdf`;
-
     try {
-      await FileSystem.moveAsync({
+      await FileSystem.copyAsync({
         from: uri,
-        to: newPath,
+        to: targetPath,
       });
-      return newPath;
+      return targetPath;
     } catch {
       return uri;
     }
@@ -221,6 +365,64 @@ export const ExportService = {
       sections: [
         {
           properties: {},
+          headers: {
+            default: new Header({
+              children: [
+                new Paragraph({
+                  tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
+                  children: [
+                    new TextRun({
+                      text: 'திருக்குறள்கள்',
+                      bold: true,
+                      size: 22,
+                      color: '1E293B',
+                    }),
+                    new TextRun({
+                      text: title ? `\t${title}` : '',
+                      bold: true,
+                      size: 20,
+                      color: 'D97706',
+                    }),
+                  ],
+                  border: {
+                    bottom: {
+                      style: BorderStyle.SINGLE,
+                      size: 6,
+                      color: 'E2E8F0',
+                    },
+                  },
+                }),
+              ],
+            }),
+          },
+          footers: {
+            default: new Footer({
+              children: [
+                new Paragraph({
+                  tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
+                  children: [
+                    new TextRun({
+                      text: '© Neolumina Technology Solutions',
+                      size: 18,
+                      color: '64748B',
+                    }),
+                    new TextRun({
+                      children: ['\tPage ', PageNumber.CURRENT],
+                      size: 18,
+                      color: '64748B',
+                    }),
+                  ],
+                  border: {
+                    top: {
+                      style: BorderStyle.SINGLE,
+                      size: 6,
+                      color: 'E2E8F0',
+                    },
+                  },
+                }),
+              ],
+            }),
+          },
           children: docChildren,
         },
       ],
@@ -253,3 +455,4 @@ export const ExportService = {
     return filePath;
   },
 };
+

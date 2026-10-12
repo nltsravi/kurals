@@ -8,6 +8,9 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { NotificationService } from '../src/services/notificationService';
 
+import { View } from 'react-native';
+import { AppBottomTabBar } from '../src/components/AppBottomTabBar';
+
 export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
@@ -37,52 +40,55 @@ function RootNavigation() {
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      <Stack
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: colors.card,
-          },
-          headerTintColor: colors.primary,
-          headerTitleStyle: {
-            fontWeight: '700',
-            color: colors.text,
-          },
-          headerShadowVisible: false,
-          contentStyle: {
-            backgroundColor: colors.background,
-          },
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="kural/[id]"
-          options={{
-            title: 'குறள் விவரம்',
-            headerBackTitle: 'Back',
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <Stack
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: colors.card,
+            },
+            headerTintColor: colors.primary,
+            headerTitleStyle: {
+              fontWeight: '700',
+              color: colors.text,
+            },
+            headerShadowVisible: false,
+            contentStyle: {
+              backgroundColor: colors.background,
+            },
           }}
-        />
-        <Stack.Screen
-          name="chapter/[id]"
-          options={{
-            title: 'அதிகாரம்',
-            headerBackTitle: 'Chapters',
-          }}
-        />
-        <Stack.Screen
-          name="collections/create"
-          options={{
-            title: 'புதிய தொகுப்பு',
-            presentation: 'modal',
-          }}
-        />
-        <Stack.Screen
-          name="collections/[id]"
-          options={{
-            title: 'தொகுப்பு',
-            headerBackTitle: 'Collections',
-          }}
-        />
-      </Stack>
+        >
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="kural/[id]"
+            options={{
+              title: 'குறள் விவரம்',
+              headerBackTitle: 'Back',
+            }}
+          />
+          <Stack.Screen
+            name="chapter/[id]"
+            options={{
+              title: 'அதிகாரம்',
+              headerBackTitle: 'Chapters',
+            }}
+          />
+          <Stack.Screen
+            name="collections/create"
+            options={{
+              title: 'புதிய தொகுப்பு',
+              headerBackTitle: 'Back',
+            }}
+          />
+          <Stack.Screen
+            name="collections/[id]"
+            options={{
+              title: 'தொகுப்பு',
+              headerBackTitle: 'Collections',
+            }}
+          />
+        </Stack>
+        <AppBottomTabBar />
+      </View>
     </>
   );
 }

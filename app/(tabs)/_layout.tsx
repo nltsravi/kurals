@@ -29,16 +29,7 @@ export default function TabLayout() {
         tabBarLabelPosition: 'below-icon',
         tabBarHideOnKeyboard: Platform.OS === 'android',
         tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopColor: colors.border,
-          height: tabBarHeight,
-          paddingTop: 6,
-          paddingBottom: tabBottomPadding,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 4,
-          elevation: 8,
+          display: 'none',
         },
         tabBarItemStyle: {
           paddingVertical: 2,

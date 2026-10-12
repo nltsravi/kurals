@@ -44,7 +44,9 @@ export const ShareService = {
       ? 'com.adobe.pdf'
       : 'org.openxmlformats.wordprocessingml.document';
 
-    await Sharing.shareAsync(fileUri, {
+    const formattedUri = fileUri.startsWith('file://') ? fileUri : `file://${fileUri}`;
+
+    await Sharing.shareAsync(formattedUri, {
       mimeType,
       dialogTitle: title || 'Share Thirukkural Document',
       UTI: uti,

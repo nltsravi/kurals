@@ -118,7 +118,7 @@ export default function CollectionDetailScreen() {
         }}
       />
 
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <SafeAreaView edges={[]} style={[styles.safeArea, { backgroundColor: colors.background }]}>
         <FlatList
           data={kurals}
           keyExtractor={(item) => String(item.number)}

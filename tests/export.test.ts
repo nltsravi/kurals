@@ -31,7 +31,7 @@ describe('Document Export & Formatting', () => {
     expect(full).toContain(kural1.translation);
   });
 
-  test('generates valid HTML for PDF export with only Tamil and English Kurals', () => {
+  test('generates valid HTML for PDF export with header, footer, watermark, and Kurals', () => {
     const kural1 = KuralService.getKuralByNumber(1)!;
     const kural2 = KuralService.getKuralByNumber(2)!;
 
@@ -47,8 +47,22 @@ describe('Document Export & Formatting', () => {
     expect(html).toContain(kural2.line1);
     expect(html).toContain('Mukta Malar');
 
-    // Verify all excluded items
-    expect(html).not.toContain('My Test Collection');
+    // Verify Header elements
+    expect(html).toContain('app-icon');
+    expect(html).toContain('திருக்குறள்கள்');
+    expect(html).toContain('My Test Collection');
+    expect(html).toContain('border-bottom: 1.5px solid #E2E8F0;');
+
+    // Verify Footer elements
+    expect(html).toContain('© Neolumina Technology Solutions');
+    expect(html).toContain('counter(page)');
+    expect(html).toContain('border-top: 1px solid #E2E8F0;');
+
+    // Verify Watermark
+    expect(html).toContain('watermark-container');
+    expect(html).toContain('watermark-image');
+
+    // Verify excluded items (translations/commentaries are not in couplet card)
     expect(html).not.toContain('Generated on');
     expect(html).not.toContain(kural1.translation);
     expect(html).not.toContain(kural1.commentaryMV);

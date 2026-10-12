@@ -14,6 +14,7 @@ export const APP_CONFIG = {
   totalChapters: 133,
   totalCategories: 3,
   repoUrl: 'https://github.com/tk120404/thirukkural',
+  copyright: '© Neolumina Technology Solutions',
 };
 
 export const PALETTE = {
