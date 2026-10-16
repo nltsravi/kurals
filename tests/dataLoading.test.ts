@@ -64,6 +64,8 @@ describe('Thirukkural Data Loading & Integrity', () => {
     expect(kural.commentaryMV).toBeDefined();
     expect(kural.commentarySP).toBeDefined();
     expect(kural.commentaryMK).toBeDefined();
+    expect(kural.commentaryPRM).toBeDefined();
+    expect(kural.commentaryMNK).toBeDefined();
   });
 
   test('random Kural generator returns a valid Kural within range', () => {

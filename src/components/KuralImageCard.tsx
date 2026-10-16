@@ -28,8 +28,17 @@ export const KuralImageCard = React.forwardRef<View, KuralImageCardProps>(
       commentaryText = kural.commentarySP;
     } else if (meaningType === 'mk' && kural.commentaryMK) {
       commentaryText = kural.commentaryMK;
+    } else if (meaningType === 'prm' && kural.commentaryPRM) {
+      commentaryText = kural.commentaryPRM;
+    } else if (meaningType === 'mnk' && kural.commentaryMNK) {
+      commentaryText = kural.commentaryMNK;
     } else if (!commentaryText) {
-      commentaryText = kural.commentarySP || kural.commentaryMK || kural.explanation;
+      commentaryText =
+        kural.commentarySP ||
+        kural.commentaryMK ||
+        kural.commentaryPRM ||
+        kural.commentaryMNK ||
+        kural.explanation;
     }
 
     const categoryText = kural.categoryTamil || kural.categoryEnglish || '';

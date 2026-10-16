@@ -39,6 +39,22 @@ describe('Social Media Sharing Features', () => {
       expect(text).toContain(kural1.commentaryMK);
     });
 
+    test('formats Kural with Parimelazhagar commentary', () => {
+      const text = formatKuralForSocialShare(kural1, { meaningType: 'prm' });
+
+      expect(text).toContain('குறள் 1');
+      expect(text).toContain('பொருள் (பரிமேலழகர் உரை):');
+      expect(text).toContain(kural1.commentaryPRM);
+    });
+
+    test('formats Kural with Manakudavar commentary', () => {
+      const text = formatKuralForSocialShare(kural1, { meaningType: 'mnk' });
+
+      expect(text).toContain('குறள் 1');
+      expect(text).toContain('பொருள் (மணக்குடவர் உரை):');
+      expect(text).toContain(kural1.commentaryMNK);
+    });
+
     test('formats Kural with English translation', () => {
       const text = formatKuralForSocialShare(kural1, { meaningType: 'translation' });
 

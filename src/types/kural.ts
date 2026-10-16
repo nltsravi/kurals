@@ -6,6 +6,8 @@ export interface RawKuralItem {
   mv?: string;
   sp?: string;
   mk?: string;
+  prm?: string;
+  mnk?: string;
   explanation?: string;
   couplet?: string;
   transliteration1?: string;
@@ -108,6 +110,8 @@ export interface Kural {
   commentaryMV: string;
   commentarySP: string;
   commentaryMK: string;
+  commentaryPRM: string;
+  commentaryMNK: string;
   chapterNumber: number;
   chapterNameTamil: string;
   chapterNameEnglish: string;

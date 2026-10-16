@@ -296,6 +296,28 @@ export default function KuralDetailScreen() {
               </Text>
             </View>
           ) : null}
+
+          {kural.commentaryPRM ? (
+            <View style={[styles.commentaryItem, { borderTopColor: colors.borderLight, borderTopWidth: 1 }]}>
+              <Text style={[styles.commentaryAuthor, { color: isDark ? '#A78BFA' : '#7C3AED' }]}>
+                {t.kuralDetailScreen.authorPRM}
+              </Text>
+              <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
+                {kural.commentaryPRM}
+              </Text>
+            </View>
+          ) : null}
+
+          {kural.commentaryMNK ? (
+            <View style={[styles.commentaryItem, { borderTopColor: colors.borderLight, borderTopWidth: 1 }]}>
+              <Text style={[styles.commentaryAuthor, { color: isDark ? '#38BDF8' : '#0284C7' }]}>
+                {t.kuralDetailScreen.authorMNK}
+              </Text>
+              <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
+                {kural.commentaryMNK}
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         {/* Structural Metadata */}

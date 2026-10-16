@@ -44,6 +44,8 @@ const MEANING_OPTIONS: MeaningOption[] = [
   { type: 'mv', label: 'மு.வ. உரை', subLabel: 'Dr. Mu. Va' },
   { type: 'sp', label: 'சாலமன் பாப்பையா', subLabel: 'S. Pappaiah' },
   { type: 'mk', label: 'கலைஞர் உரை', subLabel: 'M. Karunanidhi' },
+  { type: 'prm', label: 'பரிமேலழகர்', subLabel: 'Parimelazhagar' },
+  { type: 'mnk', label: 'மணக்குடவர்', subLabel: 'Manakudavar' },
   { type: 'translation', label: 'English', subLabel: 'Translation' },
   { type: 'both', label: 'மு.வ + English', subLabel: 'Tamil & Eng' },
 ];

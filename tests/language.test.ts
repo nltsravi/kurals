@@ -42,6 +42,8 @@ describe('App Language & Translations', () => {
       expect(en.kuralDetailScreen.authorMV).toBe('Mu. Varadarasanar Urai');
       expect(en.kuralDetailScreen.authorSP).toBe('Solomon Pappaiah Urai');
       expect(en.kuralDetailScreen.authorMK).toBe('Kalaignar Karunanidhi Urai');
+      expect(en.kuralDetailScreen.authorPRM).toBe('Parimelazhagar Urai');
+      expect(en.kuralDetailScreen.authorMNK).toBe('Manakkudavar Urai');
     });
   });
 

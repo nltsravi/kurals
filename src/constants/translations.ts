@@ -122,6 +122,8 @@ export interface AppTranslations {
     authorMV: string;
     authorSP: string;
     authorMK: string;
+    authorPRM: string;
+    authorMNK: string;
   };
   chapterDetailScreen: {
     chapterPrefix: string;
@@ -310,6 +312,8 @@ export const TRANSLATIONS: Record<AppLanguage, AppTranslations> = {
       authorMV: 'மு. வரதராசனார் உரை',
       authorSP: 'சாலமன் பாப்பையா உரை',
       authorMK: 'கலைஞர் மு. கருணாநிதி உரை',
+      authorPRM: 'பரிமேலழகர் உரை',
+      authorMNK: 'மணக்குடவர் உரை',
     },
     chapterDetailScreen: {
       chapterPrefix: 'அதிகாரம்',
@@ -496,6 +500,8 @@ export const TRANSLATIONS: Record<AppLanguage, AppTranslations> = {
       authorMV: 'Mu. Varadarasanar Urai',
       authorSP: 'Solomon Pappaiah Urai',
       authorMK: 'Kalaignar Karunanidhi Urai',
+      authorPRM: 'Parimelazhagar Urai',
+      authorMNK: 'Manakkudavar Urai',
     },
     chapterDetailScreen: {
       chapterPrefix: 'Chapter',

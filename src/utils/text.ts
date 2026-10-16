@@ -145,7 +145,7 @@ export function formatKuralText(
   return parts.join('\n\n');
 }
 
-export type MeaningType = 'mv' | 'sp' | 'mk' | 'translation' | 'both';
+export type MeaningType = 'mv' | 'sp' | 'mk' | 'prm' | 'mnk' | 'translation' | 'both';
 
 export interface SocialShareOptions {
   meaningType?: MeaningType;
@@ -169,6 +169,8 @@ export function formatKuralForSocialShare(
     commentaryMV?: string;
     commentarySP?: string;
     commentaryMK?: string;
+    commentaryPRM?: string;
+    commentaryMNK?: string;
     chapterNameTamil?: string;
     categoryTamil?: string;
   },
@@ -211,10 +213,19 @@ export function formatKuralForSocialShare(
     parts.push(`பொருள் (சாலமன் பாப்பையா):\n${kural.commentarySP}`);
   } else if (meaningType === 'mk' && kural.commentaryMK) {
     parts.push(`பொருள் (கலைஞர் உரை):\n${kural.commentaryMK}`);
+  } else if (meaningType === 'prm' && kural.commentaryPRM) {
+    parts.push(`பொருள் (பரிமேலழகர் உரை):\n${kural.commentaryPRM}`);
+  } else if (meaningType === 'mnk' && kural.commentaryMNK) {
+    parts.push(`பொருள் (மணக்குடவர் உரை):\n${kural.commentaryMNK}`);
   } else if (meaningType === 'translation' && kural.translation) {
     parts.push(`Meaning (English):\n${kural.translation}`);
   } else if (meaningType === 'both') {
-    const tamilMeaning = kural.commentaryMV || kural.commentarySP || kural.commentaryMK;
+    const tamilMeaning =
+      kural.commentaryMV ||
+      kural.commentarySP ||
+      kural.commentaryMK ||
+      kural.commentaryPRM ||
+      kural.commentaryMNK;
     if (tamilMeaning) {
       parts.push(`பொருள் (மு. வரதராசனார்):\n${tamilMeaning}`);
     }

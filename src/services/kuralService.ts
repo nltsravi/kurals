@@ -110,6 +110,8 @@ function initData() {
       commentaryMV: raw.mv || '',
       commentarySP: raw.sp || '',
       commentaryMK: raw.mk || '',
+      commentaryPRM: raw.prm || '',
+      commentaryMNK: raw.mnk || '',
       chapterNumber: chNum,
       chapterNameTamil: chapter ? chapter.nameTamil : raw.chapter || `அதிகாரம் ${chNum}`,
       chapterNameEnglish: chapter ? chapter.nameEnglish : `Chapter ${chNum}`,
