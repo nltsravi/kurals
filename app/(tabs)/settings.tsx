@@ -16,11 +16,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useTheme, ThemeMode } from '../../src/context/ThemeContext';
+import { useLanguage } from '../../src/context/LanguageContext';
+import { AppLanguage } from '../../src/constants/translations';
 import { APP_CONFIG } from '../../src/constants/appConstants';
 import { NotificationService } from '../../src/services/notificationService';
 
 export default function SettingsScreen() {
   const { colors, isDark, themeMode, setThemeMode } = useTheme();
+  const { language, setLanguage, t, isEnglish } = useLanguage();
   const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
 
   // Daily notification state
@@ -56,12 +59,14 @@ export default function SettingsScreen() {
       const granted = await NotificationService.requestPermissionsAsync();
       if (!granted) {
         Alert.alert(
-          'அறிவிப்பு அனுமதி தேவை (Permission Required)',
-          'தினசரி குறள் அறிவிப்புகளைப் பெற சாதன அமைப்புகளில் அறிவிப்பை இயக்கவும் (Please enable notifications in your device settings).',
+          isEnglish ? 'Permission Required' : 'அறிவிப்பு அனுமதி தேவை (Permission Required)',
+          isEnglish
+            ? 'Please enable notifications in your device settings to receive daily Kural reminders.'
+            : 'தினசரி குறள் அறிவிப்புகளைப் பெற சாதன அமைப்புகளில் அறிவிப்பை இயக்கவும் (Please enable notifications in your device settings).',
           [
-            { text: 'சரி (OK)', style: 'cancel' },
+            { text: t.common.cancel, style: 'cancel' },
             {
-              text: 'அமைப்புகள் (Settings)',
+              text: t.common.settings,
               onPress: () => {
                 if (Platform.OS === 'ios') {
                   Linking.openURL('app-settings:');
@@ -83,8 +88,10 @@ export default function SettingsScreen() {
       await NotificationService.scheduleDailyNotificationsAsync(notificationHour, notificationMinute);
       const timeInfo = NotificationService.formatTime(notificationHour, notificationMinute);
       Alert.alert(
-        'அறிவிப்பு இயக்கப்பட்டது (Notification Enabled)',
-        `ஒவ்வொரு நாளும் ${timeInfo.periodTamil} (${timeInfo.formatted}) மணிக்கு திருக்குறள் அறிவிப்பு அனுப்பப்படும்.`
+        isEnglish ? 'Notification Enabled' : 'அறிவிப்பு இயக்கப்பட்டது (Notification Enabled)',
+        isEnglish
+          ? `Daily Thirukkural notification scheduled for ${timeInfo.formatted}.`
+          : `ஒவ்வொரு நாளும் ${timeInfo.periodTamil} (${timeInfo.formatted}) மணிக்கு திருக்குறள் அறிவிப்பு அனுப்பப்படும்.`
       );
     } else {
       setNotificationEnabled(false);
@@ -119,8 +126,10 @@ export default function SettingsScreen() {
       await NotificationService.scheduleDailyNotificationsAsync(final24Hour, modalMinute);
       const timeInfo = NotificationService.formatTime(final24Hour, modalMinute);
       Alert.alert(
-        'நேரம் மாற்றப்பட்டது (Time Updated)',
-        `தினசரி குறள் அறிவிப்பு நேரம் ${timeInfo.periodTamil} (${timeInfo.formatted}) ஆக மாற்றப்பட்டது.`
+        isEnglish ? 'Time Updated' : 'நேரம் மாற்றப்பட்டது (Time Updated)',
+        isEnglish
+          ? `Daily Kural notification time set to ${timeInfo.formatted}.`
+          : `தினசரி குறள் அறிவிப்பு நேரம் ${timeInfo.periodTamil} (${timeInfo.formatted}) ஆக மாற்றப்பட்டது.`
       );
     }
   };
@@ -129,22 +138,30 @@ export default function SettingsScreen() {
     try {
       await NotificationService.sendTestNotificationAsync();
       Alert.alert(
-        'சோதனை அறிவிப்பு அனுப்பப்பட்டது (Test Sent)',
-        'சீரற்ற திருக்குறள் அறிவிப்பு உருவாக்கப்பட்டது! அறிவிப்புப் பட்டியில் (Notification bar) அதைச் சரிபார்க்கவும்.'
+        t.settingsScreen.testNoticeSent,
+        t.settingsScreen.testNoticeDesc
       );
     } catch {
       Alert.alert(
-        'அறிவிப்பு பிழை (Error)',
-        'அறிவிப்பை அனுப்ப முடியவில்லை. அறிவிப்பு அனுமதி வழங்கப்பட்டுள்ளதா என்பதை உறுதிப்படுத்தவும்.'
+        isEnglish ? 'Error' : 'அறிவிப்பு பிழை (Error)',
+        isEnglish
+          ? 'Unable to send notification. Please make sure notifications are enabled.'
+          : 'அறிவிப்பை அனுப்ப முடியவில்லை. அறிவிப்பு அனுமதி வழங்கப்பட்டுள்ளதா என்பதை உறுதிப்படுத்தவும்.'
       );
     }
   };
+
+  const LANGUAGE_OPTIONS: { id: AppLanguage; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+    { id: 'ta', label: t.settingsScreen.langTamil, icon: 'book-outline' },
+    { id: 'en', label: t.settingsScreen.langEnglish, icon: 'globe-outline' },
+  ];
 
   const THEME_OPTIONS: { id: ThemeMode; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
     { id: 'system', label: 'System', icon: 'phone-portrait-outline' },
     { id: 'light', label: 'Light', icon: 'sunny-outline' },
     { id: 'dark', label: 'Dark', icon: 'moon-outline' },
   ];
+
 
   const handleRateApp = () => {
     const playStoreUri = 'market://details?id=com.nltsravi.kurals';
@@ -182,8 +199,8 @@ export default function SettingsScreen() {
     try {
       await Clipboard.setStringAsync(APP_CONFIG.buildNumber);
       Alert.alert(
-        'கட்டமைப்பு எண் (Build Number)',
-        `நகலெடுக்கப்பட்டது:\n${APP_CONFIG.buildNumber}`
+        t.settingsScreen.buildNumberAlertTitle,
+        `${t.settingsScreen.buildNumberCopiedMsg}\n${APP_CONFIG.buildNumber}`
       );
     } catch {
       // User cancelled or clipboard error
@@ -194,15 +211,62 @@ export default function SettingsScreen() {
     <SafeAreaView edges={[]} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>அமைப்புகள்</Text>
-          <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Settings & About</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>{t.settingsScreen.title}</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>{t.settingsScreen.subtitle}</Text>
+        </View>
+
+        {/* Language Settings */}
+        <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.settingsScreen.languageSectionTitle}</Text>
+          <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>
+            {t.settingsScreen.languageSectionSubtitle}
+          </Text>
+
+          <View style={styles.themeOptionsRow}>
+            {LANGUAGE_OPTIONS.map((opt) => {
+              const isSelected = language === opt.id;
+              return (
+                <TouchableOpacity
+                  key={opt.id}
+                  style={[
+                    styles.themeBtn,
+                    {
+                      backgroundColor: isSelected
+                        ? colors.primaryLight
+                        : (isDark ? colors.surface : colors.card),
+                      borderColor: isSelected ? colors.primary : colors.border,
+                    },
+                  ]}
+                  onPress={() => setLanguage(opt.id)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
+                >
+                  <Ionicons
+                    name={opt.icon}
+                    size={20}
+                    color={isSelected ? colors.primary : colors.textMuted}
+                  />
+                  <Text
+                    style={[
+                      styles.themeBtnText,
+                      { color: isSelected ? colors.primary : colors.text },
+                    ]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
 
         {/* Theme Settings */}
         <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>தோற்றம் (Appearance / Theme)</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.settingsScreen.themeSectionTitle}</Text>
           <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>
-            Choose your preferred reading color scheme
+            {t.settingsScreen.themeSectionSubtitle}
           </Text>
 
           <View style={styles.themeOptionsRow}>
@@ -234,6 +298,8 @@ export default function SettingsScreen() {
                       styles.themeBtnText,
                       { color: isSelected ? colors.primary : colors.text },
                     ]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
                   >
                     {opt.label}
                   </Text>
@@ -247,9 +313,9 @@ export default function SettingsScreen() {
         <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.cardHeaderWithAction}>
             <View style={{ flex: 1, marginRight: 12 }}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>தினசரி குறள் அறிவிப்பு (Daily Notification)</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.settingsScreen.notificationSectionTitle}</Text>
               <Text style={[styles.sectionSubtitle, { color: colors.textMuted, marginBottom: 0 }]}>
-                Receive a random Thirukkural with Tamil & English commentaries daily
+                {t.settingsScreen.notificationSectionSubtitle}
               </Text>
             </View>
             <Switch
@@ -274,7 +340,7 @@ export default function SettingsScreen() {
                   <Ionicons name="time-outline" size={20} color={colors.primary} />
                 </View>
                 <View style={styles.actionRowText}>
-                  <Text style={[styles.actionLabel, { color: colors.text }]}>அறிவிப்பு நேரம் (Scheduled Time)</Text>
+                  <Text style={[styles.actionLabel, { color: colors.text }]}>{t.settingsScreen.scheduledTimeLabel}</Text>
                   <Text style={[styles.actionSubtext, { color: colors.textSecondary }]}>
                     {NotificationService.formatTime(notificationHour, notificationMinute).periodTamil} ({NotificationService.formatTime(notificationHour, notificationMinute).formatted})
                   </Text>
@@ -299,9 +365,9 @@ export default function SettingsScreen() {
                   <Ionicons name="paper-plane-outline" size={18} color="#0284C7" />
                 </View>
                 <View style={styles.actionRowText}>
-                  <Text style={[styles.actionLabel, { color: colors.text }]}>உடனடி சோதனை அறிவிப்பு (Test Notification)</Text>
+                  <Text style={[styles.actionLabel, { color: colors.text }]}>{t.settingsScreen.testNotificationLabel}</Text>
                   <Text style={[styles.actionSubtext, { color: colors.textSecondary }]}>
-                    Preview a random couplet notification right now on your device
+                    {t.settingsScreen.testNotificationSubtitle}
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
@@ -312,7 +378,7 @@ export default function SettingsScreen() {
 
         {/* Support & Share on Google Play */}
         <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>ஆதரவு & பகிர் (Support & Share)</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.settingsScreen.supportSectionTitle}</Text>
 
           <TouchableOpacity
             style={styles.actionRow}
@@ -324,9 +390,9 @@ export default function SettingsScreen() {
               <Ionicons name="star" size={20} color={colors.primary} />
             </View>
             <View style={styles.actionRowText}>
-              <Text style={[styles.actionLabel, { color: colors.text }]}>மதிப்பீடு செய் (Rate on Google Play)</Text>
+              <Text style={[styles.actionLabel, { color: colors.text }]}>{t.settingsScreen.rateAppLabel}</Text>
               <Text style={[styles.actionSubtext, { color: colors.textSecondary }]}>
-                Help others discover Tamil wisdom with a 5-star review
+                {t.settingsScreen.rateAppSubtitle}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
@@ -344,9 +410,9 @@ export default function SettingsScreen() {
               <Ionicons name="share-social-outline" size={20} color={colors.primary} />
             </View>
             <View style={styles.actionRowText}>
-              <Text style={[styles.actionLabel, { color: colors.text }]}>நண்பர்களுடன் பகிர் (Share App)</Text>
+              <Text style={[styles.actionLabel, { color: colors.text }]}>{t.settingsScreen.shareAppLabel}</Text>
               <Text style={[styles.actionSubtext, { color: colors.textSecondary }]}>
-                Share this ad-free Thirukkural app with friends & family
+                {t.settingsScreen.shareAppSubtitle}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
@@ -355,7 +421,7 @@ export default function SettingsScreen() {
 
         {/* Privacy & Data Safety */}
         <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>தனியுரிமை & பாதுகாப்பு (Privacy & Safety)</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.settingsScreen.privacySectionTitle}</Text>
 
           <TouchableOpacity
             style={styles.actionRow}
@@ -367,9 +433,9 @@ export default function SettingsScreen() {
               <Ionicons name="shield-checkmark-outline" size={20} color="#16A34A" />
             </View>
             <View style={styles.actionRowText}>
-              <Text style={[styles.actionLabel, { color: colors.text }]}>தனியுரிமைக் கொள்கை (Privacy Policy)</Text>
+              <Text style={[styles.actionLabel, { color: colors.text }]}>{t.settingsScreen.privacyPolicyLabel}</Text>
               <Text style={[styles.actionSubtext, { color: colors.textSecondary }]}>
-                Zero data collected • 100% private & ad-free
+                {t.settingsScreen.privacyPolicySubtitle}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
@@ -382,9 +448,9 @@ export default function SettingsScreen() {
               <Ionicons name="lock-closed-outline" size={20} color="#0284C7" />
             </View>
             <View style={styles.actionRowText}>
-              <Text style={[styles.actionLabel, { color: colors.text }]}>Google Play Data Safety</Text>
+              <Text style={[styles.actionLabel, { color: colors.text }]}>{t.settingsScreen.dataSafetyLabel}</Text>
               <Text style={[styles.actionSubtext, { color: colors.textSecondary }]}>
-                No personal data collected or shared. Your collections stay on your device.
+                {t.settingsScreen.dataSafetySubtitle}
               </Text>
             </View>
           </View>
@@ -392,14 +458,14 @@ export default function SettingsScreen() {
 
         {/* Offline & Data Info */}
         <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>தரவு தகவல் (Data & Offline)</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.settingsScreen.dataSectionTitle}</Text>
 
           <View style={styles.infoRow}>
             <Ionicons name="cloud-offline-outline" size={20} color={colors.primary} />
             <View style={styles.infoTextContainer}>
-              <Text style={[styles.infoLabel, { color: colors.text }]}>100% Offline-First</Text>
+              <Text style={[styles.infoLabel, { color: colors.text }]}>{t.settingsScreen.offlineLabel}</Text>
               <Text style={[styles.infoValue, { color: colors.textSecondary }]}>
-                Works completely without internet. All 1,330 Kurals are bundled on your device.
+                {t.settingsScreen.offlineValue}
               </Text>
             </View>
           </View>
@@ -409,9 +475,9 @@ export default function SettingsScreen() {
           <View style={styles.infoRow}>
             <Ionicons name="library-outline" size={20} color={colors.accent} />
             <View style={styles.infoTextContainer}>
-              <Text style={[styles.infoLabel, { color: colors.text }]}>Dataset Content</Text>
+              <Text style={[styles.infoLabel, { color: colors.text }]}>{t.settingsScreen.datasetLabel}</Text>
               <Text style={[styles.infoValue, { color: colors.textSecondary }]}>
-                3 பால் (Sections) • 133 அதிகாரம் (Chapters) • 1,330 குறள்கள்
+                {t.settingsScreen.datasetValue}
               </Text>
             </View>
           </View>
@@ -421,9 +487,9 @@ export default function SettingsScreen() {
           <View style={styles.infoRow}>
             <Ionicons name="chatbubbles-outline" size={20} color="#10B981" />
             <View style={styles.infoTextContainer}>
-              <Text style={[styles.infoLabel, { color: colors.text }]}>Commentaries Included</Text>
+              <Text style={[styles.infoLabel, { color: colors.text }]}>{t.settingsScreen.commentariesLabel}</Text>
               <Text style={[styles.infoValue, { color: colors.textSecondary }]}>
-                Mu. Varadarajan (மு.வ), Solomon Pappaiah (சாலமன் பாப்பையா), Kalaignar Karunanidhi (மு.க), & English Pope Couplet
+                {t.settingsScreen.commentariesValue}
               </Text>
             </View>
           </View>
@@ -431,7 +497,7 @@ export default function SettingsScreen() {
 
         {/* About App */}
         <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>செயலி பற்றி (About App)</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.settingsScreen.aboutSectionTitle}</Text>
 
           <View style={styles.aboutHeader}>
             <Text style={[styles.appName, { color: colors.text }]}>{APP_CONFIG.name}</Text>
@@ -456,7 +522,7 @@ export default function SettingsScreen() {
               <Ionicons name="construct-outline" size={20} color={colors.primary} />
             </View>
             <View style={styles.actionRowText}>
-              <Text style={[styles.actionLabel, { color: colors.text }]}>கட்டமைப்பு எண் (Build Number)</Text>
+              <Text style={[styles.actionLabel, { color: colors.text }]}>{t.settingsScreen.buildNumberLabel}</Text>
               <Text
                 style={[
                   styles.actionSubtext,
@@ -482,13 +548,14 @@ export default function SettingsScreen() {
               <Ionicons name="shield-checkmark-outline" size={20} color={colors.primary} />
             </View>
             <View style={styles.actionRowText}>
-              <Text style={[styles.actionLabel, { color: colors.text }]}>பதிப்புரிமை (Copyright)</Text>
+              <Text style={[styles.actionLabel, { color: colors.text }]}>{t.settingsScreen.copyrightLabel}</Text>
               <Text style={[styles.actionSubtext, { color: colors.textSecondary }]}>
                 {APP_CONFIG.copyright}
               </Text>
             </View>
           </View>
         </View>
+
 
         {/* Footer Copyright */}
         <View style={styles.footerContainer}>
@@ -730,13 +797,17 @@ export default function SettingsScreen() {
                 style={[styles.modalCancelBtn, { borderColor: colors.border }]}
                 onPress={() => setTimeModalVisible(false)}
               >
-                <Text style={[styles.modalCancelBtnText, { color: colors.textSecondary }]}>ரத்துசெய் (Cancel)</Text>
+                <Text style={[styles.modalCancelBtnText, { color: colors.textSecondary }]}>
+                  {isEnglish ? 'Cancel' : 'ரத்துசெய் (Cancel)'}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalSaveBtn, { backgroundColor: colors.primary }]}
                 onPress={handleSaveModalTime}
               >
-                <Text style={styles.modalSaveBtnText}>சேமி (Save Time)</Text>
+                <Text style={styles.modalSaveBtnText}>
+                  {isEnglish ? 'Save Time' : 'சேமி (Save Time)'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -791,6 +862,8 @@ const styles = StyleSheet.create({
   themeOptionsRow: {
     flexDirection: 'row',
     gap: 10,
+    alignItems: 'center',
+    width: '100%',
   },
   themeBtn: {
     flex: 1,
@@ -798,13 +871,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 6,
     borderRadius: 12,
     borderWidth: 1.5,
+    minHeight: 46,
   },
   themeBtnText: {
     fontSize: 13.5,
     fontWeight: '600',
+    textAlign: 'center',
   },
   actionRow: {
     flexDirection: 'row',

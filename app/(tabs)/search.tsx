@@ -17,6 +17,7 @@ import { ShareModal } from '../../src/components/ShareModal';
 import { useKuralSearch } from '../../src/hooks/useKuralSearch';
 import { useCollections } from '../../src/context/CollectionContext';
 import { useTheme } from '../../src/context/ThemeContext';
+import { useLanguage } from '../../src/context/LanguageContext';
 import { Kural } from '../../src/types/kural';
 
 const SEARCH_SUGGESTIONS = [
@@ -34,6 +35,7 @@ const SEARCH_SUGGESTIONS = [
 export default function SearchScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { t, isEnglish } = useLanguage();
   const { query, setQuery, results, isSearching, clearQuery } = useKuralSearch('', 200);
   const { isKuralInCollection, collections } = useCollections();
   const [modalKural, setModalKural] = useState<Kural | null>(null);
@@ -45,7 +47,7 @@ export default function SearchScreen() {
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.searchingText, { color: colors.textSecondary }]}>
-            Searching Kurals...
+            {t.searchScreen.searching}
           </Text>
         </View>
       );
@@ -55,8 +57,8 @@ export default function SearchScreen() {
       return (
         <EmptyState
           icon="search-outline"
-          title="Search Thirukkural"
-          description="Find any Kural by number, Tamil phrase, English transliteration, chapter, or category."
+          title={t.searchScreen.emptyTitle}
+          description={t.searchScreen.emptyDesc}
           suggestions={SEARCH_SUGGESTIONS}
           onSuggestionPress={(item) => setQuery(item)}
         />
@@ -67,8 +69,8 @@ export default function SearchScreen() {
       return (
         <EmptyState
           icon="alert-circle-outline"
-          title="No Kurals found"
-          description="Try searching with a Kural number (1-1330), chapter name, category, or partial Tamil/English words."
+          title={t.searchScreen.noResultsTitle}
+          description={t.searchScreen.noResultsDesc}
           suggestions={['1', 'அறத்துப்பால்', 'அன்புடைமை']}
           onSuggestionPress={(item) => setQuery(item)}
         />
@@ -96,7 +98,7 @@ export default function SearchScreen() {
         ListHeaderComponent={
           <View style={styles.resultsHeader}>
             <Text style={[styles.resultsCount, { color: colors.textSecondary }]}>
-              {results.length} {results.length === 1 ? 'Kural found' : 'Kurals found'}
+              {results.length} {results.length === 1 ? t.searchScreen.singleResultFound : t.searchScreen.resultsFound}
             </Text>
           </View>
         }
@@ -107,9 +109,11 @@ export default function SearchScreen() {
   return (
     <SafeAreaView edges={['top']} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>தேடல்</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          {isEnglish ? 'Search' : 'தேடல்'}
+        </Text>
         <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-          Search Thirukkural
+          {isEnglish ? 'Search Thirukkural' : 'திருக்குறள் தேடல்'}
         </Text>
       </View>
 
@@ -117,7 +121,7 @@ export default function SearchScreen() {
         value={query}
         onChangeText={setQuery}
         onClear={clearQuery}
-        placeholder="Search by text, number, chapter, category..."
+        placeholder={t.searchScreen.placeholder}
       />
 
       <View style={styles.body}>{renderContent()}</View>

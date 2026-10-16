@@ -13,11 +13,13 @@ import { KuralService } from '../../src/services/kuralService';
 import { Category, Chapter } from '../../src/types/kural';
 import { ChapterCard } from '../../src/components/ChapterCard';
 import { useTheme } from '../../src/context/ThemeContext';
+import { useLanguage } from '../../src/context/LanguageContext';
 
 export default function ChaptersScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ categoryNumber?: string }>();
   const { colors, isDark } = useTheme();
+  const { t, isEnglish, getCategoryName } = useLanguage();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryNum, setSelectedCategoryNum] = useState<number>(1);
@@ -41,6 +43,11 @@ export default function ChaptersScreen() {
       <View style={[styles.pillsContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         {categories.map((cat) => {
           const isSelected = cat.number === selectedCategoryNum;
+          const primaryName = getCategoryName(cat.number, cat.nameTamil, cat.nameEnglish);
+          const secondaryName = isEnglish
+            ? cat.nameTamil
+            : cat.transliteration || cat.nameEnglish;
+
           return (
             <TouchableOpacity
               key={cat.number}
@@ -57,23 +64,25 @@ export default function ChaptersScreen() {
               onPress={() => setSelectedCategoryNum(cat.number)}
               accessibilityRole="tab"
               accessibilityState={{ selected: isSelected }}
-              accessibilityLabel={`${cat.nameTamil} category`}
+              accessibilityLabel={`${primaryName} category`}
             >
               <Text
                 style={[
                   styles.pillTamil,
                   { color: isSelected ? '#FFFFFF' : colors.text },
                 ]}
+                numberOfLines={1}
               >
-                {cat.nameTamil}
+                {primaryName}
               </Text>
               <Text
                 style={[
                   styles.pillEnglish,
                   { color: isSelected ? 'rgba(255,255,255,0.85)' : colors.textMuted },
                 ]}
+                numberOfLines={1}
               >
-                {cat.nameEnglish} ({cat.chapters.length})
+                {secondaryName} ({cat.chapters.length})
               </Text>
             </TouchableOpacity>
           );
@@ -87,28 +96,38 @@ export default function ChaptersScreen() {
           keyExtractor={(group) => `${activeCategory.number}_${group.number}_${group.nameTamil}`}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item: group }) => (
-            <View style={styles.groupSection}>
-              <View style={[styles.groupHeaderRow, { backgroundColor: colors.surface }]}>
-                <View>
-                  <Text style={[styles.groupNameTamil, { color: colors.text }]}>
-                    இயல் {group.number}: {group.nameTamil}
-                  </Text>
-                  <Text style={[styles.groupNameEnglish, { color: colors.textSecondary }]}>
-                    {group.nameEnglish} ({group.chapters.length} அதிகாரங்கள்)
-                  </Text>
-                </View>
-              </View>
+          renderItem={({ item: group }) => {
+            const translitGroup = group.transliteration || group.nameEnglish;
+            const groupTitle = isEnglish
+              ? `Group ${group.number}: ${translitGroup}`
+              : `இயல் ${group.number}: ${group.nameTamil}`;
+            const groupSubtitle = isEnglish
+              ? `${group.nameTamil} (${group.chapters.length} ${t.chaptersScreen.chaptersSuffix})`
+              : `${translitGroup} (${group.chapters.length} ${t.chaptersScreen.chaptersSuffix})`;
 
-              {group.chapters.map((ch) => (
-                <ChapterCard
-                  key={ch.number}
-                  chapter={ch}
-                  onPress={() => router.push(`/chapter/${ch.number}`)}
-                />
-              ))}
-            </View>
-          )}
+            return (
+              <View style={styles.groupSection}>
+                <View style={[styles.groupHeaderRow, { backgroundColor: colors.surface }]}>
+                  <View>
+                    <Text style={[styles.groupNameTamil, { color: colors.text }]}>
+                      {groupTitle}
+                    </Text>
+                    <Text style={[styles.groupNameEnglish, { color: colors.textSecondary }]}>
+                      {groupSubtitle}
+                    </Text>
+                  </View>
+                </View>
+
+                {group.chapters.map((ch) => (
+                  <ChapterCard
+                    key={ch.number}
+                    chapter={ch}
+                    onPress={() => router.push(`/chapter/${ch.number}`)}
+                  />
+                ))}
+              </View>
+            );
+          }}
         />
       )}
     </SafeAreaView>
@@ -130,18 +149,23 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 12,
     paddingVertical: 8,
-    paddingHorizontal: 6,
+    paddingHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: 50,
   },
   pillTamil: {
-    fontSize: 13.5,
+    fontSize: 13,
     fontWeight: '700',
+    textAlign: 'center',
+    lineHeight: 18,
   },
   pillEnglish: {
     fontSize: 10.5,
     marginTop: 2,
     fontWeight: '500',
+    textAlign: 'center',
+    lineHeight: 14,
   },
   listContent: {
     paddingBottom: 30,

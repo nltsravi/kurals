@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, TouchableOpacity } from 'react-nativ
 import { Ionicons } from '@expo/vector-icons';
 import { Collection } from '../types/kural';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 interface CollectionCardProps {
   collection: Collection;
@@ -20,6 +21,7 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
   onEdit,
 }) => {
   const { colors, isDark } = useTheme();
+  const { isEnglish } = useLanguage();
   const accentColor = collection.color || colors.primary;
 
   return (
@@ -47,8 +49,11 @@ export const CollectionCard: React.FC<CollectionCardProps> = ({
           </Text>
           <Text style={[styles.countText, { color: colors.textSecondary }]}>
             {collection.kuralNumbers.length}{' '}
-            {collection.kuralNumbers.length === 1 ? 'Kural' : 'Kurals'} •{' '}
-            {collection.kuralNumbers.length} குறள்கள்
+            {isEnglish
+              ? collection.kuralNumbers.length === 1
+                ? 'Kural'
+                : 'Kurals'
+              : 'குறள்கள்'}
           </Text>
         </View>
 

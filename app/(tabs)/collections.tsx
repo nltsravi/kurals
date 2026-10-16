@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useCollections } from '../../src/context/CollectionContext';
 import { useTheme } from '../../src/context/ThemeContext';
+import { useLanguage } from '../../src/context/LanguageContext';
 import { CollectionCard } from '../../src/components/CollectionCard';
 import { EmptyState } from '../../src/components/EmptyState';
 import { ExportModal } from '../../src/components/ExportModal';
@@ -22,6 +23,7 @@ import { Collection, Kural } from '../../src/types/kural';
 export default function CollectionsScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { t, isEnglish } = useLanguage();
   const { collections, deleteCollection } = useCollections();
 
   const [exportCollection, setExportCollection] = useState<{
@@ -31,12 +33,14 @@ export default function CollectionsScreen() {
 
   const handleDelete = (collection: Collection) => {
     Alert.alert(
-      'Delete Collection',
-      `Are you sure you want to delete "${collection.name}"? This cannot be undone.`,
+      t.collectionsScreen.deleteTitle,
+      isEnglish
+        ? `Are you sure you want to delete "${collection.name}"? This cannot be undone.`
+        : `இந்தத் தொகுப்பை நீக்க விரும்புகிறீர்களா? ("${collection.name}")`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t.common.cancel, style: 'cancel' },
         {
-          text: 'Delete',
+          text: t.common.delete,
           style: 'destructive',
           onPress: async () => {
             await deleteCollection(collection.id);
@@ -50,8 +54,8 @@ export default function CollectionsScreen() {
     const kurals = KuralService.getKuralsByNumbers(collection.kuralNumbers);
     if (kurals.length === 0) {
       Alert.alert(
-        'Empty Collection',
-        'Add some Kurals to this collection before exporting.'
+        t.collectionsScreen.emptyCollectionTitle,
+        t.collectionsScreen.emptyCollectionDesc
       );
       return;
     }
@@ -65,9 +69,9 @@ export default function CollectionsScreen() {
     <SafeAreaView edges={[]} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <View>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>என் தொகுப்புகள்</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>{t.collectionsScreen.title}</Text>
           <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
-            My Collections ({collections.length})
+            {isEnglish ? `Collections (${collections.length})` : `தொகுப்புகள் (${collections.length})`}
           </Text>
         </View>
 
@@ -75,10 +79,10 @@ export default function CollectionsScreen() {
           style={[styles.createBtn, { backgroundColor: colors.primary }]}
           onPress={() => router.push('/collections/create')}
           accessibilityRole="button"
-          accessibilityLabel="Create Collection"
+          accessibilityLabel={t.collectionsScreen.newBtn}
         >
           <Ionicons name="add" size={20} color="#FFFFFF" />
-          <Text style={styles.createBtnText}>New</Text>
+          <Text style={styles.createBtnText}>{t.collectionsScreen.newBtn}</Text>
         </TouchableOpacity>
       </View>
 
@@ -98,9 +102,9 @@ export default function CollectionsScreen() {
         ListEmptyComponent={
           <EmptyState
             icon="bookmark-outline"
-            title="No collections yet"
-            description="Create your first collection to organize and save your favorite Thirukkurals."
-            actionLabel="+ Create Collection"
+            title={t.collectionsScreen.emptyTitle}
+            description={t.collectionsScreen.emptyDesc}
+            actionLabel={isEnglish ? '+ Create Collection' : '+ புதிய தொகுப்பு'}
             onAction={() => router.push('/collections/create')}
           />
         }
@@ -109,7 +113,7 @@ export default function CollectionsScreen() {
       <ExportModal
         visible={!!exportCollection}
         onClose={() => setExportCollection(null)}
-        title={exportCollection?.name || 'Collection'}
+        title={exportCollection?.name || (isEnglish ? 'Collection' : 'தொகுப்பு')}
         kurals={exportCollection?.kurals || []}
       />
     </SafeAreaView>

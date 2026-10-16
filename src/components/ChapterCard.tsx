@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Chapter } from '../types/kural';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ChapterCardProps {
   chapter: Chapter;
@@ -11,6 +12,13 @@ interface ChapterCardProps {
 
 export const ChapterCard: React.FC<ChapterCardProps> = ({ chapter, onPress }) => {
   const { colors, isDark } = useTheme();
+  const { isEnglish } = useLanguage();
+
+  const translitName = chapter.transliteration || chapter.nameEnglish;
+  const primaryTitle = isEnglish ? translitName : chapter.nameTamil;
+  const secondaryTitle = isEnglish ? chapter.nameTamil : translitName;
+  const groupName = isEnglish ? chapter.groupEnglish : chapter.groupTamil;
+  const kuralsLabel = isEnglish ? 'Kurals' : 'குறள்கள்';
 
   return (
     <Pressable
@@ -24,7 +32,11 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({ chapter, onPress }) =>
         },
       ]}
       accessibilityRole="button"
-      accessibilityLabel={`அதிகாரம் ${chapter.number}: ${chapter.nameTamil}`}
+      accessibilityLabel={
+        isEnglish
+          ? `Chapter ${chapter.number}: ${translitName}`
+          : `அதிகாரம் ${chapter.number}: ${chapter.nameTamil}`
+      }
     >
       <View style={styles.contentRow}>
         <View style={[styles.numberBox, { backgroundColor: colors.primaryLight }]}>
@@ -35,16 +47,16 @@ export const ChapterCard: React.FC<ChapterCardProps> = ({ chapter, onPress }) =>
 
         <View style={styles.textContainer}>
           <View style={styles.titleRow}>
-            <Text style={[styles.nameTamil, { color: colors.text }]}>{chapter.nameTamil}</Text>
+            <Text style={[styles.nameTamil, { color: colors.text }]}>{primaryTitle}</Text>
           </View>
 
           <Text style={[styles.nameEnglish, { color: colors.textSecondary }]} numberOfLines={1}>
-            {chapter.nameEnglish}
+            {secondaryTitle}
           </Text>
 
           <View style={styles.metaRow}>
             <Text style={[styles.metaPill, { color: colors.textMuted }]}>
-              {chapter.groupTamil} • குறள்கள் {chapter.startKural} - {chapter.endKural}
+              {groupName} • {kuralsLabel} {chapter.startKural} - {chapter.endKural}
             </Text>
           </View>
         </View>
@@ -95,10 +107,12 @@ const styles = StyleSheet.create({
   nameTamil: {
     fontSize: 16,
     fontWeight: '600',
+    lineHeight: 22,
   },
   nameEnglish: {
     fontSize: 13,
     marginBottom: 4,
+    lineHeight: 18,
   },
   metaRow: {
     flexDirection: 'row',

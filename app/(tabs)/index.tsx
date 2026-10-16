@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { KuralService } from '../../src/services/kuralService';
 import { Kural, Category } from '../../src/types/kural';
 import { useTheme } from '../../src/context/ThemeContext';
+import { useLanguage } from '../../src/context/LanguageContext';
 import { AddToCollectionModal } from '../../src/components/AddToCollectionModal';
 import { ShareModal } from '../../src/components/ShareModal';
 import { CATEGORY_COLORS } from '../../src/constants/appConstants';
@@ -21,6 +22,7 @@ import { KuralCoupletText } from '../../src/components/KuralCoupletText';
 export default function HomeScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { t, isEnglish, getCategoryName } = useLanguage();
   const [randomKural, setRandomKural] = useState<Kural | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [modalKural, setModalKural] = useState<Kural | null>(null);
@@ -45,12 +47,12 @@ export default function HomeScreen() {
         <View style={styles.headerContainer}>
           <View style={styles.headerTitleRow}>
             <View style={styles.titleColumn}>
-              <Text style={[styles.mainTitle, { color: colors.text }]}>திருக்குறள்</Text>
-              <Text style={[styles.subTitle, { color: colors.textSecondary }]}>Thirukkural</Text>
+              <Text style={[styles.mainTitle, { color: colors.text }]}>{t.home.title}</Text>
+              <Text style={[styles.subTitle, { color: colors.textSecondary }]}>{t.home.subTitle}</Text>
             </View>
           </View>
           <Text style={[styles.tagline, { color: colors.textMuted }]}>
-            133 அதிகாரங்கள் • 1330 அருங்குறள்கள் • உலகப் பொதுமறை
+            {t.home.tagline}
           </Text>
         </View>
 
@@ -66,14 +68,14 @@ export default function HomeScreen() {
           onPress={() => router.push('/search')}
           activeOpacity={0.8}
           accessibilityRole="button"
-          accessibilityLabel="Search Thirukkural"
+          accessibilityLabel={t.home.searchPlaceholder}
         >
           <Ionicons name="search" size={20} color={colors.textMuted} style={styles.searchIcon} />
           <Text style={[styles.searchPlaceholder, { color: colors.textMuted }]}>
-            Search Thirukkural...
+            {t.home.searchPlaceholder}
           </Text>
           <View style={[styles.searchBadge, { backgroundColor: colors.borderLight }]}>
-            <Text style={[styles.searchBadgeText, { color: colors.textSecondary }]}>குறள்</Text>
+            <Text style={[styles.searchBadgeText, { color: colors.textSecondary }]}>{t.home.searchBadge}</Text>
           </View>
         </TouchableOpacity>
 
@@ -86,8 +88,8 @@ export default function HomeScreen() {
             <View style={[styles.qaIconCircle, { backgroundColor: colors.primaryLight }]}>
               <Ionicons name="search" size={20} color={colors.primary} />
             </View>
-            <Text style={[styles.qaTitle, { color: colors.text }]} numberOfLines={1} adjustsFontSizeToFit>Search Kural</Text>
-            <Text style={[styles.qaSubtitle, { color: colors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit>தேடல்</Text>
+            <Text style={[styles.qaTitle, { color: colors.text }]} numberOfLines={1} adjustsFontSizeToFit>{t.home.searchActionTitle}</Text>
+            <Text style={[styles.qaSubtitle, { color: colors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit>{t.home.searchActionSub}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -97,8 +99,8 @@ export default function HomeScreen() {
             <View style={[styles.qaIconCircle, { backgroundColor: isDark ? '#3B1E08' : '#FEF3C7' }]}>
               <Ionicons name="book-outline" size={20} color={colors.accent} />
             </View>
-            <Text style={[styles.qaTitle, { color: colors.text }]} numberOfLines={1} adjustsFontSizeToFit>Browse</Text>
-            <Text style={[styles.qaSubtitle, { color: colors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit>அதிகாரங்கள்</Text>
+            <Text style={[styles.qaTitle, { color: colors.text }]} numberOfLines={1} adjustsFontSizeToFit>{t.home.browseActionTitle}</Text>
+            <Text style={[styles.qaSubtitle, { color: colors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit>{t.home.browseActionSub}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -108,8 +110,8 @@ export default function HomeScreen() {
             <View style={[styles.qaIconCircle, { backgroundColor: isDark ? '#2D1220' : '#FFE4E6' }]}>
               <Ionicons name="bookmark-outline" size={20} color="#E11D48" />
             </View>
-            <Text style={[styles.qaTitle, { color: colors.text }]} numberOfLines={1} adjustsFontSizeToFit>Collections</Text>
-            <Text style={[styles.qaSubtitle, { color: colors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit>தொகுப்புகள்</Text>
+            <Text style={[styles.qaTitle, { color: colors.text }]} numberOfLines={1} adjustsFontSizeToFit>{t.home.collectionsActionTitle}</Text>
+            <Text style={[styles.qaSubtitle, { color: colors.textMuted }]} numberOfLines={1} adjustsFontSizeToFit>{t.home.collectionsActionSub}</Text>
           </TouchableOpacity>
         </View>
 
@@ -120,11 +122,17 @@ export default function HomeScreen() {
               <View style={styles.randomBadgeRow}>
                 <View style={[styles.randomPill, { backgroundColor: colors.primaryLight }]}>
                   <Text style={[styles.randomPillText, { color: isDark ? '#FED7AA' : colors.primary }]}>
-                    குறள் {randomKural.number}
+                    {isEnglish ? `Kural ${randomKural.number}` : `குறள் ${randomKural.number}`}
                   </Text>
                 </View>
-                <Text style={[styles.randomChapterText, { color: colors.textSecondary }]}>
-                  {randomKural.chapterNameTamil}
+                <Text
+                  style={[styles.randomChapterText, { color: colors.textSecondary }]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {isEnglish
+                    ? randomKural.chapterTransliteration || randomKural.chapterNameEnglish
+                    : randomKural.chapterNameTamil}
                 </Text>
               </View>
 
@@ -161,9 +169,9 @@ export default function HomeScreen() {
                 style={[styles.viewKuralBtn, { backgroundColor: colors.primary }]}
                 onPress={() => router.push(`/kural/${randomKural.number}`)}
                 accessibilityRole="button"
-                accessibilityLabel={`View Kural ${randomKural.number}`}
+                accessibilityLabel={`${t.home.viewKural} ${randomKural.number}`}
               >
-                <Text style={styles.viewKuralText}>View Kural</Text>
+                <Text style={styles.viewKuralText}>{t.home.viewKural}</Text>
                 <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
               </TouchableOpacity>
 
@@ -188,59 +196,66 @@ export default function HomeScreen() {
 
         {/* 3 Categories / Sections */}
         <View style={styles.sectionHeaderRow}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>முப்பால் (Categories)</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t.home.muppaalTitle}</Text>
           <TouchableOpacity onPress={() => router.push('/chapters')}>
-            <Text style={[styles.seeAllText, { color: colors.primary }]}>View All →</Text>
+            <Text style={[styles.seeAllText, { color: colors.primary }]}>{t.home.viewAll}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.categoriesList}>
-          {categories.map((cat) => (
-            <TouchableOpacity
-              key={cat.number}
-              style={[styles.categoryCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-              onPress={() => router.push({ pathname: '/chapters', params: { categoryNumber: cat.number } })}
-            >
-              <View style={styles.categoryCardLeft}>
-                <View
-                  style={[
-                    styles.catNumCircle,
-                    {
-                      backgroundColor:
-                        (isDark
-                          ? CATEGORY_COLORS[cat.number]?.dark.bg
-                          : CATEGORY_COLORS[cat.number]?.light.bg) || colors.primaryLight,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={{
-                      fontWeight: '700',
-                      color:
-                        (isDark
-                          ? CATEGORY_COLORS[cat.number]?.dark.text
-                          : CATEGORY_COLORS[cat.number]?.light.text) || colors.primary,
-                    }}
-                  >
-                    0{cat.number}
-                  </Text>
-                </View>
-                <View>
-                  <Text style={[styles.catNameTamil, { color: colors.text }]}>{cat.nameTamil}</Text>
-                  <Text style={[styles.catNameEnglish, { color: colors.textSecondary }]}>
-                    {cat.nameEnglish} ({cat.transliteration})
-                  </Text>
-                </View>
-              </View>
+          {categories.map((cat) => {
+            const primaryName = getCategoryName(cat.number, cat.nameTamil, cat.nameEnglish);
+            const secondaryName = isEnglish
+              ? cat.nameTamil
+              : (cat.transliteration || cat.nameEnglish);
 
-              <View style={styles.categoryCardRight}>
-                <Text style={[styles.catCount, { color: colors.textMuted }]}>
-                  {cat.chapters.length} அ அதிகாரங்கள்
-                </Text>
-                <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-              </View>
-            </TouchableOpacity>
-          ))}
+            return (
+              <TouchableOpacity
+                key={cat.number}
+                style={[styles.categoryCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+                onPress={() => router.push({ pathname: '/chapters', params: { categoryNumber: cat.number } })}
+              >
+                <View style={styles.categoryCardLeft}>
+                  <View
+                    style={[
+                      styles.catNumCircle,
+                      {
+                        backgroundColor:
+                          (isDark
+                            ? CATEGORY_COLORS[cat.number]?.dark.bg
+                            : CATEGORY_COLORS[cat.number]?.light.bg) || colors.primaryLight,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={{
+                        fontWeight: '700',
+                        color:
+                          (isDark
+                            ? CATEGORY_COLORS[cat.number]?.dark.text
+                            : CATEGORY_COLORS[cat.number]?.light.text) || colors.primary,
+                      }}
+                    >
+                      0{cat.number}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.catNameTamil, { color: colors.text }]}>{primaryName}</Text>
+                    <Text style={[styles.catNameEnglish, { color: colors.textSecondary }]}>
+                      {secondaryName}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.categoryCardRight}>
+                  <Text style={[styles.catCount, { color: colors.textMuted }]}>
+                    {cat.chapters.length} {t.home.chapterCountSuffix}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </ScrollView>
 
@@ -475,9 +490,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   categoryCardLeft: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    marginRight: 8,
   },
   catNumCircle: {
     width: 38,

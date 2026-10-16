@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { KuralService } from '../../src/services/kuralService';
 import { ShareService } from '../../src/services/shareService';
 import { useTheme } from '../../src/context/ThemeContext';
+import { useLanguage } from '../../src/context/LanguageContext';
 import { useCollections } from '../../src/context/CollectionContext';
 import { AddToCollectionModal } from '../../src/components/AddToCollectionModal';
 import { ExportModal } from '../../src/components/ExportModal';
@@ -23,6 +24,7 @@ export default function KuralDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { t, isEnglish } = useLanguage();
   const { collections } = useCollections();
 
   const [showAddToCollection, setShowAddToCollection] = useState(false);
@@ -36,12 +38,16 @@ export default function KuralDetailScreen() {
   if (!kural) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
-        <Text style={[styles.errorText, { color: colors.text }]}>குறள் கிடைக்கவில்லை</Text>
+        <Text style={[styles.errorText, { color: colors.text }]}>
+          {isEnglish ? 'Kural not found' : 'குறள் கிடைக்கவில்லை'}
+        </Text>
         <TouchableOpacity
           style={[styles.backBtn, { backgroundColor: colors.primary }]}
           onPress={() => router.back()}
         >
-          <Text style={styles.backBtnText}>Back to safety</Text>
+          <Text style={styles.backBtnText}>
+            {isEnglish ? 'Go Back' : 'பின்னே செல்'}
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -57,19 +63,19 @@ export default function KuralDetailScreen() {
   const handleCopyTamil = async () => {
     const text = formatKuralText(kural, 'tamil');
     await ShareService.copyToClipboard(text);
-    showNotice('Tamil text copied!');
+    showNotice(t.kuralDetailScreen.toastTamilCopied);
   };
 
   const handleCopyTransliteration = async () => {
     const text = formatKuralText(kural, 'transliteration');
     await ShareService.copyToClipboard(text);
-    showNotice('Transliteration copied!');
+    showNotice(t.kuralDetailScreen.toastTranslitCopied);
   };
 
   const handleCopyBoth = async () => {
     const text = formatKuralText(kural, 'both');
     await ShareService.copyToClipboard(text);
-    showNotice('Tamil & Transliteration copied!');
+    showNotice(t.kuralDetailScreen.toastBothCopied);
   };
 
   const handleShare = () => {
@@ -92,7 +98,7 @@ export default function KuralDetailScreen() {
     <>
       <Stack.Screen
         options={{
-          title: `குறள் ${kural.number}`,
+          title: isEnglish ? `Kural ${kural.number}` : `குறள் ${kural.number}`,
           headerRight: () => (
             <View style={styles.headerRightActions}>
               <TouchableOpacity
@@ -135,15 +141,17 @@ export default function KuralDetailScreen() {
           <View style={styles.kuralBadgeRow}>
             <View style={[styles.badge, { backgroundColor: colors.primaryLight }]}>
               <Text style={[styles.badgeText, { color: isDark ? '#FED7AA' : colors.primary }]}>
-                குறள் {kural.number}
+                {isEnglish ? `Kural ${kural.number}` : `குறள் ${kural.number}`}
               </Text>
             </View>
             <TouchableOpacity
               onPress={() => router.push(`/chapter/${kural.chapterNumber}`)}
               style={styles.chapterBadgeLink}
             >
-              <Text style={[styles.chapterLinkText, { color: colors.textSecondary }]}>
-                {kural.chapterNameTamil} →
+              <Text style={[styles.chapterLinkText, { color: colors.textSecondary }]} numberOfLines={1}>
+                {isEnglish
+                  ? `${kural.chapterTransliteration || kural.chapterNameEnglish} →`
+                  : `${kural.chapterNameTamil} →`}
               </Text>
             </TouchableOpacity>
           </View>
@@ -161,7 +169,7 @@ export default function KuralDetailScreen() {
           {kural.transliteration ? (
             <View style={[styles.transliterationContainer, { borderTopColor: colors.borderLight }]}>
               <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
-                English Transliteration
+                {t.kuralDetailScreen.transliterationHeader}
               </Text>
               <Text style={[styles.transliterationText, { color: colors.textSecondary }]}>
                 {kural.transliteration}
@@ -170,55 +178,76 @@ export default function KuralDetailScreen() {
           ) : null}
         </View>
 
-        {/* Quick Copy / Share / Export Action Bar */}
+        {/* Primary Action Bar: Share & Export */}
         <View style={styles.actionsBar}>
           <TouchableOpacity
             style={[styles.actionChip, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}
             onPress={() => setShowShareModal(true)}
+            accessibilityRole="button"
+            accessibilityLabel={t.kuralDetailScreen.shareKural}
           >
-            <Ionicons name="share-social-outline" size={14} color={colors.primary} />
+            <Ionicons name="share-social-outline" size={15} color={colors.primary} />
             <Text style={[styles.actionChipText, { color: colors.primary, fontWeight: '700' }]} numberOfLines={1}>
-              Share
+              {t.kuralDetailScreen.shareKural}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.actionChip, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={handleCopyTamil}
-          >
-            <Ionicons name="copy-outline" size={14} color={colors.primary} />
-            <Text style={[styles.actionChipText, { color: colors.text }]} numberOfLines={1}>Copy Tamil</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionChip, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={handleCopyTransliteration}
-          >
-            <Ionicons name="copy-outline" size={14} color={colors.primary} />
-            <Text style={[styles.actionChipText, { color: colors.text }]} numberOfLines={1}>Translit</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionChip, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={handleCopyBoth}
-          >
-            <Ionicons name="copy-outline" size={14} color={colors.primary} />
-            <Text style={[styles.actionChipText, { color: colors.text }]} numberOfLines={1}>Both</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionChip, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={() => setShowExportModal(true)}
+            accessibilityRole="button"
+            accessibilityLabel={t.kuralDetailScreen.exportDoc}
           >
-            <Ionicons name="download-outline" size={14} color={colors.accent} />
-            <Text style={[styles.actionChipText, { color: colors.text }]} numberOfLines={1}>Export</Text>
+            <Ionicons name="download-outline" size={15} color={colors.accent} />
+            <Text style={[styles.actionChipText, { color: colors.text }]} numberOfLines={1}>
+              {t.kuralDetailScreen.exportDoc}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Copy Text Action Bar: Displayed below for proper button label alignment */}
+        <View style={styles.copyActionsBar}>
+          <TouchableOpacity
+            style={[styles.copyChip, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={handleCopyTamil}
+            accessibilityRole="button"
+            accessibilityLabel="Copy Tamil Kural text"
+          >
+            <Ionicons name="copy-outline" size={14} color={colors.primary} />
+            <Text style={[styles.copyChipText, { color: colors.text }]} numberOfLines={1}>
+              {t.kuralDetailScreen.copyTamil}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.copyChip, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={handleCopyTransliteration}
+            accessibilityRole="button"
+            accessibilityLabel="Copy transliteration"
+          >
+            <Ionicons name="copy-outline" size={14} color={colors.primary} />
+            <Text style={[styles.copyChipText, { color: colors.text }]} numberOfLines={1}>
+              {t.kuralDetailScreen.copyTranslit}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.copyChip, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={handleCopyBoth}
+            accessibilityRole="button"
+            accessibilityLabel="Copy Tamil and transliteration"
+          >
+            <Ionicons name="copy-outline" size={14} color={colors.primary} />
+            <Text style={[styles.copyChipText, { color: colors.text }]} numberOfLines={1}>
+              {t.kuralDetailScreen.copyBoth}
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* English Translation */}
         {kural.translation ? (
           <View style={[styles.detailSection, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.sectionHeader, { color: colors.text }]}>English Translation</Text>
+            <Text style={[styles.sectionHeader, { color: colors.text }]}>{t.kuralDetailScreen.translationHeader}</Text>
             <Text style={[styles.bodyText, { color: colors.textSecondary }]}>{kural.translation}</Text>
             {kural.couplet ? (
               <View style={[styles.coupletBox, { backgroundColor: colors.surface }]}>
@@ -231,14 +260,14 @@ export default function KuralDetailScreen() {
           </View>
         ) : null}
 
-        {/* Commentaries (உரைகள்) */}
+        {/* Commentaries (உரைகள் / Urai) */}
         <View style={[styles.detailSection, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.sectionHeader, { color: colors.text }]}>உரைகள் (Commentaries)</Text>
+          <Text style={[styles.sectionHeader, { color: colors.text }]}>{t.kuralDetailScreen.commentaryHeader}</Text>
 
           {kural.commentaryMV ? (
             <View style={styles.commentaryItem}>
               <Text style={[styles.commentaryAuthor, { color: colors.primary }]}>
-                மு. வரதராசனார் உரை
+                {t.kuralDetailScreen.authorMV}
               </Text>
               <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
                 {kural.commentaryMV}
@@ -249,7 +278,7 @@ export default function KuralDetailScreen() {
           {kural.commentarySP ? (
             <View style={[styles.commentaryItem, { borderTopColor: colors.borderLight, borderTopWidth: 1 }]}>
               <Text style={[styles.commentaryAuthor, { color: colors.accent }]}>
-                சாலமன் பாப்பையா உரை
+                {t.kuralDetailScreen.authorSP}
               </Text>
               <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
                 {kural.commentarySP}
@@ -260,7 +289,7 @@ export default function KuralDetailScreen() {
           {kural.commentaryMK ? (
             <View style={[styles.commentaryItem, { borderTopColor: colors.borderLight, borderTopWidth: 1 }]}>
               <Text style={[styles.commentaryAuthor, { color: '#10B981' }]}>
-                கலைஞர் மு. கருணாநிதி உரை
+                {t.kuralDetailScreen.authorMK}
               </Text>
               <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
                 {kural.commentaryMK}
@@ -271,33 +300,54 @@ export default function KuralDetailScreen() {
 
         {/* Structural Metadata */}
         <View style={[styles.detailSection, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.sectionHeader, { color: colors.text }]}>அமைப்பு விவரங்கள் (Structure)</Text>
+          <Text style={[styles.sectionHeader, { color: colors.text }]}>{t.kuralDetailScreen.structureHeader}</Text>
 
           <View style={styles.metaGrid}>
             <View style={styles.metaCell}>
-              <Text style={[styles.metaCellLabel, { color: colors.textMuted }]}>பால் (Category)</Text>
-              <Text style={[styles.metaCellValue, { color: colors.text }]}>{kural.categoryTamil}</Text>
-              <Text style={[styles.metaCellSub, { color: colors.textSecondary }]}>{kural.categoryEnglish}</Text>
-            </View>
-
-            <View style={styles.metaCell}>
-              <Text style={[styles.metaCellLabel, { color: colors.textMuted }]}>இயல் (Group)</Text>
-              <Text style={[styles.metaCellValue, { color: colors.text }]}>{kural.chapterGroupTamil}</Text>
-              <Text style={[styles.metaCellSub, { color: colors.textSecondary }]}>{kural.chapterGroupEnglish}</Text>
-            </View>
-
-            <View style={styles.metaCell}>
-              <Text style={[styles.metaCellLabel, { color: colors.textMuted }]}>அதிகாரம் (Chapter)</Text>
-              <Text style={[styles.metaCellValue, { color: colors.text }]}>{kural.chapterNameTamil}</Text>
+              <Text style={[styles.metaCellLabel, { color: colors.textMuted }]}>{t.kuralDetailScreen.categoryLabel}</Text>
+              <Text style={[styles.metaCellValue, { color: colors.text }]}>
+                {isEnglish
+                  ? (kural.categoryTamil.includes('அறத்து')
+                      ? 'Arathupaal'
+                      : kural.categoryTamil.includes('பொருட்')
+                      ? 'Porutpaal'
+                      : 'Kaamathupaal')
+                  : kural.categoryTamil}
+              </Text>
               <Text style={[styles.metaCellSub, { color: colors.textSecondary }]}>
-                #{kural.chapterNumber} • {kural.chapterNameEnglish}
+                {isEnglish ? kural.categoryTamil : kural.categoryEnglish}
               </Text>
             </View>
 
             <View style={styles.metaCell}>
-              <Text style={[styles.metaCellLabel, { color: colors.textMuted }]}>குறள் எண்</Text>
+              <Text style={[styles.metaCellLabel, { color: colors.textMuted }]}>{t.kuralDetailScreen.groupLabel}</Text>
+              <Text style={[styles.metaCellValue, { color: colors.text }]}>
+                {isEnglish ? kural.chapterGroupEnglish : kural.chapterGroupTamil}
+              </Text>
+              <Text style={[styles.metaCellSub, { color: colors.textSecondary }]}>
+                {isEnglish ? kural.chapterGroupTamil : kural.chapterGroupEnglish}
+              </Text>
+            </View>
+
+            <View style={styles.metaCell}>
+              <Text style={[styles.metaCellLabel, { color: colors.textMuted }]}>{t.kuralDetailScreen.chapterLabel}</Text>
+              <Text style={[styles.metaCellValue, { color: colors.text }]}>
+                {isEnglish
+                  ? kural.chapterTransliteration || kural.chapterNameEnglish
+                  : kural.chapterNameTamil}
+              </Text>
+              <Text style={[styles.metaCellSub, { color: colors.textSecondary }]}>
+                #{kural.chapterNumber} •{' '}
+                {isEnglish
+                  ? kural.chapterNameTamil
+                  : kural.chapterTransliteration || kural.chapterNameEnglish}
+              </Text>
+            </View>
+
+            <View style={styles.metaCell}>
+              <Text style={[styles.metaCellLabel, { color: colors.textMuted }]}>{t.kuralDetailScreen.kuralNumberLabel}</Text>
               <Text style={[styles.metaCellValue, { color: colors.primary }]}>{kural.number}</Text>
-              <Text style={[styles.metaCellSub, { color: colors.textSecondary }]}>of 1330</Text>
+              <Text style={[styles.metaCellSub, { color: colors.textSecondary }]}>{t.kuralDetailScreen.ofTotal}</Text>
             </View>
           </View>
         </View>
@@ -317,7 +367,7 @@ export default function KuralDetailScreen() {
             disabled={kural.number <= 1}
           >
             <Ionicons name="arrow-back" size={18} color={colors.primary} />
-            <Text style={[styles.navBtnText, { color: colors.primary }]}>முந்தைய குறள்</Text>
+            <Text style={[styles.navBtnText, { color: colors.primary }]}>{t.kuralDetailScreen.prevKural}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -332,7 +382,7 @@ export default function KuralDetailScreen() {
             onPress={goToNext}
             disabled={kural.number >= 1330}
           >
-            <Text style={[styles.navBtnText, { color: colors.primary }]}>அடுத்த குறள்</Text>
+            <Text style={[styles.navBtnText, { color: colors.primary }]}>{t.kuralDetailScreen.nextKural}</Text>
             <Ionicons name="arrow-forward" size={18} color={colors.primary} />
           </TouchableOpacity>
         </View>
@@ -474,23 +524,45 @@ const styles = StyleSheet.create({
   },
   actionsBar: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 14,
+    gap: 10,
+    marginBottom: 8,
   },
   actionChip: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 9,
-    paddingHorizontal: 4,
-    borderRadius: 10,
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 12,
     borderWidth: 1,
   },
   actionChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  copyActionsBar: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 14,
+  },
+  copyChip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 9,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  copyChipText: {
     fontSize: 12,
     fontWeight: '600',
+    textAlign: 'center',
   },
   detailSection: {
     borderRadius: 16,
@@ -533,11 +605,12 @@ const styles = StyleSheet.create({
   metaGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    justifyContent: 'space-between',
+    rowGap: 12,
   },
   metaCell: {
     width: '48%',
-    padding: 10,
+    padding: 6,
   },
   metaCellLabel: {
     fontSize: 11,

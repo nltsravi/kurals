@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useCollections } from '../../src/context/CollectionContext';
 import { useTheme } from '../../src/context/ThemeContext';
+import { useLanguage } from '../../src/context/LanguageContext';
 
 const COLOR_OPTIONS = [
   '#FF7C0A', // Saffron / Orange (Brand)
@@ -27,6 +28,7 @@ const COLOR_OPTIONS = [
 export default function CreateCollectionScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { t, isEnglish } = useLanguage();
   const { createCollection } = useCollections();
 
   const [name, setName] = useState('');
@@ -55,7 +57,7 @@ export default function CreateCollectionScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.label, { color: colors.text }]}>Collection Name (பெயர்)</Text>
+            <Text style={[styles.label, { color: colors.text }]}>{t.createCollectionScreen.nameLabel}</Text>
             <TextInput
               style={[
                 styles.input,
@@ -67,13 +69,13 @@ export default function CreateCollectionScreen() {
               ]}
               value={name}
               onChangeText={setName}
-              placeholder="e.g. My Favorite Kurals, Exam Prep"
+              placeholder={t.createCollectionScreen.namePlaceholder}
               placeholderTextColor={colors.textMuted}
               autoFocus
             />
 
             <Text style={[styles.label, { color: colors.text, marginTop: 16 }]}>
-              Description (விளக்கம் - Optional)
+              {t.createCollectionScreen.descLabel}
             </Text>
             <TextInput
               style={[
@@ -86,14 +88,14 @@ export default function CreateCollectionScreen() {
               ]}
               value={description}
               onChangeText={setDescription}
-              placeholder="Brief note about this collection"
+              placeholder={t.createCollectionScreen.descPlaceholder}
               placeholderTextColor={colors.textMuted}
               multiline
               numberOfLines={3}
             />
 
             <Text style={[styles.label, { color: colors.text, marginTop: 16 }]}>
-              Accent Color (வண்ணம்)
+              {t.createCollectionScreen.colorLabel}
             </Text>
             <View style={styles.colorRow}>
               {COLOR_OPTIONS.map((c) => (
@@ -126,9 +128,9 @@ export default function CreateCollectionScreen() {
               onPress={handleSave}
               disabled={!name.trim() || isSubmitting}
               accessibilityRole="button"
-              accessibilityLabel="Create Collection"
+              accessibilityLabel={t.createCollectionScreen.createBtn}
             >
-              <Text style={styles.saveBtnText}>Create Collection</Text>
+              <Text style={styles.saveBtnText}>{t.createCollectionScreen.createBtn}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

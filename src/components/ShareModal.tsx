@@ -12,8 +12,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { captureRef } from 'react-native-view-shot';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Kural } from '../types/kural';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import {
   ShareService,
   SocialPlatform,
@@ -52,7 +54,10 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   kural,
 }) => {
   const { colors, isDark } = useTheme();
+  const { t, isEnglish } = useLanguage();
+  const insets = useSafeAreaInsets();
   const imageCardRef = useRef<View>(null);
+
 
   const [shareTab, setShareTab] = useState<'image' | 'text'>('image');
   const [meaningType, setMeaningType] = useState<MeaningType>('mv');
@@ -222,15 +227,17 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             <View style={styles.headerLeft}>
               <View style={[styles.headerBadge, { backgroundColor: colors.primaryLight }]}>
                 <Text style={[styles.headerBadgeText, { color: colors.primary }]}>
-                  குறள் {kural.number}
+                  {t.common.kural} {kural.number}
                 </Text>
               </View>
               <View>
                 <Text style={[styles.modalTitle, { color: colors.text }]}>
-                  பகிர் & உரை | Share Kural
+                  {t.shareModal.title}
                 </Text>
                 <Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>
-                  {kural.chapterNameTamil} • {kural.categoryTamil}
+                  {isEnglish
+                    ? `${kural.chapterTransliteration || kural.chapterNameEnglish || kural.chapterNameTamil} • ${kural.categoryEnglish || kural.categoryTamil}`
+                    : `${kural.chapterNameTamil} • ${kural.categoryTamil}`}
                 </Text>
               </View>
             </View>
@@ -269,7 +276,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                   { color: shareTab === 'image' ? colors.primary : colors.textSecondary },
                 ]}
               >
-                படம் (Image Card)
+                {t.shareModal.tabImage}
               </Text>
             </TouchableOpacity>
 
@@ -295,7 +302,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                   { color: shareTab === 'text' ? colors.primary : colors.textSecondary },
                 ]}
               >
-                உரை (Text Format)
+                {t.shareModal.tabText}
               </Text>
             </TouchableOpacity>
           </View>
@@ -319,7 +326,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             {/* Meaning Selector (Live-updates Image and Text) */}
             <View style={styles.sectionBlock}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                பொருள் / உரை தேர்வு (Select Meaning)
+                {t.shareModal.selectMeaningTitle}
               </Text>
               <ScrollView
                 horizontal
@@ -396,7 +403,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                     <Ionicons name="share-social" size={20} color="#FFFFFF" />
                   )}
                   <Text style={styles.heroShareImageBtnText}>
-                    {isProcessing ? 'படம் உருவாக்கப்படுகிறது...' : 'படம் பகிர் (Share Image Card)'}
+                    {isProcessing ? t.shareModal.imageCreating : t.shareModal.shareImageHero}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -498,8 +505,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             <View style={styles.sectionBlock}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
                 {shareTab === 'image'
-                  ? 'படத்தை சமூக வலைத்தளங்களில் பகிர (Share Image to Apps)'
-                  : 'உரையை சமூக வலைத்தளங்களில் பகிர (Share Text to Apps)'}
+                  ? t.shareModal.shareGridImageTitle
+                  : t.shareModal.shareGridTextTitle}
               </Text>
 
               <View style={styles.socialGrid}>
@@ -677,7 +684,15 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           </ScrollView>
 
           {/* Bottom Bar: Quick Copy Kural Text Button */}
-          <View style={[styles.footer, { borderTopColor: colors.borderLight }]}>
+          <View
+            style={[
+              styles.footer,
+              {
+                borderTopColor: colors.borderLight,
+                paddingBottom: Math.max(12, insets.bottom > 0 ? insets.bottom + 6 : 12),
+              },
+            ]}
+          >
             <TouchableOpacity
               style={[
                 styles.copyTextBtn,
@@ -685,11 +700,18 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               ]}
               onPress={handleCopyText}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel={`${t.shareModal.quickCopyTextBtnTitle} ${t.shareModal.quickCopyTextBtnSub}`}
             >
-              <Ionicons name="copy-outline" size={18} color={colors.primary} />
-              <Text style={[styles.copyTextBtnTitle, { color: colors.text }]}>
-                குறள் உரையை நகலெடு (Copy Kural Text)
-              </Text>
+              <Ionicons name="copy-outline" size={19} color={colors.primary} />
+              <View style={styles.copyTextBtnTextCol}>
+                <Text style={[styles.copyTextBtnTitle, { color: colors.text }]}>
+                  {t.shareModal.quickCopyTextBtnTitle}
+                </Text>
+                <Text style={[styles.copyTextBtnSubtitle, { color: colors.textSecondary }]}>
+                  {t.shareModal.quickCopyTextBtnSub}
+                </Text>
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -986,20 +1008,32 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: 18,
-    paddingVertical: 12,
+    paddingTop: 12,
     borderTopWidth: 1,
   },
   copyTextBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     borderRadius: 12,
     borderWidth: 1,
+  },
+  copyTextBtnTextCol: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   copyTextBtnTitle: {
     fontSize: 14,
     fontWeight: '700',
+    textAlign: 'center',
+  },
+  copyTextBtnSubtitle: {
+    fontSize: 11.5,
+    fontWeight: '600',
+    marginTop: 2,
+    textAlign: 'center',
   },
 });

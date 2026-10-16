@@ -14,6 +14,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useCollections } from '../../src/context/CollectionContext';
 import { useTheme } from '../../src/context/ThemeContext';
+import { useLanguage } from '../../src/context/LanguageContext';
 import { KuralService } from '../../src/services/kuralService';
 import { ExportModal } from '../../src/components/ExportModal';
 import { ShareModal } from '../../src/components/ShareModal';
@@ -25,6 +26,7 @@ export default function CollectionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { t, isEnglish } = useLanguage();
   const { collections, updateCollection, deleteCollection, removeKuralFromCollection, moveKural } =
     useCollections();
 
@@ -38,12 +40,16 @@ export default function CollectionDetailScreen() {
   if (!collection) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
-        <Text style={[styles.errorText, { color: colors.text }]}>தொகுப்பு கிடைக்கவில்லை</Text>
+        <Text style={[styles.errorText, { color: colors.text }]}>
+          {isEnglish ? 'Collection not found' : 'தொகுப்பு கிடைக்கவில்லை'}
+        </Text>
         <TouchableOpacity
           style={[styles.backBtn, { backgroundColor: colors.primary }]}
           onPress={() => router.back()}
         >
-          <Text style={styles.backBtnText}>Back to Collections</Text>
+          <Text style={styles.backBtnText}>
+            {isEnglish ? 'Back to Collections' : 'தொகுப்புகளுக்குத் திரும்பு'}
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -59,12 +65,14 @@ export default function CollectionDetailScreen() {
 
   const handleDeleteCollection = () => {
     Alert.alert(
-      'Delete Collection',
-      `Are you sure you want to delete "${collection.name}"?`,
+      t.collectionDetailScreen.deleteTitle,
+      isEnglish
+        ? `Are you sure you want to delete "${collection.name}"? This cannot be undone.`
+        : `இந்தத் தொகுப்பை நிச்சயமாக நீக்க வேண்டுமா? ("${collection.name}")`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t.common.cancel, style: 'cancel' },
         {
-          text: 'Delete',
+          text: t.common.delete,
           style: 'destructive',
           onPress: async () => {
             await deleteCollection(collection.id);
@@ -77,12 +85,14 @@ export default function CollectionDetailScreen() {
 
   const handleRemoveKural = (kuralNumber: number) => {
     Alert.alert(
-      'Remove Kural',
-      `Remove குறள் ${kuralNumber} from "${collection.name}"?`,
+      t.collectionDetailScreen.removeKuralTitle,
+      isEnglish
+        ? `Remove Kural ${kuralNumber} from "${collection.name}"?`
+        : `குறள் ${kuralNumber} ஐ "${collection.name}" தொகுப்பிலிருந்து நீக்கவா?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t.common.cancel, style: 'cancel' },
         {
-          text: 'Remove',
+          text: isEnglish ? 'Remove' : 'நீக்கு',
           style: 'destructive',
           onPress: async () => {
             await removeKuralFromCollection(collection.id, kuralNumber);
@@ -180,8 +190,7 @@ export default function CollectionDetailScreen() {
 
               <View style={[styles.metaBar, { borderTopColor: colors.borderLight }]}>
                 <Text style={[styles.metaText, { color: colors.textMuted }]}>
-                  {kurals.length} {kurals.length === 1 ? 'Kural' : 'Kurals'} •{' '}
-                  {kurals.length} குறள்கள்
+                  {kurals.length} {kurals.length === 1 ? (isEnglish ? 'Kural' : 'குறள்') : (isEnglish ? 'Kurals' : 'குறள்கள்')}
                 </Text>
                 {kurals.length > 0 && (
                   <TouchableOpacity
@@ -189,7 +198,7 @@ export default function CollectionDetailScreen() {
                     onPress={() => setShowExportModal(true)}
                   >
                     <Ionicons name="share-outline" size={14} color={colors.primary} />
-                    <Text style={[styles.exportChipText, { color: colors.primary }]}>Export</Text>
+                    <Text style={[styles.exportChipText, { color: colors.primary }]}>{t.common.export}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -210,11 +219,17 @@ export default function CollectionDetailScreen() {
                 <View style={styles.cardHeader}>
                   <View style={[styles.kuralNumBadge, { backgroundColor: colors.primaryLight }]}>
                     <Text style={[styles.kuralNumText, { color: isDark ? '#FED7AA' : colors.primary }]}>
-                      குறள் {item.number}
+                      {isEnglish ? `Kural ${item.number}` : `குறள் ${item.number}`}
                     </Text>
                   </View>
-                  <Text style={[styles.cardChapter, { color: colors.textSecondary }]}>
-                    {item.chapterNameTamil}
+                  <Text
+                    style={[styles.cardChapter, { color: colors.textSecondary }]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {isEnglish
+                      ? item.chapterTransliteration || item.chapterNameEnglish
+                      : item.chapterNameTamil}
                   </Text>
                 </View>
 
@@ -243,7 +258,7 @@ export default function CollectionDetailScreen() {
                     disabled={index === 0}
                     style={[styles.arrowBtn, { opacity: index === 0 ? 0.3 : 1 }]}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    accessibilityLabel="Move Kural up"
+                    accessibilityLabel={isEnglish ? "Move Kural up" : "மேலே நகர்த்து"}
                   >
                     <Ionicons name="arrow-up" size={16} color={colors.text} />
                   </TouchableOpacity>
@@ -253,7 +268,7 @@ export default function CollectionDetailScreen() {
                     disabled={index === kurals.length - 1}
                     style={[styles.arrowBtn, { opacity: index === kurals.length - 1 ? 0.3 : 1 }]}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    accessibilityLabel="Move Kural down"
+                    accessibilityLabel={isEnglish ? "Move Kural down" : "கீழே நகர்த்து"}
                   >
                     <Ionicons name="arrow-down" size={16} color={colors.text} />
                   </TouchableOpacity>
@@ -264,20 +279,22 @@ export default function CollectionDetailScreen() {
                     onPress={() => setShareKural(item)}
                     style={styles.shareBtn}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    accessibilityLabel="Share Kural"
+                    accessibilityLabel={t.common.share}
                   >
                     <Ionicons name="share-social-outline" size={16} color={colors.primary} />
-                    <Text style={[styles.shareText, { color: colors.primary }]}>Share</Text>
+                    <Text style={[styles.shareText, { color: colors.primary }]}>{t.common.share}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     onPress={() => handleRemoveKural(item.number)}
                     style={styles.removeBtn}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    accessibilityLabel="Remove from collection"
+                    accessibilityLabel={isEnglish ? "Remove from collection" : "தொகுப்பிலிருந்து நீக்கு"}
                   >
                     <Ionicons name="close-circle-outline" size={16} color={colors.danger} />
-                    <Text style={[styles.removeText, { color: colors.danger }]}>Remove</Text>
+                    <Text style={[styles.removeText, { color: colors.danger }]}>
+                      {isEnglish ? 'Remove' : 'நீக்கு'}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -285,10 +302,10 @@ export default function CollectionDetailScreen() {
           )}
           ListEmptyComponent={
             <EmptyState
-              icon="book-outline"
-              title="No Kurals in this collection"
-              description="Browse chapters or search to find Kurals and add them here."
-              actionLabel="Search Kurals"
+              icon="bookmark-outline"
+              title={t.collectionDetailScreen.emptyTitle}
+              description={t.collectionDetailScreen.emptyDesc}
+              actionLabel={isEnglish ? "Search Kurals" : "குறள்களைத் தேடுக"}
               onAction={() => router.push('/search')}
             />
           }

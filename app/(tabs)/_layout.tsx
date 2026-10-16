@@ -2,11 +2,13 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/context/ThemeContext';
+import { useLanguage } from '../../src/context/LanguageContext';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
   const insets = useSafeAreaInsets();
 
   // On devices with on-screen navigation buttons (such as Samsung 3-button nav, e.g. Samsung M47),
@@ -56,9 +58,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t.tabs.home,
           headerShown: false,
-          tabBarLabel: 'முகப்பு',
+          tabBarLabel: t.tabs.home,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'home' : 'home-outline'} size={22} color={color} />
           ),
@@ -67,9 +69,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="search"
         options={{
-          title: 'தேடல்',
+          title: t.tabs.search,
           headerShown: false,
-          tabBarLabel: 'தேடல்',
+          tabBarLabel: t.tabs.search,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'search' : 'search-outline'} size={22} color={color} />
           ),
@@ -78,8 +80,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="chapters"
         options={{
-          title: 'அதிகாரங்கள்',
-          tabBarLabel: 'அதிகாரங்கள்',
+          title: t.tabs.chapters,
+          tabBarLabel: t.tabs.chapters,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'book' : 'book-outline'} size={22} color={color} />
           ),
@@ -88,8 +90,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="collections"
         options={{
-          title: 'தொகுப்புகள்',
-          tabBarLabel: 'தொகுப்புகள்',
+          title: t.tabs.collections,
+          tabBarLabel: t.tabs.collections,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'bookmark' : 'bookmark-outline'} size={22} color={color} />
           ),
@@ -98,8 +100,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'அமைப்புகள்',
-          tabBarLabel: 'அமைப்புகள்',
+          title: t.tabs.settings,
+          tabBarLabel: t.tabs.settings,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'settings' : 'settings-outline'} size={22} color={color} />
           ),
@@ -108,3 +110,4 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+

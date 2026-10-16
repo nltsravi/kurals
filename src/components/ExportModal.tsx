@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Kural } from '../types/kural';
 import { ExportService } from '../services/exportService';
 import { ShareService } from '../services/shareService';
@@ -29,6 +30,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   kurals,
 }) => {
   const { colors, isDark } = useTheme();
+  const { isEnglish } = useLanguage();
   const [isExporting, setIsExporting] = useState(false);
   const [exportFormat, setExportFormat] = useState<'pdf' | 'docx' | null>(null);
 
@@ -51,16 +53,20 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         } catch (shareErr) {
           console.error('Share dialog error:', shareErr);
           Alert.alert(
-            'Share Failed',
-            'Unable to open the share dialog. Please try again.'
+            isEnglish ? 'Share Failed' : 'பகிர்வதில் பிழை',
+            isEnglish
+              ? 'Unable to open the share dialog. Please try again.'
+              : 'பகிர்வு உரையாடலைத் திறக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.'
           );
         }
       }, 250);
     } catch (error) {
       console.error('Export error:', error);
       Alert.alert(
-        'Export Failed',
-        'Unable to create the document. Please try again.'
+        isEnglish ? 'Export Failed' : 'ஏற்றுமதியில் பிழை',
+        isEnglish
+          ? 'Unable to create the document. Please try again.'
+          : 'ஆவணத்தை உருவாக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.'
       );
     } finally {
       setIsExporting(false);
@@ -80,9 +86,16 @@ export const ExportModal: React.FC<ExportModalProps> = ({
           <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <View style={[styles.header, { borderBottomColor: colors.borderLight }]}>
                 <View>
-                  <Text style={[styles.title, { color: colors.text }]}>Export & Share</Text>
+                  <Text style={[styles.title, { color: colors.text }]}>
+                    {isEnglish ? 'Export & Share' : 'ஆவண ஏற்றுமதி & பகிர்வு'}
+                  </Text>
                   <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                    {title} • {kurals.length} {kurals.length === 1 ? 'Kural' : 'Kurals'}
+                    {title} • {kurals.length}{' '}
+                    {isEnglish
+                      ? kurals.length === 1
+                        ? 'Kural'
+                        : 'Kurals'
+                      : 'குறள்கள்'}
                   </Text>
                 </View>
                 <TouchableOpacity onPress={onClose} style={styles.closeBtn} disabled={isExporting}>
@@ -94,10 +107,14 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="large" color={colors.primary} />
                   <Text style={[styles.loadingText, { color: colors.text }]}>
-                    Generating {exportFormat?.toUpperCase()} document...
+                    {isEnglish
+                      ? `Generating ${exportFormat?.toUpperCase()} document...`
+                      : `${exportFormat?.toUpperCase()} ஆவணம் உருவாக்கப்படுகிறது...`}
                   </Text>
                   <Text style={[styles.subLoadingText, { color: colors.textMuted }]}>
-                    Please wait while formatting Tamil text
+                    {isEnglish
+                      ? 'Please wait while formatting text'
+                      : 'தயவுசெய்து காத்திருக்கவும்'}
                   </Text>
                 </View>
               ) : (
@@ -106,15 +123,19 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     style={[styles.formatOption, { borderColor: colors.border, backgroundColor: isDark ? colors.surface : colors.card }]}
                     onPress={() => handleExport('pdf')}
                     accessibilityRole="button"
-                    accessibilityLabel="Export as PDF"
+                    accessibilityLabel={isEnglish ? 'Export as PDF' : 'PDF ஆக ஏற்றுமதி'}
                   >
                     <View style={[styles.formatIconCircle, { backgroundColor: '#FEE2E2' }]}>
                       <Ionicons name="document-text" size={26} color="#DC2626" />
                     </View>
                     <View style={styles.formatTextContainer}>
-                      <Text style={[styles.formatName, { color: colors.text }]}>PDF Document (.pdf)</Text>
+                      <Text style={[styles.formatName, { color: colors.text }]}>
+                        {isEnglish ? 'PDF Document (.pdf)' : 'PDF ஆவணம் (.pdf)'}
+                      </Text>
                       <Text style={[styles.formatDesc, { color: colors.textSecondary }]}>
-                        Best for printing, reading, and sharing with clean Tamil fonts
+                        {isEnglish
+                          ? 'Best for printing, reading, and sharing with clean Tamil fonts'
+                          : 'அச்சிட மற்றும் வாசிக்க உகந்தது'}
                       </Text>
                     </View>
                     <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
@@ -124,15 +145,19 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     style={[styles.formatOption, { borderColor: colors.border, backgroundColor: isDark ? colors.surface : colors.card }]}
                     onPress={() => handleExport('docx')}
                     accessibilityRole="button"
-                    accessibilityLabel="Export as Word DOCX"
+                    accessibilityLabel={isEnglish ? 'Export as Word DOCX' : 'Word DOCX ஆக ஏற்றுமதி'}
                   >
                     <View style={[styles.formatIconCircle, { backgroundColor: '#DBEAFE' }]}>
                       <Ionicons name="document" size={26} color="#2563EB" />
                     </View>
                     <View style={styles.formatTextContainer}>
-                      <Text style={[styles.formatName, { color: colors.text }]}>Word Document (.docx)</Text>
+                      <Text style={[styles.formatName, { color: colors.text }]}>
+                        {isEnglish ? 'Word Document (.docx)' : 'Word ஆவணம் (.docx)'}
+                      </Text>
                       <Text style={[styles.formatDesc, { color: colors.textSecondary }]}>
-                        Editable Microsoft Word document formatted with structured kurals
+                        {isEnglish
+                          ? 'Editable Microsoft Word document formatted with structured kurals'
+                          : 'திருத்தக்கூடிய மைக்ரோசாஃப்ட் வேர்ட் ஆவணம்'}
                       </Text>
                     </View>
                     <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />

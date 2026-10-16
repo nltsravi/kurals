@@ -12,6 +12,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { KuralService } from '../../src/services/kuralService';
 import { useTheme } from '../../src/context/ThemeContext';
+import { useLanguage } from '../../src/context/LanguageContext';
 import { useCollections } from '../../src/context/CollectionContext';
 import { KuralCard } from '../../src/components/KuralCard';
 import { ExportModal } from '../../src/components/ExportModal';
@@ -23,6 +24,7 @@ export default function ChapterDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { t, isEnglish } = useLanguage();
   const { collections } = useCollections();
 
   const [showExportModal, setShowExportModal] = useState(false);
@@ -36,12 +38,12 @@ export default function ChapterDetailScreen() {
   if (!chapter) {
     return (
       <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
-        <Text style={[styles.errorText, { color: colors.text }]}>அதிகாரம் கிடைக்கவில்லை</Text>
+        <Text style={[styles.errorText, { color: colors.text }]}>{t.chapterDetailScreen.notFound}</Text>
         <TouchableOpacity
           style={[styles.backBtn, { backgroundColor: colors.primary }]}
           onPress={() => router.back()}
         >
-          <Text style={styles.backBtnText}>Go Back</Text>
+          <Text style={styles.backBtnText}>{t.chapterDetailScreen.goBack}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -59,16 +61,31 @@ export default function ChapterDetailScreen() {
     }
   };
 
+  const categoryName = isEnglish
+    ? (chapter.categoryTamil.includes('அறத்து')
+        ? 'Arathupaal'
+        : chapter.categoryTamil.includes('பொருட்')
+        ? 'Porutpaal'
+        : 'Kaamathupaal')
+    : chapter.categoryTamil;
+  const groupName = isEnglish ? chapter.groupEnglish : chapter.groupTamil;
+  const translitChapter = chapter.transliteration || chapter.nameEnglish;
+  const primaryTitle = isEnglish ? translitChapter : chapter.nameTamil;
+  const secondaryTitle = isEnglish ? chapter.nameTamil : translitChapter;
+  const rangeText = isEnglish
+    ? `Kurals ${chapter.startKural} to ${chapter.endKural} (10 Kurals)`
+    : `குறள்கள் ${chapter.startKural} முதல் ${chapter.endKural} வரை (10 குறள்கள்)`;
+
   return (
     <>
       <Stack.Screen
         options={{
-          title: `அதிகாரம் ${chapter.number}`,
+          title: isEnglish ? `Chapter ${chapter.number}` : `அதிகாரம் ${chapter.number}`,
           headerRight: () => (
             <TouchableOpacity
               onPress={() => setShowExportModal(true)}
               style={styles.headerExportBtn}
-              accessibilityLabel="Export Chapter"
+              accessibilityLabel={t.chapterDetailScreen.exportChapter}
             >
               <Ionicons name="download-outline" size={22} color={colors.primary} />
             </TouchableOpacity>
@@ -87,32 +104,34 @@ export default function ChapterDetailScreen() {
               <View style={styles.badgeRow}>
                 <View style={[styles.chBadge, { backgroundColor: colors.primaryLight }]}>
                   <Text style={[styles.chBadgeText, { color: isDark ? '#FED7AA' : colors.primary }]}>
-                    அதிகாரம் {chapter.number}
+                    {isEnglish ? `Chapter ${chapter.number}` : `அதிகாரம் ${chapter.number}`}
                   </Text>
                 </View>
                 <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-                  {chapter.categoryTamil} • {chapter.groupTamil}
+                  {categoryName} • {groupName}
                 </Text>
               </View>
 
               <Text style={[styles.chapterTitleTamil, { color: colors.text }]}>
-                {chapter.nameTamil}
+                {primaryTitle}
               </Text>
 
               <Text style={[styles.chapterTitleEnglish, { color: colors.textSecondary }]}>
-                {chapter.nameEnglish} ({chapter.transliteration})
+                {secondaryTitle}
               </Text>
 
               <View style={[styles.footerMeta, { borderTopColor: colors.borderLight }]}>
                 <Text style={[styles.rangeText, { color: colors.textMuted }]}>
-                  குறள்கள் {chapter.startKural} முதல் {chapter.endKural} வரை (10 குறள்கள்)
+                  {rangeText}
                 </Text>
                 <TouchableOpacity
                   style={[styles.exportChip, { backgroundColor: isDark ? colors.surface : colors.primaryLight }]}
                   onPress={() => setShowExportModal(true)}
                 >
                   <Ionicons name="share-outline" size={14} color={colors.primary} />
-                  <Text style={[styles.exportChipText, { color: colors.primary }]}>Export Chapter</Text>
+                  <Text style={[styles.exportChipText, { color: colors.primary }]}>
+                    {t.chapterDetailScreen.exportChapter}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -145,7 +164,7 @@ export default function ChapterDetailScreen() {
                 disabled={chapter.number <= 1}
               >
                 <Ionicons name="arrow-back" size={18} color={colors.primary} />
-                <Text style={[styles.navBtnText, { color: colors.primary }]}>முந்தைய அதிகாரம்</Text>
+                <Text style={[styles.navBtnText, { color: colors.primary }]}>{t.chapterDetailScreen.prevChapter}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -160,7 +179,7 @@ export default function ChapterDetailScreen() {
                 onPress={goToNext}
                 disabled={chapter.number >= 133}
               >
-                <Text style={[styles.navBtnText, { color: colors.primary }]}>அடுத்த அதிகாரம்</Text>
+                <Text style={[styles.navBtnText, { color: colors.primary }]}>{t.chapterDetailScreen.nextChapter}</Text>
                 <Ionicons name="arrow-forward" size={18} color={colors.primary} />
               </TouchableOpacity>
             </View>
@@ -269,6 +288,8 @@ const styles = StyleSheet.create({
   rangeText: {
     fontSize: 12,
     fontWeight: '500',
+    flex: 1,
+    marginRight: 8,
   },
   exportChip: {
     flexDirection: 'row',

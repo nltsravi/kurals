@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-nativ
 import { Ionicons } from '@expo/vector-icons';
 import { Kural } from '../types/kural';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { KuralCoupletText } from './KuralCoupletText';
 
 interface KuralCardProps {
@@ -25,6 +26,12 @@ export const KuralCard: React.FC<KuralCardProps> = ({
   showChapter = true,
 }) => {
   const { colors, isDark } = useTheme();
+  const { isEnglish } = useLanguage();
+
+  const kuralLabel = isEnglish ? `Kural ${kural.number}` : `குறள் ${kural.number}`;
+  const chapterName = isEnglish
+    ? kural.chapterTransliteration || kural.chapterNameEnglish
+    : kural.chapterNameTamil;
 
   return (
     <Pressable
@@ -38,18 +45,22 @@ export const KuralCard: React.FC<KuralCardProps> = ({
         },
       ]}
       accessibilityRole="button"
-      accessibilityLabel={`குறள் ${kural.number}, ${kural.line1} ${kural.line2}`}
+      accessibilityLabel={`${kuralLabel}, ${kural.line1} ${kural.line2}`}
     >
       <View style={styles.topRow}>
         <View style={[styles.numberBadge, { backgroundColor: colors.primaryLight }]}>
           <Text style={[styles.numberText, { color: isDark ? '#FED7AA' : colors.primary }]}>
-            குறள் {kural.number}
+            {kuralLabel}
           </Text>
         </View>
 
         {showChapter && (
-          <Text style={[styles.chapterText, { color: colors.textSecondary }]} numberOfLines={1}>
-            {kural.chapterNameTamil}
+          <Text
+            style={[styles.chapterText, { color: colors.textSecondary }]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {chapterName}
           </Text>
         )}
 

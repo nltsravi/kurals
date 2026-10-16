@@ -11,12 +11,12 @@ import { useRouter, usePathname, useSegments } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export type TabKey = 'index' | 'search' | 'chapters' | 'collections' | 'settings';
 
 interface TabItemConfig {
   key: TabKey;
-  label: string;
   outlineIcon: keyof typeof Ionicons.glyphMap;
   filledIcon: keyof typeof Ionicons.glyphMap;
   targetPath: string;
@@ -25,35 +25,30 @@ interface TabItemConfig {
 const TAB_ITEMS: TabItemConfig[] = [
   {
     key: 'index',
-    label: 'முகப்பு',
     outlineIcon: 'home-outline',
     filledIcon: 'home',
     targetPath: '/',
   },
   {
     key: 'search',
-    label: 'தேடல்',
     outlineIcon: 'search-outline',
     filledIcon: 'search',
     targetPath: '/search',
   },
   {
     key: 'chapters',
-    label: 'அதிகாரங்கள்',
     outlineIcon: 'book-outline',
     filledIcon: 'book',
     targetPath: '/chapters',
   },
   {
     key: 'collections',
-    label: 'தொகுப்புகள்',
     outlineIcon: 'bookmark-outline',
     filledIcon: 'bookmark',
     targetPath: '/collections',
   },
   {
     key: 'settings',
-    label: 'அமைப்புகள்',
     outlineIcon: 'settings-outline',
     filledIcon: 'settings',
     targetPath: '/settings',
@@ -62,7 +57,9 @@ const TAB_ITEMS: TabItemConfig[] = [
 
 export function AppBottomTabBar() {
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const insets = useSafeAreaInsets();
+
   const router = useRouter();
 
   let pathname = '';
@@ -170,6 +167,7 @@ export function AppBottomTabBar() {
         const isFocused = activeTab === item.key;
         const iconName = isFocused ? item.filledIcon : item.outlineIcon;
         const iconColor = isFocused ? colors.primary : colors.tabIconDefault;
+        const label = t.tabs[item.key === 'index' ? 'home' : item.key];
 
         return (
           <TouchableOpacity
@@ -179,7 +177,7 @@ export function AppBottomTabBar() {
             activeOpacity={0.7}
             accessibilityRole="tab"
             accessibilityState={{ selected: isFocused }}
-            accessibilityLabel={item.label}
+            accessibilityLabel={label}
           >
             <Ionicons name={iconName} size={22} color={iconColor} />
             <Text
@@ -190,13 +188,16 @@ export function AppBottomTabBar() {
                 },
               ]}
               numberOfLines={1}
+              adjustsFontSizeToFit={true}
+              minimumFontScale={0.85}
             >
-              {item.label}
+              {label}
             </Text>
           </TouchableOpacity>
         );
       })}
     </View>
+
   );
 }
 

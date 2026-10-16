@@ -3,6 +3,7 @@ import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
 import { ThemeProvider, useTheme } from '../src/context/ThemeContext';
+import { LanguageProvider, useLanguage } from '../src/context/LanguageContext';
 import { CollectionProvider } from '../src/context/CollectionContext';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
@@ -21,6 +22,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function RootNavigation() {
   const { colors, isDark } = useTheme();
+  const { t } = useLanguage();
 
   useEffect(() => {
     SplashScreen.hideAsync().catch(() => {});
@@ -61,29 +63,29 @@ function RootNavigation() {
           <Stack.Screen
             name="kural/[id]"
             options={{
-              title: 'குறள் விவரம்',
-              headerBackTitle: 'Back',
+              title: t.stackHeaders.kuralDetail,
+              headerBackTitle: t.common.back,
             }}
           />
           <Stack.Screen
             name="chapter/[id]"
             options={{
-              title: 'அதிகாரம்',
-              headerBackTitle: 'Chapters',
+              title: t.stackHeaders.chapterDetail,
+              headerBackTitle: t.common.chapters,
             }}
           />
           <Stack.Screen
             name="collections/create"
             options={{
-              title: 'புதிய தொகுப்பு',
-              headerBackTitle: 'Back',
+              title: t.stackHeaders.newCollection,
+              headerBackTitle: t.common.back,
             }}
           />
           <Stack.Screen
             name="collections/[id]"
             options={{
-              title: 'தொகுப்பு',
-              headerBackTitle: 'Collections',
+              title: t.stackHeaders.collectionDetail,
+              headerBackTitle: t.common.collections,
             }}
           />
         </Stack>
@@ -97,10 +99,13 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <ThemeProvider>
-        <CollectionProvider>
-          <RootNavigation />
-        </CollectionProvider>
+        <LanguageProvider>
+          <CollectionProvider>
+            <RootNavigation />
+          </CollectionProvider>
+        </LanguageProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );
 }
+

@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useCollections } from '../context/CollectionContext';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Kural } from '../types/kural';
 
 interface AddToCollectionModalProps {
@@ -28,6 +29,7 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
   kural,
 }) => {
   const { colors, isDark } = useTheme();
+  const { t, isEnglish } = useLanguage();
   const { collections, addKuralToCollection, removeKuralFromCollection, createCollection } =
     useCollections();
   const [newCollectionName, setNewCollectionName] = useState('');
@@ -66,9 +68,11 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
             >
               <View style={[styles.header, { borderBottomColor: colors.borderLight }]}>
                 <View>
-                  <Text style={[styles.title, { color: colors.text }]}>Add to Collection</Text>
+                  <Text style={[styles.title, { color: colors.text }]}>
+                    {isEnglish ? 'Add to Collection' : 'தொகுப்பில் சேர்க்க'}
+                  </Text>
                   <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                    குறள் {kural.number}
+                    {t.common.kural} {kural.number}
                   </Text>
                 </View>
                 <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -102,7 +106,12 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
                       <View style={styles.itemTextContainer}>
                         <Text style={[styles.itemName, { color: colors.text }]}>{item.name}</Text>
                         <Text style={[styles.itemCount, { color: colors.textSecondary }]}>
-                          {item.kuralNumbers.length} Kurals
+                          {item.kuralNumbers.length}{' '}
+                          {isEnglish
+                            ? item.kuralNumbers.length === 1
+                              ? 'Kural'
+                              : 'Kurals'
+                            : 'குறள்கள்'}
                         </Text>
                       </View>
                     </TouchableOpacity>
@@ -110,7 +119,9 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
                 }}
                 ListEmptyComponent={
                   <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-                    No collections yet. Create your first collection below!
+                    {isEnglish
+                      ? 'No collections yet. Create your first collection below!'
+                      : 'தொகுப்புகள் எதுவும் இல்லை. கீழே புதிய தொகுப்பை உருவாக்கவும்!'}
                   </Text>
                 }
               />
@@ -128,7 +139,11 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
                     ]}
                     value={newCollectionName}
                     onChangeText={setNewCollectionName}
-                    placeholder="Collection name (e.g. My Favorites)"
+                    placeholder={
+                      isEnglish
+                        ? 'Collection name (e.g. My Favorites)'
+                        : 'தொகுப்புப் பெயர் (எ.கா. விருப்பமானவை)'
+                    }
                     placeholderTextColor={colors.textMuted}
                     autoFocus
                   />
@@ -136,7 +151,9 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
                     style={[styles.saveBtn, { backgroundColor: colors.primary }]}
                     onPress={handleCreateNew}
                   >
-                    <Text style={styles.saveBtnText}>Save</Text>
+                    <Text style={styles.saveBtnText}>
+                      {isEnglish ? 'Save' : 'சேமி'}
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.cancelBtn}
@@ -155,7 +172,7 @@ export const AddToCollectionModal: React.FC<AddToCollectionModalProps> = ({
                 >
                   <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
                   <Text style={[styles.newCollectionText, { color: colors.primary }]}>
-                    Create New Collection
+                    {isEnglish ? 'Create New Collection' : 'புதிய தொகுப்பு உருவாக்க'}
                   </Text>
                 </TouchableOpacity>
               )}

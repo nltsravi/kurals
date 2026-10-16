@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 interface EmptyStateProps {
   icon?: keyof typeof Ionicons.glyphMap;
@@ -23,6 +24,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   onSuggestionPress,
 }) => {
   const { colors, isDark } = useTheme();
+  const { isEnglish } = useLanguage();
 
   return (
     <View style={styles.container}>
@@ -46,7 +48,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       {suggestions && suggestions.length > 0 && (
         <View style={styles.suggestionsContainer}>
           <Text style={[styles.suggestionsHeader, { color: colors.textMuted }]}>
-            Try searching for:
+            {isEnglish ? 'Try searching for:' : 'தேட பரிந்துரைக்கப்படுபவை:'}
           </Text>
           <View style={styles.chipsRow}>
             {suggestions.map((item, idx) => (
