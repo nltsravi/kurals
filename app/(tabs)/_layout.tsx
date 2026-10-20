@@ -62,7 +62,7 @@ export default function TabLayout() {
           headerShown: false,
           tabBarLabel: t.tabs.home,
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} size={22} color={color} />
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={22} color={color as string} />
           ),
         }}
       />
@@ -73,7 +73,7 @@ export default function TabLayout() {
           headerShown: false,
           tabBarLabel: t.tabs.search,
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'search' : 'search-outline'} size={22} color={color} />
+            <Ionicons name={focused ? 'search' : 'search-outline'} size={22} color={color as string} />
           ),
         }}
       />
@@ -83,7 +83,7 @@ export default function TabLayout() {
           title: t.tabs.chapters,
           tabBarLabel: t.tabs.chapters,
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'book' : 'book-outline'} size={22} color={color} />
+            <Ionicons name={focused ? 'book' : 'book-outline'} size={22} color={color as string} />
           ),
         }}
       />
@@ -93,7 +93,7 @@ export default function TabLayout() {
           title: t.tabs.collections,
           tabBarLabel: t.tabs.collections,
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'bookmark' : 'bookmark-outline'} size={22} color={color} />
+            <Ionicons name={focused ? 'bookmark' : 'bookmark-outline'} size={22} color={color as string} />
           ),
         }}
       />
@@ -103,7 +103,7 @@ export default function TabLayout() {
           title: t.tabs.settings,
           tabBarLabel: t.tabs.settings,
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'settings' : 'settings-outline'} size={22} color={color} />
+            <Ionicons name={focused ? 'settings' : 'settings-outline'} size={22} color={color as string} />
           ),
         }}
       />

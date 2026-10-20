@@ -66,7 +66,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   const { colors, isDark } = useTheme();
   const { t, isEnglish } = useLanguage();
   const insets = useSafeAreaInsets();
-  const imageCardRef = useRef<View>(null);
+  const imageCardRef = useRef<any>(null);
 
 
   const [shareTab, setShareTab] = useState<'image' | 'text'>('image');

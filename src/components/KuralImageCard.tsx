@@ -21,7 +21,7 @@ export interface KuralImageCardProps {
   cardRatio?: '9:16' | '4:5' | '1:1';
 }
 
-export const KuralImageCard = React.forwardRef<View, KuralImageCardProps>(
+export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
   (
     {
       kural,
