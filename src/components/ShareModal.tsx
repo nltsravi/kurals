@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -9,6 +9,7 @@ import {
   Pressable,
   Platform,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { captureRef } from 'react-native-view-shot';
@@ -27,6 +28,13 @@ import {
   formatKuralForSocialShare,
 } from '../utils/text';
 import { KuralImageCard } from './KuralImageCard';
+import {
+  THIRUVALLUVAR_IMAGES,
+  ThiruvalluvarImageId,
+  DEFAULT_THIRUVALLUVAR_IMAGE_ID,
+  getSavedCardImageId,
+  saveCardImageId,
+} from '../constants/thiruvalluvarImages';
 
 interface ShareModalProps {
   visible: boolean;
@@ -63,10 +71,25 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
   const [shareTab, setShareTab] = useState<'image' | 'text'>('image');
   const [meaningType, setMeaningType] = useState<MeaningType>('mv');
+  const [selectedImageId, setSelectedImageId] = useState<ThiruvalluvarImageId>(DEFAULT_THIRUVALLUVAR_IMAGE_ID);
+  const [cardRatio, setCardRatio] = useState<'9:16' | '4:5' | '1:1'>('9:16');
   const [includeTransliteration, setIncludeTransliteration] = useState(false);
   const [includeHashtags, setIncludeHashtags] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    if (visible) {
+      getSavedCardImageId().then((id) => {
+        setSelectedImageId(id);
+      });
+    }
+  }, [visible]);
+
+  const handleSelectImage = (id: ThiruvalluvarImageId) => {
+    setSelectedImageId(id);
+    saveCardImageId(id);
+  };
 
   const shareOptions: SocialShareOptions = useMemo(
     () => ({
@@ -373,13 +396,116 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               </ScrollView>
             </View>
 
+            {/* Thiruvalluvar Image Selector (Live updates card & theme) */}
+            <View style={styles.sectionBlock}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                {t.shareModal.selectImageTitle}
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                nestedScrollEnabled={true}
+                contentContainerStyle={styles.imageOptionsScrollContainer}
+              >
+                {THIRUVALLUVAR_IMAGES.map((img) => {
+                  const isSelected = selectedImageId === img.id;
+                  return (
+                    <TouchableOpacity
+                      key={img.id}
+                      style={[
+                        styles.imageOptionCard,
+                        {
+                          backgroundColor: isSelected ? colors.primaryLight : colors.card,
+                          borderColor: isSelected ? colors.primary : colors.border,
+                        },
+                      ]}
+                      onPress={() => handleSelectImage(img.id)}
+                      activeOpacity={0.7}
+                    >
+                      <View
+                        style={[
+                          styles.imageThumbnailWrapper,
+                          {
+                            backgroundColor: img.theme.imageContainerBg,
+                            borderColor: img.theme.imageBorderColor,
+                          },
+                        ]}
+                      >
+                        <Image
+                          source={img.source}
+                          style={styles.imageThumbnail}
+                          resizeMode={img.resizeMode}
+                        />
+                        {isSelected && (
+                          <View style={[styles.selectedCheckBadge, { backgroundColor: colors.primary }]}>
+                            <Ionicons name="checkmark" size={10} color="#FFFFFF" />
+                          </View>
+                        )}
+                      </View>
+                      <View>
+                        <Text
+                          style={[
+                            styles.imageOptionTitle,
+                            { color: isSelected ? colors.primary : colors.text },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {isEnglish ? img.nameEnglish : img.nameTamil}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+
             {/* Main Preview Area: Image Card or Text Card */}
             {shareTab === 'image' ? (
               <View style={styles.imagePreviewContainer}>
+                {/* Card Aspect Ratio Selector Chips */}
+                <View style={styles.formatSelectorRow}>
+                  {(
+                    [
+                      { id: '9:16', label: 'Status (9:16)', icon: 'phone-portrait-outline' },
+                      { id: '4:5', label: 'Feed (4:5)', icon: 'tablet-portrait-outline' },
+                      { id: '1:1', label: 'Square (1:1)', icon: 'square-outline' },
+                    ] as const
+                  ).map((fmt) => {
+                    const isSelected = cardRatio === fmt.id;
+                    return (
+                      <TouchableOpacity
+                        key={fmt.id}
+                        style={[
+                          styles.formatChip,
+                          {
+                            backgroundColor: isSelected ? colors.primaryLight : colors.card,
+                            borderColor: isSelected ? colors.primary : colors.border,
+                          },
+                        ]}
+                        onPress={() => setCardRatio(fmt.id)}
+                      >
+                        <Ionicons
+                          name={fmt.icon}
+                          size={14}
+                          color={isSelected ? colors.primary : colors.textMuted}
+                        />
+                        <Text
+                          style={[
+                            styles.formatChipText,
+                            { color: isSelected ? colors.primary : colors.textSecondary },
+                          ]}
+                        >
+                          {fmt.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
                 <View style={styles.previewTagRow}>
                   <Ionicons name="sparkles" size={14} color={colors.primary} />
                   <Text style={[styles.previewLabel, { color: colors.primary }]}>
-                    HD IMAGE CARD PREVIEW (1:1 SQUARE)
+                    HD STATUS & SOCIAL IMAGE CARD ({cardRatio})
                   </Text>
                 </View>
 
@@ -389,6 +515,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                     ref={imageCardRef}
                     kural={kural}
                     meaningType={meaningType}
+                    imageId={selectedImageId}
+                    cardRatio={cardRatio}
                   />
                 </View>
 
@@ -879,6 +1007,65 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  /* Image options scroll in ShareModal */
+  imageOptionsScrollContainer: {
+    gap: 8,
+    paddingVertical: 2,
+  },
+  imageOptionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+  },
+  imageThumbnailWrapper: {
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    borderWidth: 1,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  imageThumbnail: {
+    width: '100%',
+    height: '100%',
+  },
+  selectedCheckBadge: {
+    position: 'absolute',
+    top: 1,
+    right: 1,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageOptionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  formatSelectorRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+  },
+  formatChip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  formatChipText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   imageCardWrapper: {
     borderRadius: 20,

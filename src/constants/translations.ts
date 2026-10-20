@@ -145,6 +145,8 @@ export interface AppTranslations {
     themeSystem: string;
     themeLight: string;
     themeDark: string;
+    cardImageSectionTitle: string;
+    cardImageSectionSubtitle: string;
     notificationSectionTitle: string;
     notificationSectionSubtitle: string;
     scheduledTimeLabel: string;
@@ -180,6 +182,7 @@ export interface AppTranslations {
     tabImage: string;
     tabText: string;
     selectMeaningTitle: string;
+    selectImageTitle: string;
     shareImageHero: string;
     imageCreating: string;
     shareGridImageTitle: string;
@@ -335,6 +338,8 @@ export const TRANSLATIONS: Record<AppLanguage, AppTranslations> = {
       themeSystem: 'System',
       themeLight: 'Light',
       themeDark: 'Dark',
+      cardImageSectionTitle: 'பகிர்வு & ஸ்டேட்டஸ் படம்',
+      cardImageSectionSubtitle: 'சமூக ஊடகங்கள் மற்றும் ஸ்டேட்டஸ் பகிர்வுக்கான திருவள்ளுவர் படம் & வண்ணத் தீம்',
       notificationSectionTitle: 'தினசரி குறள் அறிவிப்பு',
       notificationSectionSubtitle: 'தினமும் ஒரு திருக்குறளை உரைகளுடன் அறிவிப்பாகப் பெறுக',
       scheduledTimeLabel: 'அறிவிப்பு நேரம்',
@@ -370,6 +375,7 @@ export const TRANSLATIONS: Record<AppLanguage, AppTranslations> = {
       tabImage: 'படம்',
       tabText: 'உரை',
       selectMeaningTitle: 'உரை தேர்வு',
+      selectImageTitle: 'திருவள்ளுவர் படம் தேர்வு',
       shareImageHero: 'படம் பகிர்',
       imageCreating: 'படம் உருவாக்கப்படுகிறது...',
       shareGridImageTitle: 'படத்தை பகிர',
@@ -523,6 +529,8 @@ export const TRANSLATIONS: Record<AppLanguage, AppTranslations> = {
       themeSystem: 'System',
       themeLight: 'Light',
       themeDark: 'Dark',
+      cardImageSectionTitle: 'Social Share & Status Image',
+      cardImageSectionSubtitle: 'Choose the Thiruvalluvar image and color theme for your status and social cards',
       notificationSectionTitle: 'Daily Kural Notification',
       notificationSectionSubtitle: 'Receive a random Thirukkural with Tamil & English commentaries daily',
       scheduledTimeLabel: 'Scheduled Time',
@@ -558,6 +566,7 @@ export const TRANSLATIONS: Record<AppLanguage, AppTranslations> = {
       tabImage: 'Image Card',
       tabText: 'Text Format',
       selectMeaningTitle: 'Select Urai / Commentary',
+      selectImageTitle: 'Select Thiruvalluvar Image',
       shareImageHero: 'Share Image Card',
       imageCreating: 'Generating image...',
       shareGridImageTitle: 'Share Image to Social Apps',

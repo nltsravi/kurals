@@ -11,6 +11,7 @@ import {
   Modal,
   Alert,
   Switch,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +21,13 @@ import { useLanguage } from '../../src/context/LanguageContext';
 import { AppLanguage } from '../../src/constants/translations';
 import { APP_CONFIG } from '../../src/constants/appConstants';
 import { NotificationService } from '../../src/services/notificationService';
+import {
+  THIRUVALLUVAR_IMAGES,
+  ThiruvalluvarImageId,
+  DEFAULT_THIRUVALLUVAR_IMAGE_ID,
+  getSavedCardImageId,
+  saveCardImageId,
+} from '../../src/constants/thiruvalluvarImages';
 
 export default function SettingsScreen() {
   const { colors, isDark, themeMode, setThemeMode } = useTheme();
@@ -43,7 +51,18 @@ export default function SettingsScreen() {
       setNotificationHour(s.hour);
       setNotificationMinute(s.minute);
     });
+    getSavedCardImageId().then((id) => {
+      setSelectedCardImage(id);
+    });
   }, []);
+
+  // Card image selection state
+  const [selectedCardImage, setSelectedCardImage] = useState<ThiruvalluvarImageId>(DEFAULT_THIRUVALLUVAR_IMAGE_ID);
+
+  const handleSelectCardImage = async (id: ThiruvalluvarImageId) => {
+    setSelectedCardImage(id);
+    await saveCardImageId(id);
+  };
 
   const openTimePicker = () => {
     const period = notificationHour >= 12 ? 'PM' : 'AM';
@@ -303,6 +322,90 @@ export default function SettingsScreen() {
                   >
                     {opt.label}
                   </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Social Share & Status Card Image Settings */}
+        <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            {t.settingsScreen.cardImageSectionTitle}
+          </Text>
+          <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>
+            {t.settingsScreen.cardImageSectionSubtitle}
+          </Text>
+
+          <View style={styles.cardImageGrid}>
+            {THIRUVALLUVAR_IMAGES.map((img) => {
+              const isSelected = selectedCardImage === img.id;
+              return (
+                <TouchableOpacity
+                  key={img.id}
+                  style={[
+                    styles.cardImageOption,
+                    {
+                      backgroundColor: isSelected
+                        ? colors.primaryLight
+                        : (isDark ? colors.surface : colors.card),
+                      borderColor: isSelected ? colors.primary : colors.border,
+                    },
+                  ]}
+                  onPress={() => handleSelectCardImage(img.id)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
+                  activeOpacity={0.7}
+                >
+                  <View
+                    style={[
+                      styles.cardImageThumbnailContainer,
+                      {
+                        backgroundColor: img.theme.imageContainerBg,
+                        borderColor: isSelected ? colors.primary : img.theme.imageBorderColor,
+                      },
+                    ]}
+                  >
+                    <Image
+                      source={img.source}
+                      style={styles.cardImageThumbnail}
+                      resizeMode={img.resizeMode}
+                    />
+                    {isSelected && (
+                      <View style={[styles.cardImageCheckBadge, { backgroundColor: colors.primary }]}>
+                        <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={styles.cardImageTextWrapper}>
+                    <View style={styles.cardImageTitleRow}>
+                      <Text
+                        style={[
+                          styles.cardImageTitle,
+                          { color: isSelected ? colors.primary : colors.text },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {isEnglish ? img.nameEnglish : img.nameTamil}
+                      </Text>
+                      <View
+                        style={[
+                          styles.cardThemeDot,
+                          { backgroundColor: img.theme.heroAccent },
+                        ]}
+                      />
+                    </View>
+                    <Text
+                      style={[
+                        styles.cardImageDesc,
+                        { color: isSelected ? colors.textSecondary : colors.textMuted },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {isEnglish ? img.descriptionEnglish : img.descriptionTamil}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               );
             })}
@@ -1179,6 +1282,68 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   footerCopyrightText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  /* Card Image Grid in Settings */
+  cardImageGrid: {
+    gap: 10,
+  },
+  cardImageOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    gap: 12,
+  },
+  cardImageThumbnailContainer: {
+    width: 58,
+    height: 58,
+    borderRadius: 10,
+    borderWidth: 1,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  cardImageThumbnail: {
+    width: '100%',
+    height: '100%',
+  },
+  cardImageCheckBadge: {
+    position: 'absolute',
+    top: 3,
+    right: 3,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardImageTextWrapper: {
+    flex: 1,
+  },
+  cardImageTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 6,
+    marginBottom: 3,
+  },
+  cardImageTitle: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    flex: 1,
+  },
+  cardThemeDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+  },
+  cardImageDesc: {
     fontSize: 12,
     fontWeight: '500',
   },

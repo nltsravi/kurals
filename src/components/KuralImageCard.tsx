@@ -3,6 +3,11 @@ import { View, Text, StyleSheet, Dimensions, Image } from 'react-native';
 import { Kural } from '../types/kural';
 import { MeaningType } from '../utils/text';
 import { KuralCoupletText } from './KuralCoupletText';
+import {
+  ThiruvalluvarImageId,
+  DEFAULT_THIRUVALLUVAR_IMAGE_ID,
+  getThiruvalluvarImage,
+} from '../constants/thiruvalluvarImages';
 
 const APP_ICON = require('../../assets/images/icon.png');
 
@@ -12,14 +17,38 @@ export interface KuralImageCardProps {
   dateStr?: string;
   width?: number;
   align?: 'left' | 'center' | 'right';
+  imageId?: ThiruvalluvarImageId;
+  cardRatio?: '9:16' | '4:5' | '1:1';
 }
 
 export const KuralImageCard = React.forwardRef<View, KuralImageCardProps>(
-  ({ kural, meaningType = 'mv', dateStr, width, align = 'left' }, ref) => {
+  (
+    {
+      kural,
+      meaningType = 'mv',
+      dateStr,
+      width,
+      align = 'left',
+      imageId = DEFAULT_THIRUVALLUVAR_IMAGE_ID,
+      cardRatio = '9:16',
+    },
+    ref
+  ) => {
     const screenWidth = Dimensions?.get ? Dimensions.get('window')?.width || 380 : 380;
-    const effectiveCardWidth = width || Math.min(screenWidth - 40, 500);
-    // 8px canvas padding + 28px card padding + 28px hero box padding
-    const innerCoupletWidth = Math.max(240, effectiveCardWidth - 64);
+    const effectiveCardWidth = width || Math.min(screenWidth - 40, 480);
+    // 8px canvas padding + 24px card padding + 24px hero box padding
+    const innerCoupletWidth = Math.max(240, effectiveCardWidth - 56);
+
+    const imageOption = getThiruvalluvarImage(imageId);
+    const theme = imageOption.theme;
+
+    // Aspect ratio calculation
+    const numericAspectRatio =
+      cardRatio === '4:5' ? 4 / 5 : cardRatio === '1:1' ? 1 : 9 / 16;
+
+    // Image container height calculation based on card proportion
+    const imageContainerHeight =
+      cardRatio === '9:16' ? 190 : cardRatio === '4:5' ? 145 : 110;
 
     // Determine Tamil commentary text
     let commentaryText = kural.commentaryMV;
@@ -49,35 +78,82 @@ export const KuralImageCard = React.forwardRef<View, KuralImageCardProps>(
       <View
         ref={ref}
         collapsable={false}
-        style={[styles.canvas, width ? { width } : undefined]}
+        style={[
+          styles.canvas,
+          { backgroundColor: theme.canvasBg, aspectRatio: numericAspectRatio },
+          width ? { width } : undefined,
+        ]}
       >
         {/* Outer Card Container */}
-        <View style={styles.cardContainer}>
-          {/* Header Section: App icon (left), "திருக்குறள்" (center), Kural number (right) */}
+        <View
+          style={[
+            styles.cardContainer,
+            { backgroundColor: theme.cardBg, borderColor: theme.borderColor },
+          ]}
+        >
+          {/* 0. Header Section: App icon (left), "திருக்குறள்" (center), Kural number (right) */}
           <View style={styles.headerRow}>
             <View style={styles.headerLeft}>
               <Image
                 source={APP_ICON}
-                style={styles.headerAppIcon}
+                style={[styles.headerAppIcon, { borderColor: theme.borderColor }]}
                 resizeMode="cover"
               />
             </View>
 
             <View style={styles.headerCenter}>
-              <Text style={styles.mainAppTitle}>திருக்குறள்</Text>
+              <Text style={[styles.mainAppTitle, { color: theme.headerTitleColor }]}>
+                திருக்குறள்
+              </Text>
             </View>
 
             <View style={styles.headerRight}>
-              <View style={styles.kuralNumberBadge}>
-                <Text style={styles.kuralNumberText}>குறள் {kural.number}</Text>
+              <View
+                style={[
+                  styles.kuralNumberBadge,
+                  { backgroundColor: theme.badgeBg },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.kuralNumberText,
+                    { color: theme.badgeText },
+                  ]}
+                >
+                  குறள் {kural.number}
+                </Text>
               </View>
             </View>
           </View>
 
-          {/* Main Hero Kural Box: Bold and Highlighted couplet */}
+          {/* 1. Thiruvalluvar Image on Top */}
+          <View
+            style={[
+              styles.imageContainer,
+              {
+                backgroundColor: theme.imageContainerBg,
+                borderColor: theme.imageBorderColor,
+                height: imageContainerHeight,
+              },
+            ]}
+          >
+            <Image
+              source={imageOption.source}
+              style={styles.imageElement}
+              resizeMode={imageOption.resizeMode}
+              accessibilityLabel={imageOption.nameTamil}
+            />
+          </View>
+
+          {/* 2. Main Hero Kural Box: Bold and Highlighted couplet */}
           <View
             style={[
               styles.heroKuralBox,
+              {
+                backgroundColor: theme.heroBg,
+                borderColor: theme.heroBorder,
+                borderLeftColor: theme.heroAccent,
+              },
               align === 'left' && styles.heroKuralBoxLeft,
               align === 'center' && styles.heroKuralBoxCenter,
               align === 'right' && styles.heroKuralBoxRight,
@@ -87,8 +163,8 @@ export const KuralImageCard = React.forwardRef<View, KuralImageCardProps>(
               line1={kural.line1}
               line2={kural.line2}
               tamil={kural.tamil}
-              color="#120600"
-              baseFontSize={Math.round(21 * Math.min(1.2, Math.max(0.9, effectiveCardWidth / 400)))}
+              color={theme.coupletColor}
+              baseFontSize={Math.round(20 * Math.min(1.15, Math.max(0.9, effectiveCardWidth / 400)))}
               containerWidth={innerCoupletWidth}
               align={align}
               fontWeight="900"
@@ -99,31 +175,48 @@ export const KuralImageCard = React.forwardRef<View, KuralImageCardProps>(
                 align === 'center' && styles.heroKuralTextContainerCenter,
                 align === 'right' && styles.heroKuralTextContainerRight,
               ]}
-              line1Style={[styles.kuralLine1, { textAlign: align }]}
-              line2Style={[styles.kuralLine2, { textAlign: align }]}
+              line1Style={[styles.kuralLine1, { color: theme.coupletColor, textAlign: align }]}
+              line2Style={[styles.kuralLine2, { color: theme.coupletColor, textAlign: align }]}
             />
           </View>
 
-          {/* Tamil Commentary Section */}
+          {/* 3. Tamil Commentary Section */}
           {commentaryText ? (
             <View style={styles.commentarySection}>
-              <Text style={styles.commentaryBodyText}>{commentaryText}</Text>
+              <Text
+                style={[
+                  styles.commentaryBodyText,
+                  { color: theme.commentaryColor },
+                ]}
+              >
+                {commentaryText}
+              </Text>
             </View>
           ) : null}
 
-          {/* English Translation Section */}
+          {/* 4. English Translation Section */}
           {kural.translation ? (
             <View style={styles.translationSection}>
-              <Text style={styles.translationBodyText}>
+              <Text
+                style={[
+                  styles.translationBodyText,
+                  { color: theme.translationColor },
+                ]}
+              >
                 "{kural.translation}"
               </Text>
             </View>
           ) : null}
 
-          {/* Footer Section: {category} | {chapter name} on the right */}
+          {/* 5. Footer Section: {category} | {chapter name} */}
           {footerMetadata ? (
-            <View style={styles.footerRow}>
-              <Text style={styles.footerCategoryChapterText}>
+            <View style={[styles.footerRow, { borderTopColor: theme.footerBorder }]}>
+              <Text
+                style={[
+                  styles.footerCategoryChapterText,
+                  { color: theme.footerTextColor },
+                ]}
+              >
                 {footerMetadata}
               </Text>
             </View>
@@ -140,8 +233,8 @@ const styles = StyleSheet.create({
   canvas: {
     backgroundColor: '#FAF5EC',
     width: '100%',
-    maxWidth: 520,
-    aspectRatio: 1,
+    maxWidth: 460,
+    aspectRatio: 9 / 16,
     alignSelf: 'center',
     padding: 4,
   },
@@ -151,7 +244,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1.5,
     borderColor: '#DFD4BD',
-    padding: 14,
+    padding: 12,
     position: 'relative',
     overflow: 'hidden',
     justifyContent: 'space-between',
@@ -161,7 +254,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 6,
     zIndex: 2,
   },
   headerLeft: {
@@ -171,9 +264,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   headerAppIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 7,
+    width: 26,
+    height: 26,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: '#DFD4BD',
   },
@@ -182,7 +275,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   mainAppTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '800',
     color: '#1E140C',
     letterSpacing: -0.2,
@@ -194,15 +287,32 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   kuralNumberBadge: {
-    paddingHorizontal: 9,
+    paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
     backgroundColor: '#EFE6D6',
   },
   kuralNumberText: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '800',
     color: '#1E140C',
+  },
+  /* Thiruvalluvar Hero Image Container on Top */
+  imageContainer: {
+    width: '100%',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#DFD4BD',
+    backgroundColor: '#F3E9D7',
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 4,
+    zIndex: 2,
+  },
+  imageElement: {
+    width: '100%',
+    height: '100%',
   },
   /* Hero Kural Box: Highlighted with warm background & accent border */
   heroKuralBox: {
@@ -212,9 +322,9 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: '#D97706',
     borderRadius: 12,
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 12,
-    marginBottom: 10,
+    marginVertical: 4,
     alignItems: 'flex-start',
     justifyContent: 'center',
     zIndex: 2,
@@ -258,31 +368,31 @@ const styles = StyleSheet.create({
   },
   /* Tamil Commentary Section */
   commentarySection: {
-    marginBottom: 6,
+    marginVertical: 4,
     zIndex: 2,
   },
   commentaryBodyText: {
-    fontSize: 13,
-    lineHeight: 20,
+    fontSize: 12.5,
+    lineHeight: 18.5,
     color: '#261C13',
     fontWeight: '500',
   },
   /* English Translation Section */
   translationSection: {
-    paddingTop: 0,
+    marginVertical: 2,
     zIndex: 2,
   },
   translationBodyText: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontStyle: 'italic',
-    lineHeight: 18.5,
+    lineHeight: 17,
     color: '#32251A',
     fontWeight: '500',
   },
   /* Footer Section: {category} | {chapter name} */
   footerRow: {
-    marginTop: 10,
-    paddingTop: 8,
+    marginTop: 6,
+    paddingTop: 6,
     borderTopWidth: 1,
     borderTopColor: '#EBE2D0',
     flexDirection: 'row',
@@ -291,7 +401,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   footerCategoryChapterText: {
-    fontSize: 11.5,
+    fontSize: 11,
     color: '#7B6C5C',
     fontWeight: '700',
     letterSpacing: 0.2,

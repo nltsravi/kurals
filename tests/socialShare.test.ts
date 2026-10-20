@@ -236,14 +236,35 @@ describe('Social Media Sharing Features', () => {
       expect(flatStyle.borderColor).toBe('#DFD4BD');
     });
 
+    test('renders Thiruvalluvar hero image on top with default color image', () => {
+      const { KuralImageCard } = require('../src/components/KuralImageCard');
+      const cardElement = KuralImageCard.render({ kural: kural1 }, null);
+      const cardContainer = cardElement.props.children;
+
+      // Child 1 is the Thiruvalluvar image container
+      const imageContainer = cardContainer.props.children[1];
+      expect(imageContainer).toBeDefined();
+
+      const flatImageContainerStyle = Array.isArray(imageContainer.props.style)
+        ? Object.assign({}, ...imageContainer.props.style.filter(Boolean))
+        : imageContainer.props.style;
+      expect(flatImageContainerStyle.backgroundColor).toBe('#F3E9D7');
+      expect(flatImageContainerStyle.borderColor).toBe('#DFD4BD');
+
+      const imageElement = imageContainer.props.children;
+      expect(imageElement).toBeDefined();
+      expect(imageElement.props.source).toBeDefined();
+      expect(imageElement.props.accessibilityLabel).toBe('திருவள்ளுவர் (வண்ணம்)');
+    });
+
     test('renders KuralCoupletText with left alignment by default in image card', () => {
       const { KuralImageCard } = require('../src/components/KuralImageCard');
       const cardElement = KuralImageCard.render({ kural: kural1 }, null);
       expect(cardElement).toBeDefined();
 
-      // Find heroKuralBox in card children (child 1)
+      // Find heroKuralBox in card children (child 2, below image)
       const cardContainer = cardElement.props.children;
-      const heroKuralBox = cardContainer.props.children[1];
+      const heroKuralBox = cardContainer.props.children[2];
       const coupletComponent = heroKuralBox.props.children;
 
       expect(coupletComponent.props.align).toBe('left');
@@ -259,7 +280,7 @@ describe('Social Media Sharing Features', () => {
       const { KuralImageCard } = require('../src/components/KuralImageCard');
       const cardElement = KuralImageCard.render({ kural: kural1, align: 'center' }, null);
       const cardContainer = cardElement.props.children;
-      const heroKuralBox = cardContainer.props.children[1];
+      const heroKuralBox = cardContainer.props.children[2];
       const coupletComponent = heroKuralBox.props.children;
 
       expect(coupletComponent.props.align).toBe('center');
@@ -292,7 +313,7 @@ describe('Social Media Sharing Features', () => {
       const { KuralImageCard } = require('../src/components/KuralImageCard');
       const cardElement = KuralImageCard.render({ kural: kural1 }, null);
       const cardContainer = cardElement.props.children;
-      const heroKuralBox = cardContainer.props.children[1];
+      const heroKuralBox = cardContainer.props.children[2];
       const coupletComponent = heroKuralBox.props.children;
 
       // Highlighted styling on container
@@ -310,7 +331,7 @@ describe('Social Media Sharing Features', () => {
       const { KuralImageCard } = require('../src/components/KuralImageCard');
       const cardElement = KuralImageCard.render({ kural: kural1 }, null);
       const cardContainer = cardElement.props.children;
-      const footerRow = cardContainer.props.children[4];
+      const footerRow = cardContainer.props.children[5];
 
       expect(footerRow).toBeDefined();
       const footerText = footerRow.props.children;
@@ -319,13 +340,13 @@ describe('Social Media Sharing Features', () => {
       expect(footerText.props.children).not.toContain('©');
     });
 
-    test('fits mobile and instagram standard card view with 1:1 aspect ratio and balanced layout', () => {
+    test('adjusts card size to 9:16 for WhatsApp Status and social stories by default', () => {
       const { KuralImageCard } = require('../src/components/KuralImageCard');
       const cardElement = KuralImageCard.render({ kural: kural1 }, null);
       const flatCanvasStyle = Array.isArray(cardElement.props.style)
         ? Object.assign({}, ...cardElement.props.style.filter(Boolean))
         : cardElement.props.style;
-      expect(flatCanvasStyle.aspectRatio).toBe(1);
+      expect(flatCanvasStyle.aspectRatio).toBe(9 / 16);
 
       const cardContainer = cardElement.props.children;
       const flatContainerStyle = Array.isArray(cardContainer.props.style)
@@ -333,6 +354,62 @@ describe('Social Media Sharing Features', () => {
         : cardContainer.props.style;
       expect(flatContainerStyle.flex).toBe(1);
       expect(flatContainerStyle.justifyContent).toBe('space-between');
+    });
+
+    test('allows customizing card format to 4:5 or 1:1', () => {
+      const { KuralImageCard } = require('../src/components/KuralImageCard');
+      const card45 = KuralImageCard.render({ kural: kural1, cardRatio: '4:5' }, null);
+      const flat45 = Array.isArray(card45.props.style)
+        ? Object.assign({}, ...card45.props.style.filter(Boolean))
+        : card45.props.style;
+      expect(flat45.aspectRatio).toBe(4 / 5);
+
+      const card11 = KuralImageCard.render({ kural: kural1, cardRatio: '1:1' }, null);
+      const flat11 = Array.isArray(card11.props.style)
+        ? Object.assign({}, ...card11.props.style.filter(Boolean))
+        : card11.props.style;
+      expect(flat11.aspectRatio).toBe(1);
+    });
+
+    test('adapts theme colors properly based on the selected Thiruvalluvar image', () => {
+      const { KuralImageCard } = require('../src/components/KuralImageCard');
+
+      // 1. Beach statue (oceanic blue theme)
+      const beachCard = KuralImageCard.render({ kural: kural1, imageId: 'beach-statue' }, null);
+      const beachContainer = beachCard.props.children;
+      const beachStyle = Array.isArray(beachContainer.props.style)
+        ? Object.assign({}, ...beachContainer.props.style.filter(Boolean))
+        : beachContainer.props.style;
+      expect(beachStyle.borderColor).toBe('#BAE6FD');
+
+      const beachHeroBox = beachContainer.props.children[2];
+      const flatBeachHero = Array.isArray(beachHeroBox.props.style)
+        ? Object.assign({}, ...beachHeroBox.props.style.filter(Boolean))
+        : beachHeroBox.props.style;
+      expect(flatBeachHero.borderLeftColor).toBe('#0284C7');
+
+      // 2. Black and white portrait (monochrome slate theme)
+      const bwCard = KuralImageCard.render({ kural: kural1, imageId: 'thiruvalluvar-bw' }, null);
+      const bwContainer = bwCard.props.children;
+      const bwStyle = Array.isArray(bwContainer.props.style)
+        ? Object.assign({}, ...bwContainer.props.style.filter(Boolean))
+        : bwContainer.props.style;
+      expect(bwStyle.borderColor).toBe('#D1D5DB');
+
+      const bwHeroBox = bwContainer.props.children[2];
+      const flatBwHero = Array.isArray(bwHeroBox.props.style)
+        ? Object.assign({}, ...bwHeroBox.props.style.filter(Boolean))
+        : bwHeroBox.props.style;
+      expect(flatBwHero.borderLeftColor).toBe('#374151');
+
+      // 3. Granite statue (terracotta / bronze theme)
+      const statueCard = KuralImageCard.render({ kural: kural1, imageId: 'statue' }, null);
+      const statueContainer = statueCard.props.children;
+      const statueHeroBox = statueContainer.props.children[2];
+      const flatStatueHero = Array.isArray(statueHeroBox.props.style)
+        ? Object.assign({}, ...statueHeroBox.props.style.filter(Boolean))
+        : statueHeroBox.props.style;
+      expect(flatStatueHero.borderLeftColor).toBe('#C2410C');
     });
   });
 });
