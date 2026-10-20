@@ -48,7 +48,8 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
       cardRatio === '4:5' ? 4 / 5 : cardRatio === '1:1' ? 1 : 9 / 16;
 
     // Is image hidden or set to app icon
-    const isHidden = hideImage || imageId === 'hide';
+    const isHidden =
+      hideImage || imageId === 'hide' || imageId === 'thiruvalluvar-outline';
 
     let resolvedImageSource = imageOption.source;
     let resolvedResizeMode: 'contain' | 'cover' = imageOption.resizeMode;

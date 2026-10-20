@@ -7,6 +7,7 @@ export type ThiruvalluvarImageId =
   | 'beach-statue'
   | 'statue'
   | 'hide'
+  | 'thiruvalluvar-outline'
   | 'custom';
 
 export const APP_ICON_SOURCE = require('../../assets/images/icon.png');
@@ -188,6 +189,10 @@ export const THIRUVALLUVAR_IMAGES: ThiruvalluvarImageOption[] = [
  * Returns the matching ThiruvalluvarImageOption for an ID, defaulting to 'thiruvalluvar-color'.
  */
 export function getThiruvalluvarImage(id?: string | null): ThiruvalluvarImageOption {
+  if (id === 'thiruvalluvar-outline') {
+    const hideOpt = THIRUVALLUVAR_IMAGES.find((img) => img.id === 'hide');
+    if (hideOpt) return hideOpt;
+  }
   const match = THIRUVALLUVAR_IMAGES.find((img) => img.id === id);
   return match || THIRUVALLUVAR_IMAGES[0];
 }

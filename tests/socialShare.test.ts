@@ -436,6 +436,17 @@ describe('Social Media Sharing Features', () => {
 
       expect(hideIdImage.props.source).toBe(APP_ICON_SOURCE);
       expect(hideIdImage.props.accessibilityLabel).toBe('செயலி சின்னம் (App Icon)');
+
+      // 3. Using imageId: 'thiruvalluvar-outline'
+      const outlineCard = KuralImageCard.render(
+        { kural: kural1, imageId: 'thiruvalluvar-outline' },
+        null
+      );
+      const outlineContainer = outlineCard.props.children;
+      const outlineImage = outlineContainer.props.children[1].props.children;
+
+      expect(outlineImage.props.source).toBe(APP_ICON_SOURCE);
+      expect(outlineImage.props.accessibilityLabel).toBe('செயலி சின்னம் (App Icon)');
     });
 
     test('supports custom image URI when chosen by user', () => {
