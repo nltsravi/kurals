@@ -141,10 +141,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FAF5EC',
     width: '100%',
     maxWidth: 520,
+    aspectRatio: 1,
     alignSelf: 'center',
     padding: 4,
   },
   cardContainer: {
+    flex: 1,
     backgroundColor: '#FAF5EC',
     borderRadius: 16,
     borderWidth: 1.5,
@@ -152,6 +154,7 @@ const styles = StyleSheet.create({
     padding: 14,
     position: 'relative',
     overflow: 'hidden',
+    justifyContent: 'space-between',
   },
   /* Header */
   headerRow: {

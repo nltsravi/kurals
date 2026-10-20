@@ -318,6 +318,22 @@ describe('Social Media Sharing Features', () => {
       expect(footerText.props.children).not.toContain('Neolumina');
       expect(footerText.props.children).not.toContain('©');
     });
+
+    test('fits mobile and instagram standard card view with 1:1 aspect ratio and balanced layout', () => {
+      const { KuralImageCard } = require('../src/components/KuralImageCard');
+      const cardElement = KuralImageCard.render({ kural: kural1 }, null);
+      const flatCanvasStyle = Array.isArray(cardElement.props.style)
+        ? Object.assign({}, ...cardElement.props.style.filter(Boolean))
+        : cardElement.props.style;
+      expect(flatCanvasStyle.aspectRatio).toBe(1);
+
+      const cardContainer = cardElement.props.children;
+      const flatContainerStyle = Array.isArray(cardContainer.props.style)
+        ? Object.assign({}, ...cardContainer.props.style.filter(Boolean))
+        : cardContainer.props.style;
+      expect(flatContainerStyle.flex).toBe(1);
+      expect(flatContainerStyle.justifyContent).toBe('space-between');
+    });
   });
 });
 
