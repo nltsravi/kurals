@@ -7,18 +7,19 @@ import {
   ThiruvalluvarImageId,
   DEFAULT_THIRUVALLUVAR_IMAGE_ID,
   getThiruvalluvarImage,
+  APP_ICON_SOURCE,
+  TRADITIONAL_TEMPLATE_BG_SOURCE,
 } from '../constants/thiruvalluvarImages';
-
-const APP_ICON = require('../../assets/images/icon.png');
 
 export interface KuralImageCardProps {
   kural: Kural;
   meaningType?: MeaningType;
-  dateStr?: string;
   width?: number;
   align?: 'left' | 'center' | 'right';
   imageId?: ThiruvalluvarImageId;
   cardRatio?: '9:16' | '4:5' | '1:1';
+  customImageUri?: string | null;
+  hideImage?: boolean;
 }
 
 export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
@@ -26,18 +27,18 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
     {
       kural,
       meaningType = 'mv',
-      dateStr,
       width,
-      align = 'left',
+      align = 'center',
       imageId = DEFAULT_THIRUVALLUVAR_IMAGE_ID,
       cardRatio = '9:16',
+      customImageUri,
+      hideImage = false,
     },
     ref
   ) => {
     const screenWidth = Dimensions?.get ? Dimensions.get('window')?.width || 380 : 380;
     const effectiveCardWidth = width || Math.min(screenWidth - 40, 480);
-    // 8px canvas padding + 24px card padding + 24px hero box padding
-    const innerCoupletWidth = Math.max(240, effectiveCardWidth - 56);
+    const innerCoupletWidth = Math.max(240, effectiveCardWidth * 0.88);
 
     const imageOption = getThiruvalluvarImage(imageId);
     const theme = imageOption.theme;
@@ -46,9 +47,22 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
     const numericAspectRatio =
       cardRatio === '4:5' ? 4 / 5 : cardRatio === '1:1' ? 1 : 9 / 16;
 
-    // Image container height calculation based on card proportion
-    const imageContainerHeight =
-      cardRatio === '9:16' ? 190 : cardRatio === '4:5' ? 145 : 110;
+    // Is image hidden or set to app icon
+    const isHidden = hideImage || imageId === 'hide';
+
+    let resolvedImageSource = imageOption.source;
+    let resolvedResizeMode: 'contain' | 'cover' = imageOption.resizeMode;
+    let accessibilityLabel = imageOption.nameTamil;
+
+    if (isHidden) {
+      resolvedImageSource = APP_ICON_SOURCE;
+      resolvedResizeMode = 'contain';
+      accessibilityLabel = 'செயலி சின்னம் (App Icon)';
+    } else if (imageId === 'custom' && customImageUri) {
+      resolvedImageSource = { uri: customImageUri } as any;
+      resolvedResizeMode = 'cover';
+      accessibilityLabel = 'தனிப்பயன் படம் (Custom Photo)';
+    }
 
     // Determine Tamil commentary text
     let commentaryText = kural.commentaryMV;
@@ -80,7 +94,7 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
         collapsable={false}
         style={[
           styles.canvas,
-          { backgroundColor: theme.canvasBg, aspectRatio: numericAspectRatio },
+          { aspectRatio: numericAspectRatio },
           width ? { width } : undefined,
         ]}
       >
@@ -91,69 +105,53 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
             { backgroundColor: theme.cardBg, borderColor: theme.borderColor },
           ]}
         >
-          {/* 0. Header Section: App icon (left), "திருக்குறள்" (center), Kural number (right) */}
+          {/* 0. Header & Badge Row */}
           <View style={styles.headerRow}>
             <View style={styles.headerLeft}>
               <Image
-                source={APP_ICON}
-                style={[styles.headerAppIcon, { borderColor: theme.borderColor }]}
+                source={APP_ICON_SOURCE}
+                style={styles.headerAppIcon}
                 resizeMode="cover"
               />
             </View>
 
             <View style={styles.headerCenter}>
-              <Text style={[styles.mainAppTitle, { color: theme.headerTitleColor }]}>
+              <Text style={styles.mainAppTitle}>
                 திருக்குறள்
               </Text>
             </View>
 
             <View style={styles.headerRight}>
-              <View
-                style={[
-                  styles.kuralNumberBadge,
-                  { backgroundColor: theme.badgeBg },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.kuralNumberText,
-                    { color: theme.badgeText },
-                  ]}
-                >
+              <View style={styles.kuralNumberBadge}>
+                <Text style={styles.kuralNumberText}>
                   குறள் {kural.number}
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* 1. Thiruvalluvar Image on Top */}
+          {/* 1. Image Container positioned inside the golden arch */}
           <View
             style={[
               styles.imageContainer,
               {
                 backgroundColor: theme.imageContainerBg,
                 borderColor: theme.imageBorderColor,
-                height: imageContainerHeight,
               },
             ]}
           >
             <Image
-              source={imageOption.source}
+              source={resolvedImageSource}
               style={styles.imageElement}
-              resizeMode={imageOption.resizeMode}
-              accessibilityLabel={imageOption.nameTamil}
+              resizeMode={resolvedResizeMode}
+              accessibilityLabel={accessibilityLabel}
             />
           </View>
 
-          {/* 2. Main Hero Kural Box: Bold and Highlighted couplet */}
+          {/* 2. Couplet Plaque: Rendered cleanly inside the velvet maroon banner */}
           <View
             style={[
               styles.heroKuralBox,
-              {
-                backgroundColor: theme.heroBg,
-                borderColor: theme.heroBorder,
-                borderLeftColor: theme.heroAccent,
-              },
               align === 'left' && styles.heroKuralBoxLeft,
               align === 'center' && styles.heroKuralBoxCenter,
               align === 'right' && styles.heroKuralBoxRight,
@@ -163,7 +161,7 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
               line1={kural.line1}
               line2={kural.line2}
               tamil={kural.tamil}
-              color={theme.coupletColor}
+              color="#FFF5DC"
               baseFontSize={Math.round(20 * Math.min(1.15, Math.max(0.9, effectiveCardWidth / 400)))}
               containerWidth={innerCoupletWidth}
               align={align}
@@ -175,52 +173,43 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
                 align === 'center' && styles.heroKuralTextContainerCenter,
                 align === 'right' && styles.heroKuralTextContainerRight,
               ]}
-              line1Style={[styles.kuralLine1, { color: theme.coupletColor, textAlign: align }]}
-              line2Style={[styles.kuralLine2, { color: theme.coupletColor, textAlign: align }]}
+              line1Style={[styles.kuralLine1, { textAlign: align }]}
+              line2Style={[styles.kuralLine2, { textAlign: align }]}
             />
           </View>
 
           {/* 3. Tamil Commentary Section */}
-          {commentaryText ? (
-            <View style={styles.commentarySection}>
-              <Text
-                style={[
-                  styles.commentaryBodyText,
-                  { color: theme.commentaryColor },
-                ]}
-              >
+          <View style={styles.commentarySection}>
+            {commentaryText ? (
+              <Text style={styles.commentaryBodyText} numberOfLines={4}>
                 {commentaryText}
               </Text>
-            </View>
-          ) : null}
+            ) : null}
+          </View>
 
           {/* 4. English Translation Section */}
-          {kural.translation ? (
-            <View style={styles.translationSection}>
-              <Text
-                style={[
-                  styles.translationBodyText,
-                  { color: theme.translationColor },
-                ]}
-              >
+          <View style={styles.translationSection}>
+            {kural.translation ? (
+              <Text style={styles.translationBodyText} numberOfLines={3}>
                 "{kural.translation}"
               </Text>
-            </View>
-          ) : null}
+            ) : null}
+          </View>
 
           {/* 5. Footer Section: {category} | {chapter name} */}
-          {footerMetadata ? (
-            <View style={[styles.footerRow, { borderTopColor: theme.footerBorder }]}>
-              <Text
-                style={[
-                  styles.footerCategoryChapterText,
-                  { color: theme.footerTextColor },
-                ]}
-              >
-                {footerMetadata}
-              </Text>
-            </View>
-          ) : null}
+          <View style={styles.footerRow}>
+            <Text style={styles.footerCategoryChapterText} numberOfLines={1}>
+              {footerMetadata}
+            </Text>
+          </View>
+
+          {/* 6. Template Background Overlay Image (Opaque ornate graphics with transparent arch window) */}
+          <Image
+            source={TRADITIONAL_TEMPLATE_BG_SOURCE}
+            style={styles.templateBgOverlay}
+            resizeMode="stretch"
+            pointerEvents="none"
+          />
         </View>
       </View>
     );
@@ -231,118 +220,129 @@ KuralImageCard.displayName = 'KuralImageCard';
 
 const styles = StyleSheet.create({
   canvas: {
-    backgroundColor: '#FAF5EC',
+    backgroundColor: '#3B0606',
     width: '100%',
     maxWidth: 460,
     aspectRatio: 9 / 16,
     alignSelf: 'center',
-    padding: 4,
+    padding: 0,
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   cardContainer: {
     flex: 1,
-    backgroundColor: '#FAF5EC',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: '#DFD4BD',
-    padding: 12,
+    width: '100%',
+    height: '100%',
     position: 'relative',
     overflow: 'hidden',
     justifyContent: 'space-between',
+    borderWidth: 1.5,
+    borderColor: '#DFD4BD',
+    backgroundColor: '#FAF5EC',
   },
-  /* Header */
+  templateBgOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+    zIndex: 10,
+  },
+  /* Header & Badge (positioned over the top-right gold badge of the template) */
   headerRow: {
+    position: 'absolute',
+    top: '13.3%',
+    left: '72.8%',
+    width: '24.4%',
+    height: '5.7%',
+    zIndex: 20,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 6,
-    zIndex: 2,
   },
   headerLeft: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
+    display: 'none',
   },
   headerAppIcon: {
     width: 26,
     height: 26,
     borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#DFD4BD',
   },
   headerCenter: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    display: 'none',
   },
   mainAppTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#1E140C',
-    letterSpacing: -0.2,
+    color: '#F8E7BE',
   },
   headerRight: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  kuralNumberBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    backgroundColor: '#EFE6D6',
-  },
-  kuralNumberText: {
-    fontSize: 11.5,
-    fontWeight: '800',
-    color: '#1E140C',
-  },
-  /* Thiruvalluvar Hero Image Container on Top */
-  imageContainer: {
     width: '100%',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#DFD4BD',
-    backgroundColor: '#F3E9D7',
-    overflow: 'hidden',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 4,
-    zIndex: 2,
+  },
+  kuralNumberBadge: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  kuralNumberText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#4A1504',
+    textAlign: 'center',
+  },
+  /* Hero Image inside the golden arch window */
+  imageContainer: {
+    position: 'absolute',
+    top: '18.4%',
+    left: '26.5%',
+    width: '47.0%',
+    height: '32.6%',
+    borderTopLeftRadius: 100,
+    borderTopRightRadius: 100,
+    overflow: 'hidden',
+    backgroundColor: '#1E140C',
+    zIndex: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderColor: '#DFD4BD',
   },
   imageElement: {
     width: '100%',
     height: '100%',
   },
-  /* Hero Kural Box: Highlighted with warm background & accent border */
+  /* Couplet Box: over the velvet maroon plaque */
   heroKuralBox: {
-    backgroundColor: '#F5EBD9',
-    borderWidth: 1,
-    borderColor: '#E6D7BD',
-    borderLeftWidth: 4,
-    borderLeftColor: '#D97706',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    marginVertical: 4,
-    alignItems: 'flex-start',
+    position: 'absolute',
+    top: '52.6%',
+    left: '7.0%',
+    width: '86.0%',
+    height: '11.5%',
     justifyContent: 'center',
-    zIndex: 2,
-    width: '100%',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    zIndex: 20,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    borderColor: 'transparent',
   },
   heroKuralBoxLeft: {
     alignItems: 'flex-start',
   },
   heroKuralBoxCenter: {
     alignItems: 'center',
-    borderLeftWidth: 1,
   },
   heroKuralBoxRight: {
     alignItems: 'flex-end',
   },
   heroKuralTextContainer: {
     width: '100%',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   heroKuralTextContainerLeft: {
     alignItems: 'flex-start',
@@ -355,56 +355,80 @@ const styles = StyleSheet.create({
   },
   kuralLine1: {
     fontWeight: '900',
-    color: '#120600',
-    textAlign: 'left',
+    color: '#FFF5DC',
+    textAlign: 'center',
     letterSpacing: 0.3,
+    fontSize: 14,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1.5 },
+    textShadowRadius: 3,
   },
   kuralLine2: {
     fontWeight: '900',
-    color: '#120600',
-    textAlign: 'left',
+    color: '#FFF5DC',
+    textAlign: 'center',
     letterSpacing: 0.3,
     marginTop: 4,
+    fontSize: 14,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1.5 },
+    textShadowRadius: 3,
   },
-  /* Tamil Commentary Section */
+  /* Commentary Section: over lower parchment */
   commentarySection: {
-    marginVertical: 4,
-    zIndex: 2,
+    position: 'absolute',
+    top: '65.5%',
+    left: '6.4%',
+    width: '87.2%',
+    height: '12.0%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 20,
+    paddingHorizontal: 8,
   },
   commentaryBodyText: {
-    fontSize: 12.5,
+    fontSize: 13,
     lineHeight: 18.5,
-    color: '#261C13',
-    fontWeight: '500',
+    color: '#1A1108',
+    fontWeight: '600',
+    textAlign: 'center',
   },
-  /* English Translation Section */
+  /* Translation Section: over lower parchment */
   translationSection: {
-    marginVertical: 2,
-    zIndex: 2,
+    position: 'absolute',
+    top: '78.5%',
+    left: '6.4%',
+    width: '87.2%',
+    height: '9.5%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 20,
+    paddingHorizontal: 12,
   },
   translationBodyText: {
-    fontSize: 12,
+    fontSize: 12.5,
     fontStyle: 'italic',
-    lineHeight: 17,
-    color: '#32251A',
+    lineHeight: 16.5,
+    color: '#3C2415',
     fontWeight: '500',
+    textAlign: 'center',
   },
-  /* Footer Section: {category} | {chapter name} */
+  /* Footer Section: over bottom maroon banner */
   footerRow: {
-    marginTop: 6,
-    paddingTop: 6,
-    borderTopWidth: 1,
-    borderTopColor: '#EBE2D0',
-    flexDirection: 'row',
+    position: 'absolute',
+    top: '89.4%',
+    left: '7.0%',
+    width: '86.0%',
+    height: '6.5%',
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    zIndex: 2,
+    zIndex: 20,
   },
   footerCategoryChapterText: {
-    fontSize: 11,
-    color: '#7B6C5C',
+    fontSize: 13,
+    color: '#F8E7BE',
     fontWeight: '700',
-    letterSpacing: 0.2,
-    textAlign: 'right',
+    letterSpacing: 0.4,
+    textAlign: 'center',
   },
 });

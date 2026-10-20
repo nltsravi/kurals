@@ -21,12 +21,15 @@ import { useLanguage } from '../../src/context/LanguageContext';
 import { AppLanguage } from '../../src/constants/translations';
 import { APP_CONFIG } from '../../src/constants/appConstants';
 import { NotificationService } from '../../src/services/notificationService';
+import * as ImagePicker from 'expo-image-picker';
 import {
   THIRUVALLUVAR_IMAGES,
   ThiruvalluvarImageId,
   DEFAULT_THIRUVALLUVAR_IMAGE_ID,
   getSavedCardImageId,
   saveCardImageId,
+  getSavedCustomImageUri,
+  saveCustomImageUri,
 } from '../../src/constants/thiruvalluvarImages';
 
 export default function SettingsScreen() {
@@ -54,14 +57,55 @@ export default function SettingsScreen() {
     getSavedCardImageId().then((id) => {
       setSelectedCardImage(id);
     });
+    getSavedCustomImageUri().then((uri) => {
+      setCustomImageUri(uri);
+    });
   }, []);
 
   // Card image selection state
   const [selectedCardImage, setSelectedCardImage] = useState<ThiruvalluvarImageId>(DEFAULT_THIRUVALLUVAR_IMAGE_ID);
+  const [customImageUri, setCustomImageUri] = useState<string | null>(null);
 
   const handleSelectCardImage = async (id: ThiruvalluvarImageId) => {
     setSelectedCardImage(id);
     await saveCardImageId(id);
+  };
+
+  const handlePickCustomImage = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert(
+          isEnglish ? 'Permission Required' : 'புகைப்பட அனுமதி தேவை',
+          isEnglish
+            ? 'Please grant photo library access to choose a custom image.'
+            : 'உங்கள் சாதனத்திலிருந்து படம் தேர்வு செய்ய புகைப்பட அனுமதி வழங்கவும்.'
+        );
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [3, 4],
+        quality: 0.85,
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const uri = result.assets[0].uri;
+        setCustomImageUri(uri);
+        setSelectedCardImage('custom');
+        await saveCustomImageUri(uri);
+        await saveCardImageId('custom');
+      }
+    } catch (err) {
+      console.error('Failed to pick custom image:', err);
+    }
+  };
+
+  const handleRemoveCustomImage = async () => {
+    setCustomImageUri(null);
+    setSelectedCardImage(DEFAULT_THIRUVALLUVAR_IMAGE_ID);
+    await saveCustomImageUri(null);
+    await saveCardImageId(DEFAULT_THIRUVALLUVAR_IMAGE_ID);
   };
 
   const openTimePicker = () => {
@@ -409,6 +453,116 @@ export default function SettingsScreen() {
                 </TouchableOpacity>
               );
             })}
+
+            {/* Custom Photo Option */}
+            {customImageUri ? (
+              <TouchableOpacity
+                style={[
+                  styles.cardImageOption,
+                  {
+                    backgroundColor: selectedCardImage === 'custom'
+                      ? colors.primaryLight
+                      : (isDark ? colors.surface : colors.card),
+                    borderColor: selectedCardImage === 'custom' ? colors.primary : colors.border,
+                  },
+                ]}
+                onPress={() => handleSelectCardImage('custom')}
+                accessibilityRole="button"
+                accessibilityState={{ selected: selectedCardImage === 'custom' }}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.cardImageThumbnailContainer,
+                    {
+                      backgroundColor: '#FEF3C7',
+                      borderColor: selectedCardImage === 'custom' ? colors.primary : '#FCD34D',
+                    },
+                  ]}
+                >
+                  <Image
+                    source={{ uri: customImageUri }}
+                    style={styles.cardImageThumbnail}
+                    resizeMode="cover"
+                  />
+                  {selectedCardImage === 'custom' && (
+                    <View style={[styles.cardImageCheckBadge, { backgroundColor: colors.primary }]}>
+                      <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+                    </View>
+                  )}
+                </View>
+
+                <View style={styles.cardImageTextWrapper}>
+                  <View style={styles.cardImageTitleRow}>
+                    <Text
+                      style={[
+                        styles.cardImageTitle,
+                        { color: selectedCardImage === 'custom' ? colors.primary : colors.text },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {isEnglish ? 'Custom Photo' : 'தனிப்பயன் படம்'}
+                    </Text>
+                    <View style={[styles.cardThemeDot, { backgroundColor: '#D97706' }]} />
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                    <TouchableOpacity
+                      onPress={handlePickCustomImage}
+                      style={{ marginRight: 10 }}
+                    >
+                      <Text style={{ fontSize: 11, color: colors.primary, fontWeight: '700' }}>
+                        {isEnglish ? 'Change' : 'மாற்று'}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handleRemoveCustomImage}>
+                      <Text style={{ fontSize: 11, color: '#DC2626', fontWeight: '700' }}>
+                        {t.settingsScreen.removeCustomImage}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[
+                  styles.cardImageOption,
+                  {
+                    backgroundColor: isDark ? colors.surface : colors.card,
+                    borderColor: colors.border,
+                    borderStyle: 'dashed',
+                  },
+                ]}
+                onPress={handlePickCustomImage}
+                accessibilityRole="button"
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.cardImageThumbnailContainer,
+                    {
+                      backgroundColor: isDark ? '#1F2937' : '#F3F4F6',
+                      borderColor: colors.border,
+                    },
+                  ]}
+                >
+                  <Ionicons name="image-outline" size={24} color={colors.primary} />
+                </View>
+                <View style={styles.cardImageTextWrapper}>
+                  <Text
+                    style={[styles.cardImageTitle, { color: colors.primary }]}
+                    numberOfLines={1}
+                  >
+                    + {t.settingsScreen.addCustomImageBtn}
+                  </Text>
+                  <Text
+                    style={[styles.cardImageDesc, { color: colors.textMuted }]}
+                    numberOfLines={1}
+                  >
+                    {t.settingsScreen.customImageDesc}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 

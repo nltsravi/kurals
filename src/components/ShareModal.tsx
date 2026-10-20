@@ -28,12 +28,15 @@ import {
   formatKuralForSocialShare,
 } from '../utils/text';
 import { KuralImageCard } from './KuralImageCard';
+import * as ImagePicker from 'expo-image-picker';
 import {
   THIRUVALLUVAR_IMAGES,
   ThiruvalluvarImageId,
   DEFAULT_THIRUVALLUVAR_IMAGE_ID,
   getSavedCardImageId,
   saveCardImageId,
+  getSavedCustomImageUri,
+  saveCustomImageUri,
 } from '../constants/thiruvalluvarImages';
 
 interface ShareModalProps {
@@ -72,6 +75,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   const [shareTab, setShareTab] = useState<'image' | 'text'>('image');
   const [meaningType, setMeaningType] = useState<MeaningType>('mv');
   const [selectedImageId, setSelectedImageId] = useState<ThiruvalluvarImageId>(DEFAULT_THIRUVALLUVAR_IMAGE_ID);
+  const [customImageUri, setCustomImageUri] = useState<string | null>(null);
   const [cardRatio, setCardRatio] = useState<'9:16' | '4:5' | '1:1'>('9:16');
   const [includeTransliteration, setIncludeTransliteration] = useState(false);
   const [includeHashtags, setIncludeHashtags] = useState(true);
@@ -83,12 +87,37 @@ export const ShareModal: React.FC<ShareModalProps> = ({
       getSavedCardImageId().then((id) => {
         setSelectedImageId(id);
       });
+      getSavedCustomImageUri().then((uri) => {
+        setCustomImageUri(uri);
+      });
     }
   }, [visible]);
 
   const handleSelectImage = (id: ThiruvalluvarImageId) => {
     setSelectedImageId(id);
     saveCardImageId(id);
+  };
+
+  const handlePickCustomImage = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) return;
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [3, 4],
+        quality: 0.85,
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const uri = result.assets[0].uri;
+        setCustomImageUri(uri);
+        setSelectedImageId('custom');
+        await saveCustomImageUri(uri);
+        await saveCardImageId('custom');
+      }
+    } catch (err) {
+      console.error('Failed to pick custom image in ShareModal:', err);
+    }
   };
 
   const shareOptions: SocialShareOptions = useMemo(
@@ -456,6 +485,92 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                     </TouchableOpacity>
                   );
                 })}
+
+                {/* Custom Photo Chip */}
+                {customImageUri ? (
+                  <TouchableOpacity
+                    style={[
+                      styles.imageOptionCard,
+                      {
+                        backgroundColor: selectedImageId === 'custom' ? colors.primaryLight : colors.card,
+                        borderColor: selectedImageId === 'custom' ? colors.primary : colors.border,
+                      },
+                    ]}
+                    onPress={() => handleSelectImage('custom')}
+                    activeOpacity={0.7}
+                  >
+                    <View
+                      style={[
+                        styles.imageThumbnailWrapper,
+                        {
+                          backgroundColor: '#FEF3C7',
+                          borderColor: '#FCD34D',
+                        },
+                      ]}
+                    >
+                      <Image
+                        source={{ uri: customImageUri }}
+                        style={styles.imageThumbnail}
+                        resizeMode="cover"
+                      />
+                      {selectedImageId === 'custom' && (
+                        <View style={[styles.selectedCheckBadge, { backgroundColor: colors.primary }]}>
+                          <Ionicons name="checkmark" size={10} color="#FFFFFF" />
+                        </View>
+                      )}
+                    </View>
+                    <View>
+                      <Text
+                        style={[
+                          styles.imageOptionTitle,
+                          { color: selectedImageId === 'custom' ? colors.primary : colors.text },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {isEnglish ? 'Custom Photo' : 'தனிப்பயன் படம்'}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ) : null}
+
+                {/* Pick / Add Photo Chip */}
+                <TouchableOpacity
+                  style={[
+                    styles.imageOptionCard,
+                    {
+                      backgroundColor: colors.card,
+                      borderColor: colors.border,
+                      borderStyle: 'dashed',
+                    },
+                  ]}
+                  onPress={handlePickCustomImage}
+                  activeOpacity={0.7}
+                >
+                  <View
+                    style={[
+                      styles.imageThumbnailWrapper,
+                      {
+                        backgroundColor: isDark ? '#1F2937' : '#F3F4F6',
+                        borderColor: colors.border,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      },
+                    ]}
+                  >
+                    <Ionicons name="add" size={20} color={colors.primary} />
+                  </View>
+                  <View>
+                    <Text
+                      style={[
+                        styles.imageOptionTitle,
+                        { color: colors.primary },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {isEnglish ? '+ Add Photo' : '+ படம்'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
               </ScrollView>
             </View>
 
@@ -517,6 +632,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                     meaningType={meaningType}
                     imageId={selectedImageId}
                     cardRatio={cardRatio}
+                    customImageUri={customImageUri}
+                    hideImage={selectedImageId === 'hide'}
                   />
                 </View>
 

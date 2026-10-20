@@ -8,7 +8,11 @@
     "scheme": "thirukkural",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nltsravi.kurals",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "This app accesses your photos to select custom background image for sharing cards."
+      }
     },
     "android": {
       "package": "com.nltsravi.kurals",
@@ -21,6 +25,10 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA"
+      ],
       "allowBackup": true
     },
     "web": {
@@ -46,9 +54,16 @@
           "color": "#FF7C0A"
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "This app accesses your photos to select custom background image for sharing cards.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
       "expo-font",
-      "expo-status-bar",
-      "expo-web-browser"
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true

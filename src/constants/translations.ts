@@ -176,6 +176,9 @@ export interface AppTranslations {
     testNoticeDesc: string;
     buildNumberAlertTitle: string;
     buildNumberCopiedMsg: string;
+    addCustomImageBtn: string;
+    customImageDesc: string;
+    removeCustomImage: string;
   };
   shareModal: {
     title: string;
@@ -369,6 +372,9 @@ export const TRANSLATIONS: Record<AppLanguage, AppTranslations> = {
       testNoticeDesc: 'உங்கள் அறிவிப்புப் பட்டியைச் சரிபார்க்கவும்.',
       buildNumberAlertTitle: 'கட்டமைப்பு எண்',
       buildNumberCopiedMsg: 'நகலெடுக்கப்பட்டது:',
+      addCustomImageBtn: 'உங்கள் படம் சேர்க்க',
+      customImageDesc: 'உங்கள் சாதனத்திலிருந்து படம் தேர்வு செய்க',
+      removeCustomImage: 'படத்தை நீக்கு',
     },
     shareModal: {
       title: 'குறள் பகிர்வு',
@@ -560,6 +566,9 @@ export const TRANSLATIONS: Record<AppLanguage, AppTranslations> = {
       testNoticeDesc: 'Check your notification shade now.',
       buildNumberAlertTitle: 'Build Number',
       buildNumberCopiedMsg: 'Copied to clipboard:',
+      addCustomImageBtn: 'Add Custom Photo',
+      customImageDesc: 'Choose a photo from your device photo library',
+      removeCustomImage: 'Remove Photo',
     },
     shareModal: {
       title: 'Share Kural',
