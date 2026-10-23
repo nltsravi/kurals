@@ -9,8 +9,8 @@ import {
   Pressable,
   Platform,
   ActivityIndicator,
-  Image,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { captureRef } from 'react-native-view-shot';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -461,9 +461,10 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                         ]}
                       >
                         <Image
-                          source={img.source}
+                          source={img.source as any}
                           style={styles.imageThumbnail}
-                          resizeMode={img.resizeMode}
+                          contentFit={img.resizeMode}
+                          cachePolicy="memory-disk"
                         />
                         {isSelected && (
                           <View style={[styles.selectedCheckBadge, { backgroundColor: colors.primary }]}>
@@ -511,7 +512,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                       <Image
                         source={{ uri: customImageUri }}
                         style={styles.imageThumbnail}
-                        resizeMode="cover"
+                        contentFit="cover"
+                        cachePolicy="memory-disk"
                       />
                       {selectedImageId === 'custom' && (
                         <View style={[styles.selectedCheckBadge, { backgroundColor: colors.primary }]}>

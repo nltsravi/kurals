@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions, Image } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { Image } from 'expo-image';
 import { Kural } from '../types/kural';
 import { MeaningType } from '../utils/text';
 import { KuralCoupletText } from './KuralCoupletText';
@@ -51,7 +52,7 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
     const isHidden =
       hideImage || imageId === 'hide' || imageId === 'thiruvalluvar-outline';
 
-    let resolvedImageSource = imageOption.source;
+    let resolvedImageSource: any = imageOption.source;
     let resolvedResizeMode: 'contain' | 'cover' = imageOption.resizeMode;
     let accessibilityLabel = imageOption.nameTamil;
 
@@ -112,7 +113,8 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
               <Image
                 source={APP_ICON_SOURCE}
                 style={styles.headerAppIcon}
-                resizeMode="cover"
+                contentFit="cover"
+                cachePolicy="memory-disk"
               />
             </View>
 
@@ -144,7 +146,8 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
             <Image
               source={resolvedImageSource}
               style={styles.imageElement}
-              resizeMode={resolvedResizeMode}
+              contentFit={resolvedResizeMode}
+              cachePolicy="memory-disk"
               accessibilityLabel={accessibilityLabel}
             />
           </View>
@@ -208,7 +211,8 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
           <Image
             source={TRADITIONAL_TEMPLATE_BG_SOURCE}
             style={styles.templateBgOverlay}
-            resizeMode="stretch"
+            contentFit="fill"
+            cachePolicy="memory-disk"
             pointerEvents="none"
           />
         </View>
