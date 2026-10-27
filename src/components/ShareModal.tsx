@@ -37,7 +37,6 @@ import {
   saveCardImageId,
   getSavedCustomImageUri,
   saveCustomImageUri,
-  getSavedAllowModifyCardImage,
 } from '../constants/thiruvalluvarImages';
 
 interface ShareModalProps {
@@ -75,7 +74,6 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
   const [shareTab, setShareTab] = useState<'image' | 'text'>('image');
   const [meaningType, setMeaningType] = useState<MeaningType>('mv');
-  const [allowModifyCardImage, setAllowModifyCardImage] = useState(false);
   const [selectedImageId, setSelectedImageId] = useState<ThiruvalluvarImageId>(DEFAULT_THIRUVALLUVAR_IMAGE_ID);
   const [customImageUri, setCustomImageUri] = useState<string | null>(null);
   const [cardRatio, setCardRatio] = useState<'9:16' | '4:5' | '1:1'>('9:16');
@@ -86,19 +84,11 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
   useEffect(() => {
     if (visible) {
-      getSavedAllowModifyCardImage().then((allowed) => {
-        setAllowModifyCardImage(allowed);
-        if (allowed) {
-          getSavedCardImageId().then((id) => {
-            setSelectedImageId(id);
-          });
-          getSavedCustomImageUri().then((uri) => {
-            setCustomImageUri(uri);
-          });
-        } else {
-          setSelectedImageId(DEFAULT_THIRUVALLUVAR_IMAGE_ID);
-          setCustomImageUri(null);
-        }
+      getSavedCardImageId().then((id) => {
+        setSelectedImageId(id);
+      });
+      getSavedCustomImageUri().then((uri) => {
+        setCustomImageUri(uri);
       });
     }
   }, [visible]);
@@ -435,12 +425,11 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               </ScrollView>
             </View>
 
-            {/* Thiruvalluvar Image Selector (Only shown if allowModifyCardImage is true) */}
-            {allowModifyCardImage ? (
-              <View style={styles.sectionBlock}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                  {t.shareModal.selectImageTitle}
-                </Text>
+            {/* Thiruvalluvar Image Selector (Live updates card & theme) */}
+            <View style={styles.sectionBlock}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                {t.shareModal.selectImageTitle}
+              </Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -586,9 +575,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                 </TouchableOpacity>
               </ScrollView>
             </View>
-          ) : null}
 
-          {/* Main Preview Area: Image Card or Text Card */}
+            {/* Main Preview Area: Image Card or Text Card */}
             {shareTab === 'image' ? (
               <View style={styles.imagePreviewContainer}>
                 {/* Card Aspect Ratio Selector Chips */}
@@ -644,10 +632,10 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                     ref={imageCardRef}
                     kural={kural}
                     meaningType={meaningType}
-                    imageId={allowModifyCardImage ? selectedImageId : DEFAULT_THIRUVALLUVAR_IMAGE_ID}
+                    imageId={selectedImageId}
                     cardRatio={cardRatio}
-                    customImageUri={allowModifyCardImage ? customImageUri : null}
-                    hideImage={allowModifyCardImage && selectedImageId === 'hide'}
+                    customImageUri={customImageUri}
+                    hideImage={selectedImageId === 'hide'}
                   />
                 </View>
 

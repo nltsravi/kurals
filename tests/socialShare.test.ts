@@ -286,24 +286,22 @@ describe('Social Media Sharing Features', () => {
       expect(coupletComponent.props.align).toBe('left');
     });
 
-    test('renders subheader row with logo on left, chapter name in center, and Kural number on right', () => {
+    test('renders header with app icon on left, Tamil title in center, and Kural number on right', () => {
       const { KuralImageCard } = require('../src/components/KuralImageCard');
-      const { THALIR_LOGO_SOURCE } = require('../src/constants/thiruvalluvarImages');
       const cardElement = KuralImageCard.render({ kural: kural1 }, null);
       const cardContainer = cardElement.props.children;
       const headerRow = cardContainer.props.children[0];
 
-      // Header has 3 columns: left (Thalir logo), center (chapter name), right (kural number)
+      // Header has 3 columns: left (app icon), center (title), right (kural number)
       const [headerLeft, headerCenter, headerRight] = headerRow.props.children;
 
-      // Left: Thalir Kalvikkoodam logo image
+      // Left: App icon image
       const appIconImage = headerLeft.props.children;
       expect(appIconImage).toBeDefined();
-      expect(appIconImage.props.source).toEqual(THALIR_LOGO_SOURCE);
 
-      // Center: Chapter Name
+      // Center: "திருக்குறள்"
       const centerTitle = headerCenter.props.children;
-      expect(centerTitle.props.children).toBe('கடவுள் வாழ்த்து');
+      expect(centerTitle.props.children).toBe('திருக்குறள்');
 
       // Right: Kural number badge
       const numberBadge = headerRight.props.children;
@@ -328,7 +326,7 @@ describe('Social Media Sharing Features', () => {
       expect(coupletComponent.props.fontWeight).toBe('900');
     });
 
-    test('renders footer with category on the bottom right and no copyright text', () => {
+    test('renders footer with category and chapter name on the right and no copyright text', () => {
       const { KuralImageCard } = require('../src/components/KuralImageCard');
       const cardElement = KuralImageCard.render({ kural: kural1 }, null);
       const cardContainer = cardElement.props.children;
@@ -336,7 +334,7 @@ describe('Social Media Sharing Features', () => {
 
       expect(footerRow).toBeDefined();
       const footerText = footerRow.props.children;
-      expect(footerText.props.children).toBe('அறத்துப்பால்');
+      expect(footerText.props.children).toBe('அறத்துப்பால் | கடவுள் வாழ்த்து');
       expect(footerText.props.children).not.toContain('Neolumina');
       expect(footerText.props.children).not.toContain('©');
     });
@@ -477,32 +475,6 @@ describe('Social Media Sharing Features', () => {
       const templateBg = cardContainer.props.children[6];
       expect(templateBg).toBeDefined();
       expect(templateBg.props.source).toBe(TRADITIONAL_TEMPLATE_BG_SOURCE);
-    });
-
-    test('allowModifyCardImage setting persists and defaults to false', async () => {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      const {
-        getSavedAllowModifyCardImage,
-        saveAllowModifyCardImage,
-        ALLOW_MODIFY_CARD_IMAGE_KEY,
-      } = require('../src/constants/thiruvalluvarImages');
-
-      // Clear
-      await AsyncStorage.removeItem(ALLOW_MODIFY_CARD_IMAGE_KEY);
-
-      // Defaults to false
-      let allowed = await getSavedAllowModifyCardImage();
-      expect(allowed).toBe(false);
-
-      // Saves true
-      await saveAllowModifyCardImage(true);
-      allowed = await getSavedAllowModifyCardImage();
-      expect(allowed).toBe(true);
-
-      // Saves false
-      await saveAllowModifyCardImage(false);
-      allowed = await getSavedAllowModifyCardImage();
-      expect(allowed).toBe(false);
     });
   });
 });

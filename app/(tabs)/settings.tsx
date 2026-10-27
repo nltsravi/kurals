@@ -30,8 +30,6 @@ import {
   saveCardImageId,
   getSavedCustomImageUri,
   saveCustomImageUri,
-  getSavedAllowModifyCardImage,
-  saveAllowModifyCardImage,
 } from '../../src/constants/thiruvalluvarImages';
 
 export default function SettingsScreen() {
@@ -62,20 +60,11 @@ export default function SettingsScreen() {
     getSavedCustomImageUri().then((uri) => {
       setCustomImageUri(uri);
     });
-    getSavedAllowModifyCardImage().then((allowed) => {
-      setAllowModifyCardImage(allowed);
-    });
   }, []);
 
-  // Card image customization toggle and selection state
-  const [allowModifyCardImage, setAllowModifyCardImage] = useState(false);
+  // Card image selection state
   const [selectedCardImage, setSelectedCardImage] = useState<ThiruvalluvarImageId>(DEFAULT_THIRUVALLUVAR_IMAGE_ID);
   const [customImageUri, setCustomImageUri] = useState<string | null>(null);
-
-  const handleToggleAllowModifyCardImage = async (val: boolean) => {
-    setAllowModifyCardImage(val);
-    await saveAllowModifyCardImage(val);
-  };
 
   const handleSelectCardImage = async (id: ThiruvalluvarImageId) => {
     setSelectedCardImage(id);
@@ -385,25 +374,14 @@ export default function SettingsScreen() {
 
         {/* Social Share & Status Card Image Settings */}
         <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={styles.cardHeaderWithAction}>
-            <View style={{ flex: 1, marginRight: 12 }}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                {t.settingsScreen.cardImageSectionTitle}
-              </Text>
-              <Text style={[styles.sectionSubtitle, { color: colors.textMuted, marginBottom: 0 }]}>
-                {t.settingsScreen.allowModifyImageSubtitle}
-              </Text>
-            </View>
-            <Switch
-              value={allowModifyCardImage}
-              onValueChange={handleToggleAllowModifyCardImage}
-              trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={Platform.OS === 'android' ? (allowModifyCardImage ? colors.surface : '#f4f3f4') : undefined}
-            />
-          </View>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            {t.settingsScreen.cardImageSectionTitle}
+          </Text>
+          <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>
+            {t.settingsScreen.cardImageSectionSubtitle}
+          </Text>
 
-          {allowModifyCardImage ? (
-            <View style={[styles.cardImageGrid, { marginTop: 16 }]}>
+          <View style={styles.cardImageGrid}>
             {THIRUVALLUVAR_IMAGES.map((img) => {
               const isSelected = selectedCardImage === img.id;
               return (
@@ -586,7 +564,6 @@ export default function SettingsScreen() {
               </TouchableOpacity>
             )}
           </View>
-          ) : null}
         </View>
 
         {/* Daily Notification Settings */}

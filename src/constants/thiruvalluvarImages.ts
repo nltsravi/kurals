@@ -12,11 +12,9 @@ export type ThiruvalluvarImageId =
 
 export const APP_ICON_SOURCE = require('../../assets/images/icon.png');
 export const TRADITIONAL_TEMPLATE_BG_SOURCE = require('../../assets/images/templates/traditional_template_bg.png');
-export const THALIR_LOGO_SOURCE = require('../../assets/images/thalir_kalvikkodam_icon.png');
 
 export const THIRUVALLUVAR_IMAGE_STORAGE_KEY = '@thirukkural_card_image';
 export const CUSTOM_IMAGE_STORAGE_KEY = '@thirukkural_custom_image_uri';
-export const ALLOW_MODIFY_CARD_IMAGE_KEY = '@thirukkural_allow_modify_card_image';
 export const DEFAULT_THIRUVALLUVAR_IMAGE_ID: ThiruvalluvarImageId = 'thiruvalluvar-color';
 
 export interface CardImageTheme {
@@ -258,29 +256,3 @@ export async function saveCustomImageUri(uri: string | null): Promise<void> {
     console.error('Failed to save custom image URI:', e);
   }
 }
-
-/**
- * Loads the setting that determines whether modifying/adding card images is enabled.
- * Default is false (hidden).
- */
-export async function getSavedAllowModifyCardImage(): Promise<boolean> {
-  try {
-    const saved = await AsyncStorage.getItem(ALLOW_MODIFY_CARD_IMAGE_KEY);
-    return saved === 'true';
-  } catch (e) {
-    console.error('Failed to load allow modify card image preference:', e);
-    return false;
-  }
-}
-
-/**
- * Saves the setting that determines whether modifying/adding card images is enabled.
- */
-export async function saveAllowModifyCardImage(enabled: boolean): Promise<void> {
-  try {
-    await AsyncStorage.setItem(ALLOW_MODIFY_CARD_IMAGE_KEY, enabled ? 'true' : 'false');
-  } catch (e) {
-    console.error('Failed to save allow modify card image preference:', e);
-  }
-}
-

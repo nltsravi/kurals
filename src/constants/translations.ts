@@ -179,8 +179,6 @@ export interface AppTranslations {
     addCustomImageBtn: string;
     customImageDesc: string;
     removeCustomImage: string;
-    allowModifyImageTitle: string;
-    allowModifyImageSubtitle: string;
   };
   shareModal: {
     title: string;
@@ -377,8 +375,6 @@ export const TRANSLATIONS: Record<AppLanguage, AppTranslations> = {
       addCustomImageBtn: 'உங்கள் படம் சேர்க்க',
       customImageDesc: 'உங்கள் சாதனத்திலிருந்து படம் தேர்வு செய்க',
       removeCustomImage: 'படத்தை நீக்கு',
-      allowModifyImageTitle: 'சமூகப் பகிர்வில் படம் சேர்த்தல்',
-      allowModifyImageSubtitle: 'பகிர்வு அட்டைகளில் படங்களைத் தேர்வு செய்ய அல்லது சொந்த படம் சேர்க்க அனுமதி',
     },
     shareModal: {
       title: 'குறள் பகிர்வு',
@@ -573,8 +569,6 @@ export const TRANSLATIONS: Record<AppLanguage, AppTranslations> = {
       addCustomImageBtn: 'Add Custom Photo',
       customImageDesc: 'Choose a photo from your device photo library',
       removeCustomImage: 'Remove Photo',
-      allowModifyImageTitle: 'Add Images in Social Sharing',
-      allowModifyImageSubtitle: 'Allow selecting different images or adding custom photos for social sharing',
     },
     shareModal: {
       title: 'Share Kural',
