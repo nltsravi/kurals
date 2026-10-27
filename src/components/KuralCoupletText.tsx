@@ -166,7 +166,7 @@ export const KuralCoupletText: React.FC<KuralCoupletTextProps> = ({
     explicitContainerWidth ||
     (layoutWidth > 0 ? layoutWidth : Math.max(260, screenWidth - 72));
   const uniformFontSize = calculateCoupletFontSize(line1, line2, baseFontSize, effectiveWidth);
-  const lineHeight = Math.round(uniformFontSize * 1.45);
+  const lineHeight = Math.round(uniformFontSize * 1.35);
 
   const handleLayout = (e: LayoutChangeEvent) => {
     const w = Math.round(e.nativeEvent.layout.width);
@@ -180,7 +180,7 @@ export const KuralCoupletText: React.FC<KuralCoupletTextProps> = ({
       <Text
         numberOfLines={1}
         adjustsFontSizeToFit={true}
-        minimumFontScale={0.65}
+        minimumFontScale={0.7}
         style={[
           styles.line,
           {
@@ -201,7 +201,7 @@ export const KuralCoupletText: React.FC<KuralCoupletTextProps> = ({
       <Text
         numberOfLines={1}
         adjustsFontSizeToFit={true}
-        minimumFontScale={0.65}
+        minimumFontScale={0.7}
         style={[
           styles.line,
           {
@@ -211,7 +211,7 @@ export const KuralCoupletText: React.FC<KuralCoupletTextProps> = ({
             textAlign: align,
             fontWeight,
             letterSpacing,
-            marginTop: 4,
+            marginTop: 3,
           },
           line2Style,
           { fontSize: uniformFontSize, lineHeight },

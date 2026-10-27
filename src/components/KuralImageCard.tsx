@@ -3,12 +3,13 @@ import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { Kural } from '../types/kural';
 import { MeaningType } from '../utils/text';
-import { KuralCoupletText } from './KuralCoupletText';
+import { KuralCoupletText, getTamilTypographicWidth } from './KuralCoupletText';
 import {
   ThiruvalluvarImageId,
   DEFAULT_THIRUVALLUVAR_IMAGE_ID,
   getThiruvalluvarImage,
   APP_ICON_SOURCE,
+  THALIR_LOGO_SOURCE,
   TRADITIONAL_TEMPLATE_BG_SOURCE,
 } from '../constants/thiruvalluvarImages';
 
@@ -39,10 +40,23 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
   ) => {
     const screenWidth = Dimensions?.get ? Dimensions.get('window')?.width || 380 : 380;
     const effectiveCardWidth = width || Math.min(screenWidth - 40, 480);
-    const innerCoupletWidth = Math.max(240, effectiveCardWidth * 0.88);
 
     const imageOption = getThiruvalluvarImage(imageId);
     const theme = imageOption.theme;
+
+    // Calculate prominent couplet font size matching reference image, uniform across both lines
+    const w1 = getTamilTypographicWidth(kural.line1);
+    const w2 = getTamilTypographicWidth(kural.line2);
+    const maxKuralW = Math.max(w1, w2);
+    const targetCoupletFontSize = Math.round(
+      Math.max(
+        19,
+        Math.min(
+          25,
+          (effectiveCardWidth * 0.92) / (Math.max(16, maxKuralW) * 0.62)
+        )
+      ) * 10
+    ) / 10;
 
     // Aspect ratio calculation
     const numericAspectRatio =
@@ -88,7 +102,6 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
 
     const categoryText = kural.categoryTamil || kural.categoryEnglish || '';
     const chapterText = kural.chapterNameTamil || kural.chapterNameEnglish || '';
-    const footerMetadata = [categoryText, chapterText].filter(Boolean).join(' | ');
 
     return (
       <View
@@ -107,20 +120,21 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
             { backgroundColor: theme.cardBg, borderColor: theme.borderColor },
           ]}
         >
-          {/* 0. Header & Badge Row */}
+          {/* 0. Header & Badge Row below Header: Logo (left), Chapter (center), Kural number (right) */}
           <View style={styles.headerRow}>
             <View style={styles.headerLeft}>
               <Image
-                source={APP_ICON_SOURCE}
+                source={THALIR_LOGO_SOURCE}
                 style={styles.headerAppIcon}
-                contentFit="cover"
+                contentFit="contain"
                 cachePolicy="memory-disk"
+                accessibilityLabel="தளிர் கல்விக் கூடம்"
               />
             </View>
 
             <View style={styles.headerCenter}>
-              <Text style={styles.mainAppTitle}>
-                திருக்குறள்
+              <Text style={styles.mainAppTitle} numberOfLines={1} ellipsizeMode="tail">
+                {chapterText}
               </Text>
             </View>
 
@@ -166,8 +180,8 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
               line2={kural.line2}
               tamil={kural.tamil}
               color="#FFF5DC"
-              baseFontSize={Math.round(20 * Math.min(1.15, Math.max(0.9, effectiveCardWidth / 400)))}
-              containerWidth={innerCoupletWidth}
+              baseFontSize={targetCoupletFontSize}
+              containerWidth={effectiveCardWidth * 1.5}
               align={align}
               fontWeight="900"
               letterSpacing={0.3}
@@ -200,10 +214,10 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
             ) : null}
           </View>
 
-          {/* 5. Footer Section: {category} | {chapter name} */}
+          {/* 5. Footer Section: Category at bottom right */}
           <View style={styles.footerRow}>
             <Text style={styles.footerCategoryChapterText} numberOfLines={1}>
-              {footerMetadata}
+              {categoryText}
             </Text>
           </View>
 
@@ -255,36 +269,49 @@ const styles = StyleSheet.create({
     height: '100%',
     zIndex: 10,
   },
-  /* Header & Badge (positioned over the top-right gold badge of the template) */
+  /* Header & Badge (positioned below the header: logo on left, chapter in center, gold badge on right) */
   headerRow: {
     position: 'absolute',
-    top: '13.3%',
-    left: '72.8%',
-    width: '24.4%',
-    height: '5.7%',
+    top: '12.8%',
+    left: '3.5%',
+    width: '93.0%',
+    height: '6.2%',
     zIndex: 20,
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   headerLeft: {
-    display: 'none',
+    width: '22%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    paddingLeft: 2,
   },
   headerAppIcon: {
-    width: 26,
-    height: 26,
-    borderRadius: 6,
+    width: '100%',
+    height: '100%',
+    maxHeight: 46,
+    maxWidth: 68,
   },
   headerCenter: {
-    display: 'none',
+    flex: 1,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
   },
   mainAppTitle: {
-    fontSize: 17,
+    fontSize: 13.5,
     fontWeight: '800',
-    color: '#F8E7BE',
+    color: '#3B0606',
+    textAlign: 'center',
+    textShadowColor: 'rgba(255, 255, 255, 0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   headerRight: {
-    width: '100%',
+    width: '25%',
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
@@ -325,12 +352,12 @@ const styles = StyleSheet.create({
   heroKuralBox: {
     position: 'absolute',
     top: '52.6%',
-    left: '7.0%',
-    width: '86.0%',
-    height: '11.5%',
+    left: '5.0%',
+    width: '90.0%',
+    height: '12.2%',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: 0,
     zIndex: 20,
     backgroundColor: 'transparent',
     borderWidth: 0,
@@ -363,21 +390,19 @@ const styles = StyleSheet.create({
     color: '#FFF5DC',
     textAlign: 'center',
     letterSpacing: 0.3,
-    fontSize: 14,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowColor: 'rgba(0, 0, 0, 0.85)',
     textShadowOffset: { width: 0, height: 1.5 },
-    textShadowRadius: 3,
+    textShadowRadius: 3.5,
   },
   kuralLine2: {
     fontWeight: '900',
     color: '#FFF5DC',
     textAlign: 'center',
     letterSpacing: 0.3,
-    marginTop: 4,
-    fontSize: 14,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    marginTop: 3,
+    textShadowColor: 'rgba(0, 0, 0, 0.85)',
     textShadowOffset: { width: 0, height: 1.5 },
-    textShadowRadius: 3,
+    textShadowRadius: 3.5,
   },
   /* Commentary Section: over lower parchment */
   commentarySection: {
@@ -426,7 +451,8 @@ const styles = StyleSheet.create({
     width: '86.0%',
     height: '6.5%',
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'flex-end',
+    paddingRight: 16,
     zIndex: 20,
   },
   footerCategoryChapterText: {
@@ -434,6 +460,6 @@ const styles = StyleSheet.create({
     color: '#F8E7BE',
     fontWeight: '700',
     letterSpacing: 0.4,
-    textAlign: 'center',
+    textAlign: 'right',
   },
 });
