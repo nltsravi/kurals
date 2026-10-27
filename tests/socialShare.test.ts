@@ -257,7 +257,7 @@ describe('Social Media Sharing Features', () => {
       expect(imageElement.props.accessibilityLabel).toBe('திருவள்ளுவர் (வண்ணம்)');
     });
 
-    test('renders KuralCoupletText with center alignment by default in image card', () => {
+    test('renders KuralCoupletText with left alignment by default in image card', () => {
       const { KuralImageCard } = require('../src/components/KuralImageCard');
       const cardElement = KuralImageCard.render({ kural: kural1 }, null);
       expect(cardElement).toBeDefined();
@@ -267,43 +267,29 @@ describe('Social Media Sharing Features', () => {
       const heroKuralBox = cardContainer.props.children[2];
       const coupletComponent = heroKuralBox.props.children;
 
-      expect(coupletComponent.props.align).toBe('center');
+      expect(coupletComponent.props.align).toBe('left');
       expect(coupletComponent.props.line1Style).toEqual(
-        expect.arrayContaining([expect.objectContaining({ textAlign: 'center' })])
+        expect.arrayContaining([expect.objectContaining({ textAlign: 'left' })])
       );
       expect(coupletComponent.props.line2Style).toEqual(
-        expect.arrayContaining([expect.objectContaining({ textAlign: 'center' })])
+        expect.arrayContaining([expect.objectContaining({ textAlign: 'left' })])
       );
     });
 
-    test('allows customizing alignment to left or right if needed', () => {
-      const { KuralImageCard } = require('../src/components/KuralImageCard');
-      const cardElement = KuralImageCard.render({ kural: kural1, align: 'left' }, null);
-      const cardContainer = cardElement.props.children;
-      const heroKuralBox = cardContainer.props.children[2];
-      const coupletComponent = heroKuralBox.props.children;
-
-      expect(coupletComponent.props.align).toBe('left');
-    });
-
-    test('renders header with Thalir logo on left, chapter name in center, and Kural number on right', () => {
+    test('renders header with Thalir logo on left and Kural number on right', () => {
       const { KuralImageCard } = require('../src/components/KuralImageCard');
       const { THALIR_LOGO_SOURCE } = require('../src/constants/thiruvalluvarImages');
       const cardElement = KuralImageCard.render({ kural: kural1 }, null);
       const cardContainer = cardElement.props.children;
       const headerRow = cardContainer.props.children[0];
 
-      // Header has 3 columns: left (Thalir logo), center (chapter name), right (kural number)
-      const [headerLeft, headerCenter, headerRight] = headerRow.props.children;
+      // Header has columns: left (Thalir logo), center, right (kural number)
+      const [headerLeft, , headerRight] = headerRow.props.children;
 
       // Left: Thalir Kalvikkoodam logo image
       const appIconImage = headerLeft.props.children;
       expect(appIconImage).toBeDefined();
       expect(appIconImage.props.source).toEqual(THALIR_LOGO_SOURCE);
-
-      // Center: Chapter Name
-      const centerTitle = headerCenter.props.children;
-      expect(centerTitle.props.children).toBe('கடவுள் வாழ்த்து');
 
       // Right: Kural number badge
       const numberBadge = headerRight.props.children;
@@ -328,7 +314,7 @@ describe('Social Media Sharing Features', () => {
       expect(coupletComponent.props.fontWeight).toBe('900');
     });
 
-    test('renders footer with category on the right and no copyright text', () => {
+    test('renders footer with chapter name centered and no copyright text', () => {
       const { KuralImageCard } = require('../src/components/KuralImageCard');
       const cardElement = KuralImageCard.render({ kural: kural1 }, null);
       const cardContainer = cardElement.props.children;
@@ -336,7 +322,7 @@ describe('Social Media Sharing Features', () => {
 
       expect(footerRow).toBeDefined();
       const footerText = footerRow.props.children;
-      expect(footerText.props.children).toBe('அறத்துப்பால்');
+      expect(footerText.props.children).toBe('கடவுள் வாழ்த்து');
       expect(footerText.props.children).not.toContain('Neolumina');
       expect(footerText.props.children).not.toContain('©');
     });
@@ -494,11 +480,11 @@ describe('Social Media Sharing Features', () => {
       const flatCoupletStyle = Array.isArray(coupletBox.props.style)
         ? Object.assign({}, ...coupletBox.props.style.filter(Boolean))
         : coupletBox.props.style;
-      expect(flatCoupletStyle.top).toBe('29.0%');
-      expect(flatCoupletStyle.backgroundColor).toBe('transparent');
+      expect(flatCoupletStyle.top).toBe('27.8%');
+      expect(flatCoupletStyle.backgroundColor).toBe('#0F2D1F');
 
       const footer = noImageContainer.props.children[5];
-      expect(footer.props.children.props.children).toBe('— அறத்துப்பால்');
+      expect(footer.props.children.props.children).toBe('கடவுள் வாழ்த்து');
     });
 
     test('allowModifyCardImage setting persists and defaults to false', async () => {

@@ -15,7 +15,7 @@ import { AppBottomTabBar } from '../src/components/AppBottomTabBar';
 export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
-  initialRouteName: '(tabs)',
+  anchor: '(tabs)',
 };
 
 SplashScreen.preventAutoHideAsync().catch(() => {});

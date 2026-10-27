@@ -31,7 +31,7 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
       kural,
       meaningType = 'mv',
       width,
-      align = 'center',
+      align = 'left',
       imageId = DEFAULT_THIRUVALLUVAR_IMAGE_ID,
       cardRatio = '9:16',
       customImageUri,
@@ -45,19 +45,9 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
     const imageOption = getThiruvalluvarImage(imageId);
     const theme = imageOption.theme;
 
-    // Calculate prominent couplet font size, uniform across both lines
-    const w1 = getTamilTypographicWidth(kural.line1);
-    const w2 = getTamilTypographicWidth(kural.line2);
-    const maxKuralW = Math.max(w1, w2);
-    const targetCoupletFontSize = Math.round(
-      Math.max(
-        18,
-        Math.min(
-          hideImage ? 25 : 24,
-          (effectiveCardWidth * (hideImage ? 0.90 : 0.92)) / (Math.max(16, maxKuralW) * 0.62)
-        )
-      ) * 10
-    ) / 10;
+    const innerCoupletWidth =
+      effectiveCardWidth * 0.90 - (hideImage ? 24 : 0);
+    const coupletBaseFontSize = 18.5;
 
     // Aspect ratio calculation
     const numericAspectRatio =
@@ -106,12 +96,10 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
       ? TRADITIONAL_TEMPLATE_NO_IMAGE_BG_SOURCE
       : TRADITIONAL_TEMPLATE_BG_SOURCE;
 
-    const coupletTextColor = hideImage ? '#152E22' : '#FFF5DC';
+    const coupletTextColor = '#FFF5DC';
     const coupletLine1Style = hideImage ? styles.kuralLine1NoImage : styles.kuralLine1;
     const coupletLine2Style = hideImage ? styles.kuralLine2NoImage : styles.kuralLine2;
-    const footerCategoryText = hideImage
-      ? (categoryText ? `— ${categoryText}` : '')
-      : categoryText;
+    const footerChapterText = chapterText;
 
     return (
       <View
@@ -130,29 +118,21 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
             { backgroundColor: theme.cardBg, borderColor: theme.borderColor },
           ]}
         >
-          {/* 0. Header & Badge Row below Header: Logo (left), Chapter (center), Kural number (right) */}
-          <View style={styles.headerRow}>
-            <View style={styles.headerLeft}>
+          {/* 0. Header & Badge Row below Header: Logo (left), Kural number badge (right) */}
+          <View style={hideImage ? styles.headerRowNoImage : styles.headerRow} pointerEvents="none">
+            <View style={hideImage ? styles.headerLeftNoImage : styles.headerLeft}>
               <Image
                 source={THALIR_LOGO_SOURCE}
-                style={styles.headerAppIcon}
+                style={[styles.headerAppIcon, hideImage && styles.headerAppIconNoImage]}
                 contentFit="contain"
                 cachePolicy="memory-disk"
                 accessibilityLabel="தளிர் கல்விக் கூடம்"
               />
             </View>
 
-            <View style={styles.headerCenter}>
-              <Text
-                style={hideImage ? styles.mainAppTitle : styles.mainAppTitleMaroon}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {chapterText}
-              </Text>
-            </View>
+            <View style={styles.headerCenter} />
 
-            <View style={styles.headerRight}>
+            <View style={hideImage ? styles.headerRightNoImage : styles.headerRight}>
               <View style={styles.kuralNumberBadge}>
                 <Text style={hideImage ? styles.kuralNumberText : styles.kuralNumberTextMaroon}>
                   குறள் {kural.number}
@@ -186,9 +166,7 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
           <View
             style={[
               hideImage ? styles.heroKuralBoxNoImage : styles.heroKuralBox,
-              align === 'left' && styles.heroKuralBoxLeft,
-              align === 'center' && styles.heroKuralBoxCenter,
-              align === 'right' && styles.heroKuralBoxRight,
+              styles.heroKuralBoxLeft,
             ]}
           >
             <KuralCoupletText
@@ -196,19 +174,17 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
               line2={kural.line2}
               tamil={kural.tamil}
               color={coupletTextColor}
-              baseFontSize={targetCoupletFontSize}
-              containerWidth={effectiveCardWidth * 1.5}
-              align={align}
+              baseFontSize={coupletBaseFontSize}
+              containerWidth={innerCoupletWidth}
+              align="left"
               fontWeight="900"
-              letterSpacing={0.3}
+              letterSpacing={0}
               containerStyle={[
                 styles.heroKuralTextContainer,
-                align === 'left' && styles.heroKuralTextContainerLeft,
-                align === 'center' && styles.heroKuralTextContainerCenter,
-                align === 'right' && styles.heroKuralTextContainerRight,
+                styles.heroKuralTextContainerLeft,
               ]}
-              line1Style={[coupletLine1Style, { textAlign: align }]}
-              line2Style={[coupletLine2Style, { textAlign: align }]}
+              line1Style={[coupletLine1Style, { textAlign: 'left' }]}
+              line2Style={[coupletLine2Style, { textAlign: 'left' }]}
             />
           </View>
 
@@ -236,13 +212,13 @@ export const KuralImageCard = React.forwardRef<any, KuralImageCardProps>(
             ) : null}
           </View>
 
-          {/* 5. Footer Section: Category at bottom right */}
+          {/* 5. Footer Section: Chapter name centered */}
           <View style={hideImage ? styles.footerRowNoImage : styles.footerRow}>
             <Text
               style={hideImage ? styles.footerCategoryTextNoImage : styles.footerCategoryChapterText}
               numberOfLines={1}
             >
-              {footerCategoryText}
+              {footerChapterText}
             </Text>
           </View>
 
@@ -294,24 +270,41 @@ const styles = StyleSheet.create({
     height: '100%',
     zIndex: 10,
   },
-  /* Header & Badge: Logo (left), Chapter (center), Kural number badge (right) */
+  /* Header & Badge: Logo (left), Kural number badge (right) */
   headerRow: {
     position: 'absolute',
-    top: '14.2%',
-    left: '3.5%',
-    width: '93.0%',
-    height: '8.4%',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     zIndex: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  },
+  headerRowNoImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 20,
   },
   headerLeft: {
-    width: '20%',
-    height: '100%',
+    position: 'absolute',
+    top: '13.2%',
+    left: '4.0%',
+    width: '18.0%',
+    height: '8.2%',
     justifyContent: 'center',
     alignItems: 'flex-start',
-    paddingLeft: 2,
+  },
+  headerLeftNoImage: {
+    position: 'absolute',
+    top: '13.5%',
+    left: '4.0%',
+    width: '18.0%',
+    height: '8.2%',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    opacity: 0,
   },
   headerAppIcon: {
     width: '100%',
@@ -319,31 +312,27 @@ const styles = StyleSheet.create({
     maxHeight: 52,
     maxWidth: 58,
   },
+  headerAppIconNoImage: {
+    opacity: 0,
+  },
   headerCenter: {
-    flex: 1,
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-  },
-  mainAppTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#152E22',
-    textAlign: 'center',
-  },
-  mainAppTitleMaroon: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#3B0606',
-    textAlign: 'center',
-    textShadowColor: 'rgba(255, 255, 255, 0.6)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    display: 'none',
   },
   headerRight: {
-    width: '27%',
-    height: '100%',
+    position: 'absolute',
+    top: '13.6%',
+    right: '3.2%',
+    width: '24.5%',
+    height: '4.2%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerRightNoImage: {
+    position: 'absolute',
+    top: '17.8%',
+    right: '3.5%',
+    width: '24.5%',
+    height: '4.2%',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -356,11 +345,11 @@ const styles = StyleSheet.create({
   kuralNumberText: {
     fontSize: 13.5,
     fontWeight: '800',
-    color: '#2C1D06',
+    color: '#152E22',
     textAlign: 'center',
   },
   kuralNumberTextMaroon: {
-    fontSize: 13,
+    fontSize: 13.5,
     fontWeight: '800',
     color: '#4A1504',
     textAlign: 'center',
@@ -393,7 +382,7 @@ const styles = StyleSheet.create({
     width: '90.0%',
     height: '12.2%',
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingHorizontal: 0,
     zIndex: 20,
     backgroundColor: 'transparent',
@@ -403,17 +392,18 @@ const styles = StyleSheet.create({
   /* Couplet Box: between Divider 1 and Divider 2 (disabled mode) */
   heroKuralBoxNoImage: {
     position: 'absolute',
-    top: '29.0%',
-    left: '4.5%',
-    width: '91.0%',
-    height: '12.5%',
+    top: '27.8%',
+    left: '5.0%',
+    width: '90.0%',
+    height: '12.2%',
     justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 0,
+    alignItems: 'flex-start',
+    paddingHorizontal: 12,
     zIndex: 20,
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-    borderColor: 'transparent',
+    backgroundColor: '#0F2D1F',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#C5A059',
   },
   heroKuralBoxLeft: {
     alignItems: 'flex-start',
@@ -426,7 +416,7 @@ const styles = StyleSheet.create({
   },
   heroKuralTextContainer: {
     width: '100%',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   heroKuralTextContainerLeft: {
     alignItems: 'flex-start',
@@ -440,8 +430,8 @@ const styles = StyleSheet.create({
   kuralLine1: {
     fontWeight: '900',
     color: '#FFF5DC',
-    textAlign: 'center',
-    letterSpacing: 0.3,
+    textAlign: 'left',
+    letterSpacing: 0,
     textShadowColor: 'rgba(0, 0, 0, 0.85)',
     textShadowOffset: { width: 0, height: 1.5 },
     textShadowRadius: 3.5,
@@ -449,8 +439,8 @@ const styles = StyleSheet.create({
   kuralLine2: {
     fontWeight: '900',
     color: '#FFF5DC',
-    textAlign: 'center',
-    letterSpacing: 0.3,
+    textAlign: 'left',
+    letterSpacing: 0,
     marginTop: 3,
     textShadowColor: 'rgba(0, 0, 0, 0.85)',
     textShadowOffset: { width: 0, height: 1.5 },
@@ -458,16 +448,22 @@ const styles = StyleSheet.create({
   },
   kuralLine1NoImage: {
     fontWeight: '900',
-    color: '#152E22',
-    textAlign: 'center',
-    letterSpacing: 0.3,
+    color: '#FFF5DC',
+    textAlign: 'left',
+    letterSpacing: 0,
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   kuralLine2NoImage: {
     fontWeight: '900',
-    color: '#152E22',
-    textAlign: 'center',
-    letterSpacing: 0.3,
-    marginTop: 5,
+    color: '#FFF5DC',
+    textAlign: 'left',
+    letterSpacing: 0,
+    marginTop: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   /* Commentary Section (enabled mode) */
   commentarySection: {
@@ -551,31 +547,29 @@ const styles = StyleSheet.create({
   footerRow: {
     position: 'absolute',
     top: '89.4%',
-    left: '7.0%',
-    width: '86.0%',
+    left: '10.0%',
+    width: '80.0%',
     height: '6.5%',
     justifyContent: 'center',
-    alignItems: 'flex-end',
-    paddingRight: 16,
+    alignItems: 'center',
     zIndex: 20,
   },
   footerCategoryChapterText: {
-    fontSize: 13,
+    fontSize: 13.5,
     color: '#F8E7BE',
     fontWeight: '700',
     letterSpacing: 0.4,
-    textAlign: 'right',
+    textAlign: 'center',
   },
   /* Footer Section (disabled mode) */
   footerRowNoImage: {
     position: 'absolute',
     top: '92.5%',
-    left: '7.0%',
-    width: '86.0%',
+    left: '10.0%',
+    width: '80.0%',
     height: '4.5%',
     justifyContent: 'center',
-    alignItems: 'flex-end',
-    paddingRight: 16,
+    alignItems: 'center',
     zIndex: 20,
   },
   footerCategoryTextNoImage: {
@@ -583,6 +577,6 @@ const styles = StyleSheet.create({
     color: '#F5E8C9',
     fontWeight: '700',
     letterSpacing: 0.4,
-    textAlign: 'right',
+    textAlign: 'center',
   },
 });

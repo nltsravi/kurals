@@ -644,6 +644,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                     ref={imageCardRef}
                     kural={kural}
                     meaningType={meaningType}
+                    align="left"
                     imageId={allowModifyCardImage ? selectedImageId : DEFAULT_THIRUVALLUVAR_IMAGE_ID}
                     cardRatio={cardRatio}
                     customImageUri={allowModifyCardImage ? customImageUri : null}

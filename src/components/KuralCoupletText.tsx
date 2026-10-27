@@ -106,9 +106,8 @@ export function calculateCoupletFontSize(
   const maxW = Math.max(w1, w2);
 
   // If containerWidth is available, calculate the exact proportional font size
-  // 0.85 factor accounts for Tamil font glyph aspect ratio in system fonts
   if (containerWidth && containerWidth > 0) {
-    const maxFitSize = containerWidth / (maxW * 1.0);
+    const maxFitSize = (containerWidth * 0.98) / Math.max(12, maxW);
     const finalSize = Math.min(baseSize, Math.max(11, maxFitSize));
     return Math.round(finalSize * 10) / 10;
   }
@@ -162,15 +161,17 @@ export const KuralCoupletText: React.FC<KuralCoupletTextProps> = ({
   const screenWidth = Dimensions.get('window').width;
   const [layoutWidth, setLayoutWidth] = useState<number>(explicitContainerWidth || 0);
 
+  // Available width: prioritize explicitContainerWidth; otherwise use measured layout width or safe fallback
+  const fallbackWidth = Math.max(240, screenWidth - 72);
   const effectiveWidth =
     explicitContainerWidth ||
-    (layoutWidth > 0 ? layoutWidth : Math.max(260, screenWidth - 72));
+    (layoutWidth > 0 ? layoutWidth : fallbackWidth);
   const uniformFontSize = calculateCoupletFontSize(line1, line2, baseFontSize, effectiveWidth);
   const lineHeight = Math.round(uniformFontSize * 1.45);
 
   const handleLayout = (e: LayoutChangeEvent) => {
     const w = Math.round(e.nativeEvent.layout.width);
-    if (w > 0 && Math.abs(w - layoutWidth) > 4) {
+    if (w > 0 && Math.abs(w - layoutWidth) > 2) {
       setLayoutWidth(w);
     }
   };
@@ -180,7 +181,7 @@ export const KuralCoupletText: React.FC<KuralCoupletTextProps> = ({
       <Text
         numberOfLines={1}
         adjustsFontSizeToFit={true}
-        minimumFontScale={0.65}
+        minimumFontScale={0.7}
         style={[
           styles.line,
           {
@@ -189,19 +190,19 @@ export const KuralCoupletText: React.FC<KuralCoupletTextProps> = ({
             lineHeight,
             textAlign: align,
             fontWeight,
-            letterSpacing,
+            letterSpacing: 0,
           },
           line1Style,
-          { fontSize: uniformFontSize, lineHeight },
+          { fontSize: uniformFontSize, lineHeight, fontWeight },
         ]}
-        maxFontSizeMultiplier={1.2}
+        maxFontSizeMultiplier={1.0}
       >
         {line1}
       </Text>
       <Text
         numberOfLines={1}
         adjustsFontSizeToFit={true}
-        minimumFontScale={0.65}
+        minimumFontScale={0.7}
         style={[
           styles.line,
           {
@@ -210,13 +211,13 @@ export const KuralCoupletText: React.FC<KuralCoupletTextProps> = ({
             lineHeight,
             textAlign: align,
             fontWeight,
-            letterSpacing,
+            letterSpacing: 0,
             marginTop: 4,
           },
           line2Style,
-          { fontSize: uniformFontSize, lineHeight },
+          { fontSize: uniformFontSize, lineHeight, fontWeight },
         ]}
-        maxFontSizeMultiplier={1.2}
+        maxFontSizeMultiplier={1.0}
       >
         {line2}
       </Text>
