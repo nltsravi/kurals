@@ -286,22 +286,24 @@ describe('Social Media Sharing Features', () => {
       expect(coupletComponent.props.align).toBe('left');
     });
 
-    test('renders header with app icon on left, Tamil title in center, and Kural number on right', () => {
+    test('renders header with Thalir logo on left, chapter name in center, and Kural number on right', () => {
       const { KuralImageCard } = require('../src/components/KuralImageCard');
+      const { THALIR_LOGO_SOURCE } = require('../src/constants/thiruvalluvarImages');
       const cardElement = KuralImageCard.render({ kural: kural1 }, null);
       const cardContainer = cardElement.props.children;
       const headerRow = cardContainer.props.children[0];
 
-      // Header has 3 columns: left (app icon), center (title), right (kural number)
+      // Header has 3 columns: left (Thalir logo), center (chapter name), right (kural number)
       const [headerLeft, headerCenter, headerRight] = headerRow.props.children;
 
-      // Left: App icon image
+      // Left: Thalir Kalvikkoodam logo image
       const appIconImage = headerLeft.props.children;
       expect(appIconImage).toBeDefined();
+      expect(appIconImage.props.source).toEqual(THALIR_LOGO_SOURCE);
 
-      // Center: "திருக்குறள்"
+      // Center: Chapter Name
       const centerTitle = headerCenter.props.children;
-      expect(centerTitle.props.children).toBe('திருக்குறள்');
+      expect(centerTitle.props.children).toBe('கடவுள் வாழ்த்து');
 
       // Right: Kural number badge
       const numberBadge = headerRight.props.children;
@@ -326,7 +328,7 @@ describe('Social Media Sharing Features', () => {
       expect(coupletComponent.props.fontWeight).toBe('900');
     });
 
-    test('renders footer with category and chapter name on the right and no copyright text', () => {
+    test('renders footer with category on the right and no copyright text', () => {
       const { KuralImageCard } = require('../src/components/KuralImageCard');
       const cardElement = KuralImageCard.render({ kural: kural1 }, null);
       const cardContainer = cardElement.props.children;
@@ -334,7 +336,7 @@ describe('Social Media Sharing Features', () => {
 
       expect(footerRow).toBeDefined();
       const footerText = footerRow.props.children;
-      expect(footerText.props.children).toBe('அறத்துப்பால் | கடவுள் வாழ்த்து');
+      expect(footerText.props.children).toBe('அறத்துப்பால்');
       expect(footerText.props.children).not.toContain('Neolumina');
       expect(footerText.props.children).not.toContain('©');
     });
@@ -416,18 +418,15 @@ describe('Social Media Sharing Features', () => {
       expect(flatStatueImage.borderColor).toBe('#E7DACB');
     });
 
-    test('displays app icon when thiruvalluvar image is hidden', () => {
+    test('hides image display when hideImage is true and displays app icon when imageId is hide', () => {
       const { KuralImageCard } = require('../src/components/KuralImageCard');
       const { APP_ICON_SOURCE } = require('../src/constants/thiruvalluvarImages');
 
-      // 1. Using hideImage: true
+      // 1. Using hideImage: true (omits image container for no-image template)
       const hiddenCard = KuralImageCard.render({ kural: kural1, hideImage: true }, null);
       const hiddenContainer = hiddenCard.props.children;
       const imageContainer = hiddenContainer.props.children[1];
-      const imageElement = imageContainer.props.children;
-
-      expect(imageElement.props.source).toBe(APP_ICON_SOURCE);
-      expect(imageElement.props.accessibilityLabel).toBe('செயலி சின்னம் (App Icon)');
+      expect(imageContainer).toBeNull();
 
       // 2. Using imageId: 'hide'
       const hideIdCard = KuralImageCard.render({ kural: kural1, imageId: 'hide' }, null);
@@ -464,17 +463,68 @@ describe('Social Media Sharing Features', () => {
       expect(imageElement.props.accessibilityLabel).toBe('தனிப்பயன் படம் (Custom Photo)');
     });
 
-    test('renders traditional template background overlay', () => {
+    test('renders traditional template background overlay and adapts when image is disabled', () => {
       const { KuralImageCard } = require('../src/components/KuralImageCard');
-      const { TRADITIONAL_TEMPLATE_BG_SOURCE } = require('../src/constants/thiruvalluvarImages');
+      const {
+        TRADITIONAL_TEMPLATE_BG_SOURCE,
+        TRADITIONAL_TEMPLATE_NO_IMAGE_BG_SOURCE,
+      } = require('../src/constants/thiruvalluvarImages');
 
+      // 1. With image enabled: uses TRADITIONAL_TEMPLATE_BG_SOURCE
       const cardElement = KuralImageCard.render({ kural: kural1 }, null);
       const cardContainer = cardElement.props.children;
-
-      // Child 6 is the traditional template background overlay
       const templateBg = cardContainer.props.children[6];
       expect(templateBg).toBeDefined();
       expect(templateBg.props.source).toBe(TRADITIONAL_TEMPLATE_BG_SOURCE);
+
+      // 2. With image disabled (hideImage: true):
+      // - Uses TRADITIONAL_TEMPLATE_NO_IMAGE_BG_SOURCE
+      // - Image container is omitted (null)
+      // - Couplet plaque is positioned at top ('29.0%') between dividers with strict typography
+      // - Footer renders with dash '— அறத்துப்பால்'
+      const noImageCard = KuralImageCard.render({ kural: kural1, hideImage: true }, null);
+      const noImageContainer = noImageCard.props.children;
+      const noImageTemplateBg = noImageContainer.props.children[6];
+      expect(noImageTemplateBg.props.source).toBe(TRADITIONAL_TEMPLATE_NO_IMAGE_BG_SOURCE);
+
+      const imageSlot = noImageContainer.props.children[1];
+      expect(imageSlot).toBeNull();
+
+      const coupletBox = noImageContainer.props.children[2];
+      const flatCoupletStyle = Array.isArray(coupletBox.props.style)
+        ? Object.assign({}, ...coupletBox.props.style.filter(Boolean))
+        : coupletBox.props.style;
+      expect(flatCoupletStyle.top).toBe('29.0%');
+      expect(flatCoupletStyle.backgroundColor).toBe('transparent');
+
+      const footer = noImageContainer.props.children[5];
+      expect(footer.props.children.props.children).toBe('— அறத்துப்பால்');
+    });
+
+    test('allowModifyCardImage setting persists and defaults to false', async () => {
+      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      const {
+        getSavedAllowModifyCardImage,
+        saveAllowModifyCardImage,
+        ALLOW_MODIFY_CARD_IMAGE_KEY,
+      } = require('../src/constants/thiruvalluvarImages');
+
+      // Clear
+      await AsyncStorage.removeItem(ALLOW_MODIFY_CARD_IMAGE_KEY);
+
+      // Defaults to false
+      let allowed = await getSavedAllowModifyCardImage();
+      expect(allowed).toBe(false);
+
+      // Saves true
+      await saveAllowModifyCardImage(true);
+      allowed = await getSavedAllowModifyCardImage();
+      expect(allowed).toBe(true);
+
+      // Saves false
+      await saveAllowModifyCardImage(false);
+      allowed = await getSavedAllowModifyCardImage();
+      expect(allowed).toBe(false);
     });
   });
 });
