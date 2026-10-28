@@ -12,12 +12,15 @@ import {
   Alert,
   Switch,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { useTheme, ThemeMode } from '../../src/context/ThemeContext';
 import { useLanguage } from '../../src/context/LanguageContext';
+import { useLearningMode } from '../../src/context/LearningModeContext';
 import { AppLanguage } from '../../src/constants/translations';
 import { APP_CONFIG } from '../../src/constants/appConstants';
 import { NotificationService } from '../../src/services/notificationService';
@@ -37,7 +40,31 @@ import {
 export default function SettingsScreen() {
   const { colors, isDark, themeMode, setThemeMode } = useTheme();
   const { language, setLanguage, t, isEnglish } = useLanguage();
+  const {
+    isLearningModeEnabled,
+    isDownloading: isLearningSdkDownloading,
+    downloadProgress: learningDownloadProgress,
+    downloadError: learningDownloadError,
+    enableLearningMode,
+  } = useLearningMode();
   const [privacyModalVisible, setPrivacyModalVisible] = useState(false);
+
+  const handleEnableLearningModeFromSettings = () => {
+    if (isLearningModeEnabled || isLearningSdkDownloading) return;
+    Alert.alert(
+      t.learningModePrompt.title,
+      `${t.learningModePrompt.description}\n\n${t.learningModePrompt.networkNoticeBody}`,
+      [
+        { text: t.common.cancel, style: 'cancel' },
+        {
+          text: t.learningModePrompt.enableBtn,
+          onPress: () => {
+            enableLearningMode();
+          },
+        },
+      ]
+    );
+  };
 
   // Daily notification state
   const [notificationEnabled, setNotificationEnabled] = useState(true);
@@ -334,6 +361,117 @@ export default function SettingsScreen() {
               );
             })}
           </View>
+        </View>
+
+        {/* Tamil Reading & Pronunciation Learning Mode (Olineri SDK - Enable Only, No Disable Option) */}
+        <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            {t.settingsScreen.learningModeSectionTitle}
+          </Text>
+          <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>
+            {t.settingsScreen.learningModeSectionSubtitle}
+          </Text>
+
+          {/* Network & Tamil-only artifact notice */}
+          <View
+            style={[
+              styles.learningNoticeBox,
+              {
+                backgroundColor: isDark ? colors.surface : '#FFFBEB',
+                borderColor: isDark ? colors.border : '#FDE68A',
+              },
+            ]}
+          >
+            <Ionicons name="wifi-outline" size={18} color={colors.accent} />
+            <Text style={[styles.learningNoticeText, { color: colors.textSecondary }]}>
+              {t.settingsScreen.learningModeNetworkNotice}
+            </Text>
+          </View>
+
+          {isLearningModeEnabled ? (
+            <View style={{ marginTop: 12, gap: 10 }}>
+              <View
+                style={[
+                  styles.learningEnabledBadge,
+                  {
+                    backgroundColor: isDark ? '#143321' : '#DCFCE7',
+                    borderColor: isDark ? '#22C55E' : '#86EFAC',
+                  },
+                ]}
+              >
+                <Ionicons name="checkmark-circle" size={20} color="#16A34A" />
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={[
+                      styles.learningEnabledTitle,
+                      { color: isDark ? '#86EFAC' : '#166534' },
+                    ]}
+                  >
+                    {t.settingsScreen.learningModeEnabledBadge}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.learningEnabledDesc,
+                      { color: isDark ? '#BBF7D0' : '#15803D' },
+                    ]}
+                  >
+                    {t.settingsScreen.learningModeEnabledDesc}
+                  </Text>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.learningPrimaryBtn, { backgroundColor: colors.primary }]}
+                onPress={() => router.push('/kural/1')}
+                accessibilityRole="button"
+                accessibilityLabel={t.settingsScreen.learningModePracticeNowBtn}
+              >
+                <Ionicons name="mic-outline" size={18} color="#FFFFFF" />
+                <Text style={styles.learningPrimaryBtnText}>
+                  {t.settingsScreen.learningModePracticeNowBtn}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={{ marginTop: 12 }}>
+              {isLearningSdkDownloading && learningDownloadProgress ? (
+                <View style={[styles.learningProgressBox, { backgroundColor: colors.surface }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <ActivityIndicator size="small" color={colors.primary} />
+                    <Text style={{ fontSize: 12.5, fontWeight: '700', color: colors.text, flex: 1 }}>
+                      {t.learningModePrompt.downloadingTitle}
+                    </Text>
+                  </View>
+                  <Text style={{ fontSize: 11.5, color: colors.textSecondary }}>
+                    {learningDownloadProgress.currentArtifact} ({learningDownloadProgress.percentage}%)
+                  </Text>
+                </View>
+              ) : null}
+
+              {learningDownloadError ? (
+                <View style={[styles.learningErrorBox, { backgroundColor: '#FEF2F2', borderColor: '#FCA5A5' }]}>
+                  <Ionicons name="alert-circle-outline" size={16} color="#DC2626" />
+                  <Text style={{ fontSize: 12, color: '#991B1B', flex: 1 }}>
+                    {learningDownloadError}
+                  </Text>
+                </View>
+              ) : null}
+
+              {!isLearningSdkDownloading && (
+                <TouchableOpacity
+                  style={[styles.learningPrimaryBtn, { backgroundColor: colors.primary }]}
+                  onPress={handleEnableLearningModeFromSettings}
+                  accessibilityRole="button"
+                  accessibilityLabel={t.settingsScreen.learningModeEnableBtn}
+                >
+                  <Ionicons name="cloud-download-outline" size={18} color="#FFFFFF" />
+                  <Text style={styles.learningPrimaryBtnText}>
+                    {t.settingsScreen.learningModeEnableBtn}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
         </View>
 
         {/* Theme Settings */}
@@ -1523,5 +1661,63 @@ const styles = StyleSheet.create({
   cardImageDesc: {
     fontSize: 12,
     fontWeight: '500',
+  },
+  learningNoticeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  learningNoticeText: {
+    fontSize: 12,
+    lineHeight: 17,
+    flex: 1,
+  },
+  learningEnabledBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  learningEnabledTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  learningEnabledDesc: {
+    fontSize: 11.5,
+    lineHeight: 16,
+  },
+  learningPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+  },
+  learningPrimaryBtnText: {
+    color: '#FFFFFF',
+    fontSize: 13.5,
+    fontWeight: '700',
+  },
+  learningProgressBox: {
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  learningErrorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 10,
   },
 });

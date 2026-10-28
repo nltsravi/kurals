@@ -29,4 +29,20 @@ export const Dimensions = {
 
 export const Image = 'Image';
 
+export const NativeModules: Record<string, any> = {};
+
+export const PermissionsAndroid = {
+  PERMISSIONS: {
+    RECORD_AUDIO: 'android.permission.RECORD_AUDIO',
+  },
+  RESULTS: {
+    GRANTED: 'granted',
+    DENIED: 'denied',
+    NEVER_ASK_AGAIN: 'never_ask_again',
+  },
+  check: jest.fn(async () => true),
+  request: jest.fn(async () => 'granted'),
+};
+
+
 

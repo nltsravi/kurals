@@ -181,6 +181,45 @@ export interface AppTranslations {
     removeCustomImage: string;
     allowModifyImageTitle: string;
     allowModifyImageSubtitle: string;
+    learningModeSectionTitle: string;
+    learningModeSectionSubtitle: string;
+    learningModeNetworkNotice: string;
+    learningModeEnableBtn: string;
+    learningModeEnabledBadge: string;
+    learningModeEnabledDesc: string;
+    learningModePracticeNowBtn: string;
+  };
+  learningModePrompt: {
+    title: string;
+    subtitle: string;
+    description: string;
+    networkNoticeTitle: string;
+    networkNoticeBody: string;
+    tamilOnlyBadge: string;
+    enableBtn: string;
+    laterBtn: string;
+    downloadingTitle: string;
+    retryBtn: string;
+  };
+  learningTrainer: {
+    sectionTitle: string;
+    sectionSubtitle: string;
+    scopeFull: string;
+    scopeLine1: string;
+    scopeLine2: string;
+    wordByWordLabel: string;
+    startReadingBtn: string;
+    stopAndAssessBtn: string;
+    readingActiveHint: string;
+    challengeBtn: string;
+    overallScoreLabel: string;
+    aksharaBreakdownLabel: string;
+    tapAksharaHint: string;
+    phoneticsGuideLabel: string;
+    statusCorrect: string;
+    statusSubstitution: string;
+    statusOmission: string;
+    statusUncertain: string;
   };
   shareModal: {
     title: string;
@@ -379,6 +418,50 @@ export const TRANSLATIONS: Record<AppLanguage, AppTranslations> = {
       removeCustomImage: 'படத்தை நீக்கு',
       allowModifyImageTitle: 'சமூகப் பகிர்வில் படம் சேர்த்தல்',
       allowModifyImageSubtitle: 'பகிர்வு அட்டைகளில் படங்களைத் தேர்வு செய்ய அல்லது சொந்த படம் சேர்க்க அனுமதி',
+      learningModeSectionTitle: 'திருக்குறள் வாசிப்பு & உச்சரிப்புப் பயிற்சி',
+      learningModeSectionSubtitle:
+        'திருக்குறளைத் தமிழில் வாசித்துச் சரியான உச்சரிப்பைக் கற்க (Olineri Tamil SDK)',
+      learningModeNetworkNotice:
+        'குறிப்பு: Olineri தமிழ் உச்சரிப்பு நூலகத்தை (lang-ta) பதிவிறக்க இணைய இணைப்பு (Network) தேவை. தமிழுக்கான கோப்புகள் மட்டுமே பதிவிறக்கப்படும்.',
+      learningModeEnableBtn: 'கற்றல் முறையை இயக்கு (தமிழ் SDK பதிவிறக்கு)',
+      learningModeEnabledBadge: 'கற்றல் முறை இயக்கப்பட்டுள்ளது (lang-ta • தமிழ்)',
+      learningModeEnabledDesc:
+        'Olineri தமிழ் உச்சரிப்பு நூலகம் (ta-IN) நிறுவப்பட்டுள்ளது. எந்தக் குறளையும் தமிழில் வாசித்துப் பயிற்சி செய்யலாம்.',
+      learningModePracticeNowBtn: 'குறள் வாசிப்புப் பயிற்சி செய்',
+    },
+    learningModePrompt: {
+      title: 'திருக்குறள் கற்றல் முறை (Learning Mode)',
+      subtitle: 'Learn Thirukkural by Reading in Tamil',
+      description:
+        'திருக்குறளைத் தமிழில் வாசித்து (ழகர, ளகர, லகர, றகர, ரகர) உச்சரிப்பைத் துல்லியமாகக் கற்க கற்றல் முறையை இயக்க விரும்புகிறீர்களா?',
+      networkNoticeTitle: 'இணைய இணைப்பு தேவை (Network Required)',
+      networkNoticeBody:
+        'இதை இயக்க Olineri தமிழ் உச்சரிப்பு SDK நூலகத்தைப் பதிவிறக்க இணைய இணைப்பு தேவைப்படும். தமிழ் உச்சரிப்புக்குத் தேவையான கோப்புகள் (lang-ta) மட்டுமே பதிவிறக்கப்படும். இப்போது வேண்டாம் எனில் பிறகு அமைப்புகளில் (Settings) எப்போது வேண்டுமானாலும் இயக்கலாம்.',
+      tamilOnlyBadge: 'தமிழ் உச்சரிப்பு கோப்புகள் மட்டும் (lang-ta • ta-IN)',
+      enableBtn: 'ஆம், பதிவிறக்கி இயக்கு',
+      laterBtn: 'பிறகு அமைப்புகளில் இயக்கு',
+      downloadingTitle: 'Olineri தமிழ் உச்சரிப்பு நூலகம் பதிவிறக்கப்படுகிறது...',
+      retryBtn: 'மீண்டும் முயற்சி செய்',
+    },
+    learningTrainer: {
+      sectionTitle: 'தமிழில் வாசித்துப் பழகு (Olineri உச்சரிப்புப் பயிற்சி)',
+      sectionSubtitle: 'குறளைத் தமிழில் சத்தமாக வாசித்து எழுத்து வாரியான உச்சரிப்பு மதிப்பீட்டைப் பெறுங்கள்',
+      scopeFull: 'முழுக் குறள் (7 சீர்)',
+      scopeLine1: 'முதல் அடி (4 சீர்)',
+      scopeLine2: 'இரண்டாம் அடி (3 சீர்)',
+      wordByWordLabel: 'சொல் வாரியாகத் தேர்வு செய்க:',
+      startReadingBtn: 'தமிழில் வாசிக்கத் தொடங்கு',
+      stopAndAssessBtn: 'வாசிப்பை முடித்து மதிப்பீடு செய்',
+      readingActiveHint: 'இப்போது மேலுள்ள தமிழ் வரிகளைத் தெளிவாக வாசிக்கவும்...',
+      challengeBtn: 'உச்சரிப்புத் திருத்தச் சோதனை (ழ/ல, ற/ர)',
+      overallScoreLabel: 'உச்சரிப்பு மதிப்பெண்',
+      aksharaBreakdownLabel: 'எழுத்து வாரியான ஒலிப்பு ஆய்வு (Akshara Mapping)',
+      tapAksharaHint: 'எந்த எழுத்தையும் தொட்டு அதன் IPA ஒலிப்பு மற்றும் நாக்கு நிலைக் குறிப்பைக் காண்க:',
+      phoneticsGuideLabel: 'இக்குறளில் உள்ள சிறப்புத் தமிழ் ஒலிகள்:',
+      statusCorrect: 'சரியான உச்சரிப்பு',
+      statusSubstitution: 'ஒலி மாற்றம்',
+      statusOmission: 'ஒலி விடுபட்டது',
+      statusUncertain: 'தெளிவற்ற ஒலி',
     },
     shareModal: {
       title: 'குறள் பகிர்வு',
@@ -575,6 +658,50 @@ export const TRANSLATIONS: Record<AppLanguage, AppTranslations> = {
       removeCustomImage: 'Remove Photo',
       allowModifyImageTitle: 'Add Images in Social Sharing',
       allowModifyImageSubtitle: 'Allow selecting different images or adding custom photos for social sharing',
+      learningModeSectionTitle: 'Tamil Reading & Pronunciation Learning Mode',
+      learningModeSectionSubtitle:
+        'Learn Thirukkural by reading it aloud in Tamil with Olineri Pronunciation SDK',
+      learningModeNetworkNotice:
+        'Note: A network connection is required to download the Olineri Tamil pronunciation SDK library (lang-ta). Only required Tamil pronunciation artifacts are downloaded.',
+      learningModeEnableBtn: 'Enable Learning Mode (Download Tamil SDK)',
+      learningModeEnabledBadge: 'Learning Mode Enabled (lang-ta • Tamil)',
+      learningModeEnabledDesc:
+        'Olineri Tamil pronunciation SDK (ta-IN) is installed and active. Open any Kural to practice reading in Tamil.',
+      learningModePracticeNowBtn: 'Practice Reading a Kural Now',
+    },
+    learningModePrompt: {
+      title: 'Enable Tamil Learning Mode?',
+      subtitle: 'திருக்குறளைத் தமிழில் வாசித்துக் கற்க',
+      description:
+        'Would you like to enable Learning Mode to learn Thirukkural by reading it in Tamil with real-time phoneme & Akshara pronunciation feedback?',
+      networkNoticeTitle: 'Network Connection Required for Download',
+      networkNoticeBody:
+        'An active network connection is required to download the Olineri SDK library from GitHub. Only required Tamil pronunciation artifacts (lang-ta / ta-IN) will be downloaded. You can also enable this later anytime in Settings.',
+      tamilOnlyBadge: 'Tamil Pronunciation Artifacts Only (lang-ta • ta-IN)',
+      enableBtn: 'Yes, Download & Enable',
+      laterBtn: 'Enable Later in Settings',
+      downloadingTitle: 'Downloading Olineri Tamil Pronunciation SDK...',
+      retryBtn: 'Retry Download',
+    },
+    learningTrainer: {
+      sectionTitle: 'Learn by Reading in Tamil (Olineri SDK)',
+      sectionSubtitle: 'Read the Thirukkural aloud in Tamil to get Akshara & phoneme-level pronunciation feedback',
+      scopeFull: 'Full Kural (7 Words)',
+      scopeLine1: 'Line 1 (4 Words)',
+      scopeLine2: 'Line 2 (3 Words)',
+      wordByWordLabel: 'Or practice word by word:',
+      startReadingBtn: 'Start Reading in Tamil',
+      stopAndAssessBtn: 'Finish Reading & Assess',
+      readingActiveHint: 'Read the highlighted Tamil text aloud clearly now...',
+      challengeBtn: 'Test Phonetic Contrast (ழ/ல, ற/ர)',
+      overallScoreLabel: 'Pronunciation Score',
+      aksharaBreakdownLabel: 'Akshara & Phoneme Alignment',
+      tapAksharaHint: 'Tap any Tamil letter below to inspect its IPA phoneme & articulatory tongue guide:',
+      phoneticsGuideLabel: 'Special Tamil Phonetics in this Kural:',
+      statusCorrect: 'Correct',
+      statusSubstitution: 'Substituted',
+      statusOmission: 'Omitted',
+      statusUncertain: 'Unclear',
     },
     shareModal: {
       title: 'Share Kural',

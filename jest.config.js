@@ -6,6 +6,7 @@ module.exports = {
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.json' }],
   },
   moduleNameMapper: {
+    '^expo-audio$': '<rootDir>/tests/__mocks__/expo-audio.ts',
     '^expo-print$': '<rootDir>/tests/__mocks__/expo-print.ts',
     '^expo-notifications$': '<rootDir>/tests/__mocks__/expo-notifications.ts',
     '^expo-constants$': '<rootDir>/tests/__mocks__/expo-constants.ts',

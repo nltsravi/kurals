@@ -14,11 +14,13 @@ import { ShareService } from '../../src/services/shareService';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useLanguage } from '../../src/context/LanguageContext';
 import { useCollections } from '../../src/context/CollectionContext';
+import { useLearningMode } from '../../src/context/LearningModeContext';
 import { AddToCollectionModal } from '../../src/components/AddToCollectionModal';
 import { ExportModal } from '../../src/components/ExportModal';
 import { ShareModal } from '../../src/components/ShareModal';
 import { formatKuralText } from '../../src/utils/text';
 import { KuralCoupletText } from '../../src/components/KuralCoupletText';
+import { KuralPronunciationTrainer } from '../../src/components/KuralPronunciationTrainer';
 
 export default function KuralDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -26,6 +28,7 @@ export default function KuralDetailScreen() {
   const { colors, isDark } = useTheme();
   const { t, isEnglish } = useLanguage();
   const { collections } = useCollections();
+  const { isLearningModeEnabled } = useLearningMode();
 
   const [showAddToCollection, setShowAddToCollection] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -243,6 +246,9 @@ export default function KuralDetailScreen() {
             </Text>
           </TouchableOpacity>
         </View>
+
+        {/* Tamil Reading & Pronunciation Learning Trainer (when Learning Mode is enabled) */}
+        {isLearningModeEnabled && <KuralPronunciationTrainer kural={kural} />}
 
         {/* English Translation */}
         {kural.translation ? (

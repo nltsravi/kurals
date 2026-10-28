@@ -5,12 +5,14 @@ import 'react-native-reanimated';
 import { ThemeProvider, useTheme } from '../src/context/ThemeContext';
 import { LanguageProvider, useLanguage } from '../src/context/LanguageContext';
 import { CollectionProvider } from '../src/context/CollectionContext';
+import { LearningModeProvider } from '../src/context/LearningModeContext';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { NotificationService } from '../src/services/notificationService';
 
 import { View } from 'react-native';
 import { AppBottomTabBar } from '../src/components/AppBottomTabBar';
+import { LearningModePromptModal } from '../src/components/LearningModePromptModal';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -90,6 +92,7 @@ function RootNavigation() {
           />
         </Stack>
         <AppBottomTabBar />
+        <LearningModePromptModal />
       </View>
     </>
   );
@@ -101,7 +104,9 @@ export default function RootLayout() {
       <ThemeProvider>
         <LanguageProvider>
           <CollectionProvider>
-            <RootNavigation />
+            <LearningModeProvider>
+              <RootNavigation />
+            </LearningModeProvider>
           </CollectionProvider>
         </LanguageProvider>
       </ThemeProvider>

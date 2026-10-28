@@ -14,6 +14,7 @@ import { KuralService } from '../../src/services/kuralService';
 import { Kural, Category } from '../../src/types/kural';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useLanguage } from '../../src/context/LanguageContext';
+import { useLearningMode } from '../../src/context/LearningModeContext';
 import { AddToCollectionModal } from '../../src/components/AddToCollectionModal';
 import { ShareModal } from '../../src/components/ShareModal';
 import { CATEGORY_COLORS } from '../../src/constants/appConstants';
@@ -23,6 +24,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
   const { t, isEnglish, getCategoryName } = useLanguage();
+  const { isLearningModeEnabled } = useLearningMode();
   const [randomKural, setRandomKural] = useState<Kural | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [modalKural, setModalKural] = useState<Kural | null>(null);
@@ -174,6 +176,19 @@ export default function HomeScreen() {
                 <Text style={styles.viewKuralText}>{t.home.viewKural}</Text>
                 <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
               </TouchableOpacity>
+
+              {isLearningModeEnabled && (
+                <TouchableOpacity
+                  style={[
+                    styles.iconActionBtn,
+                    { backgroundColor: colors.primaryLight, borderColor: colors.primary },
+                  ]}
+                  onPress={() => router.push(`/kural/${randomKural.number}`)}
+                  accessibilityLabel="Practice reading Kural in Tamil"
+                >
+                  <Ionicons name="mic-outline" size={18} color={colors.primary} />
+                </TouchableOpacity>
+              )}
 
               <TouchableOpacity
                 style={[styles.iconActionBtn, { borderColor: colors.border }]}
