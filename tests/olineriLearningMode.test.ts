@@ -12,6 +12,10 @@ import {
   convertTamilG2P,
   extractSpecialTamilPhonetics,
   PronunciationSDK,
+  generateCorrectSpeechWaveform,
+  generateMispronouncedWaveform,
+  normalizeMicrophonePcm,
+  statusSeverity,
 } from '../src/services/olineriService';
 import { TRANSLATIONS } from '../src/constants/translations';
 
@@ -290,7 +294,56 @@ describe('Olineri Tamil Pronunciation Learning Mode', () => {
     expect(nativeWaveformResult.overallScore).toBeGreaterThanOrEqual(75);
   });
 
-  test('7. Translations include bilingual strings for launch prompt, network notice, and settings', () => {
+  test('7. Olineri Core SDK bug fixes: Formant/Viterbi CTC alignment, PCM gain normalization, and Akshara worst-status severity', async () => {
+    await OlineriService.enableAndDownloadTamilSdk();
+
+    // 7a. Multi-formant correct speech waveform for "பழம்" (F3 = 1800 Hz retroflex /ɻ/) -> >= 75% score
+    const correctWave = generateCorrectSpeechWaveform(1100, 16000);
+    const correctPazham = await OlineriService.assessTamilPronunciation(
+      'பழம்',
+      correctWave,
+      16000,
+      false,
+      { spokenText: '', speechRecognitionActive: false }
+    );
+    expect(correctPazham.overallScore).toBeGreaterThanOrEqual(75);
+    const zhCorrect = correctPazham.phonemes.find((p) => p.expectedPhoneme === '/ɻ/');
+    expect(zhCorrect?.status).toBe('correct');
+
+    // 7b. Mispronounced waveform (high F3 = 2950 Hz alveolar /l/ instead of retroflex /ɻ/ + early coda cutoff) -> < 50%
+    const wrongWave = generateMispronouncedWaveform(1100, 16000);
+    const wrongPazham = await OlineriService.assessTamilPronunciation(
+      'பழம்',
+      wrongWave,
+      16000,
+      false,
+      { spokenText: '', speechRecognitionActive: false }
+    );
+    expect(wrongPazham.overallScore).toBeLessThan(50);
+    const zhWrong = wrongPazham.phonemes.find((p) => p.expectedPhoneme === '/ɻ/');
+    expect(['substitution', 'omission']).toContain(zhWrong?.status);
+    const finalM = wrongPazham.phonemes[wrongPazham.phonemes.length - 1];
+    expect(finalM.status).toBe('omission');
+
+    // 7c. Microphone PCM DC-offset removal and gain normalization
+    const quietSpeechWithDc = correctWave.map((s) => s * 0.08 + 0.04);
+    const normalized = normalizeMicrophonePcm(quietSpeechWithDc);
+    const normPeak = Math.max(...normalized.map((s) => Math.abs(s)));
+    expect(normPeak).toBeCloseTo(0.7, 1);
+
+    // Ambient silence floor (< 0.025) must NOT be amplified into false speech
+    const ambientSilence = new Array(8000).fill(0).map((_, i) => 0.002 * Math.sin(i));
+    const normSilence = normalizeMicrophonePcm(ambientSilence);
+    const silencePeak = Math.max(...normSilence.map((s) => Math.abs(s)));
+    expect(silencePeak).toBeLessThan(0.01);
+
+    // 7d. Worst-status severity ordering for Akshara cluster badges
+    expect(statusSeverity('correct')).toBeLessThan(statusSeverity('uncertain'));
+    expect(statusSeverity('uncertain')).toBeLessThan(statusSeverity('substitution'));
+    expect(statusSeverity('substitution')).toBeLessThan(statusSeverity('omission'));
+  });
+
+  test('8. Translations include bilingual strings for launch prompt, network notice, and settings', () => {
     expect(TRANSLATIONS.ta.learningModePrompt.networkNoticeBody).toContain('இணைய இணைப்பு');
     expect(TRANSLATIONS.en.learningModePrompt.networkNoticeBody).toContain('network');
     expect(TRANSLATIONS.ta.settingsScreen.learningModeEnableBtn).toBeTruthy();

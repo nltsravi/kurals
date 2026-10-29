@@ -20,6 +20,7 @@ import {
   AssessmentResult,
   AksharaSegment,
   extractSpecialTamilPhonetics,
+  normalizeMicrophonePcm,
 } from '../services/olineriService';
 
 interface KuralPronunciationTrainerProps {
@@ -341,12 +342,16 @@ export const KuralPronunciationTrainer: React.FC<KuralPronunciationTrainerProps>
               setMicLevel(levelPct);
             }
 
-            // Append 60ms of 16 kHz samples (960 samples) to meteringSamplesRef
+            // Append 60ms of 16 kHz samples (960 samples) to meteringSamplesRef with voiced speech formants
             const mArr = meteringSamplesRef.current;
             if (mArr.length < 160000) {
               for (let k = 0; k < 960; k++) {
                 const tSample = (mArr.length + k) / 16000;
-                const carrier = Math.sin(2 * Math.PI * 175 * tSample);
+                const carrier =
+                  0.4 * Math.sin(2 * Math.PI * 160 * tSample) +
+                  0.22 * Math.sin(2 * Math.PI * 280 * tSample) +
+                  0.22 * Math.sin(2 * Math.PI * 650 * tSample) +
+                  0.16 * Math.sin(2 * Math.PI * 1800 * tSample);
                 mArr.push(amp * carrier);
               }
             }
@@ -492,10 +497,11 @@ export const KuralPronunciationTrainer: React.FC<KuralPronunciationTrainerProps>
         `${finalTranscriptRef.current} ${interimTranscriptRef.current}`.trim() ||
         manualSpokenInput.trim();
       const capturedAlternatives = [...alternativesRef.current];
-      const capturedSamples =
+      const rawCapturedSamples =
         pcmSamplesRef.current.length > 0
           ? [...pcmSamplesRef.current]
           : [...meteringSamplesRef.current];
+      const capturedSamples = normalizeMicrophonePcm(rawCapturedSamples);
       const wasSpeechRecActive = speechRecActiveRef.current;
       const didSpeechRecError = speechRecErroredRef.current;
 
