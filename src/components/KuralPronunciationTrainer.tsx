@@ -8,13 +8,19 @@ import {
   TextInput,
   Linking,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AudioModule, RecordingPresets } from 'expo-audio';
+import {
+  ExpoSpeechRecognitionModule,
+  useSpeechRecognitionEvent,
+} from 'expo-speech-recognition';
 import { Kural } from '../types/kural';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { formatKuralCouplet } from '../utils/text';
+import { compareKuralWords, KuralWordComparisonResult } from '../utils/kuralWordCompare';
 import {
   OlineriService,
   AssessmentResult,
@@ -72,6 +78,142 @@ export const KuralPronunciationTrainer: React.FC<KuralPronunciationTrainerProps>
   const speechRecActiveRef = useRef<boolean>(false);
   const speechRecErroredRef = useRef<boolean>(false);
 
+  // Native (iOS / Android) Tamil speech-to-text via expo-speech-recognition
+  const [wordComparison, setWordComparison] = useState<KuralWordComparisonResult | null>(null);
+  const nativeSpeechActiveRef = useRef<boolean>(false);
+  const isReadingRef = useRef<boolean>(false);
+  const speechEndResolverRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    isReadingRef.current = isReading;
+  }, [isReading]);
+
+  const updateCombinedTranscript = () => {
+    const combined = `${finalTranscriptRef.current} ${interimTranscriptRef.current}`
+      .replace(/\s+/g, ' ')
+      .trim();
+    setLiveTranscript(combined);
+  };
+
+  useSpeechRecognitionEvent('result', (event) => {
+    if (!nativeSpeechActiveRef.current) return;
+    const top = (event.results?.[0]?.transcript || '').trim();
+    if (event.isFinal) {
+      if (top && !finalTranscriptRef.current.endsWith(top)) {
+        finalTranscriptRef.current = `${finalTranscriptRef.current} ${top}`.trim();
+      }
+      interimTranscriptRef.current = '';
+      const altSet = new Set<string>(alternativesRef.current);
+      for (const r of event.results || []) {
+        if (r?.transcript) altSet.add(r.transcript.trim());
+      }
+      alternativesRef.current = Array.from(altSet);
+    } else {
+      interimTranscriptRef.current = top;
+    }
+    updateCombinedTranscript();
+  });
+
+  useSpeechRecognitionEvent('volumechange', (event) => {
+    if (!nativeSpeechActiveRef.current) return;
+    // Android/iOS report roughly -2..10; map to 0..100 for the mic meter
+    const level = Math.round(Math.max(0, Math.min(10, event.value)) * 10);
+    setMicLevel(level);
+  });
+
+  useSpeechRecognitionEvent('error', (event) => {
+    if (!nativeSpeechActiveRef.current) return;
+    if (event.error === 'no-speech' || event.error === 'aborted') return;
+    speechRecErroredRef.current = true;
+    if (event.error === 'language-not-supported' || event.error === 'service-not-allowed') {
+      setMicWarning(
+        isEnglish
+          ? 'Tamil (ta-IN) speech recognition is not available on this device. Install/enable the Google app and the Tamil voice-typing language, then try again.'
+          : 'இந்தச் சாதனத்தில் தமிழ் (ta-IN) பேச்சு அறிதல் கிடைக்கவில்லை. Google செயலி மற்றும் தமிழ் குரல் தட்டச்சு மொழியை இயக்கி மீண்டும் முயலவும்.'
+      );
+    } else if (event.error === 'network') {
+      setMicWarning(
+        isEnglish
+          ? 'Speech recognition needs a network connection. Please check your internet and try again.'
+          : 'பேச்சு அறிதலுக்கு இணைய இணைப்பு தேவை. இணைய இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.'
+      );
+    }
+  });
+
+  useSpeechRecognitionEvent('end', () => {
+    if (!nativeSpeechActiveRef.current) return;
+    // Older Android versions stop after a pause even in continuous mode — keep listening while reading
+    if (isReadingRef.current && !speechEndResolverRef.current && !speechRecErroredRef.current) {
+      try {
+        ExpoSpeechRecognitionModule.start(buildSpeechOptions());
+        return;
+      } catch {
+        // fall through to finish
+      }
+    }
+    nativeSpeechActiveRef.current = false;
+    setMicLevel(0);
+    const resolve = speechEndResolverRef.current;
+    speechEndResolverRef.current = null;
+    resolve?.();
+  });
+
+  const buildSpeechOptions = () => ({
+    lang: 'ta-IN',
+    interimResults: true,
+    continuous: true,
+    maxAlternatives: 5,
+    addsPunctuation: false,
+    volumeChangeEventOptions: { enabled: true, intervalMillis: 120 },
+    androidIntentOptions: {
+      EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS: 4000,
+      EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS: 4000,
+      EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS: 8000,
+    },
+  });
+
+  /** Starts on-device Tamil speech-to-text. Returns true if listening started. */
+  const startNativeSpeechRecognition = async (): Promise<boolean> => {
+    if (Platform.OS === 'web') return false;
+    try {
+      if (!ExpoSpeechRecognitionModule?.isRecognitionAvailable?.()) return false;
+      const perm = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+      if (!perm.granted) return false;
+      nativeSpeechActiveRef.current = true;
+      speechRecActiveRef.current = true;
+      ExpoSpeechRecognitionModule.start(buildSpeechOptions());
+      return true;
+    } catch {
+      nativeSpeechActiveRef.current = false;
+      speechRecActiveRef.current = false;
+      return false;
+    }
+  };
+
+  /** Stops speech-to-text and waits (max 2.5 s) for the final recognised words. */
+  const stopNativeSpeechRecognition = async (): Promise<void> => {
+    if (!nativeSpeechActiveRef.current) return;
+    await new Promise<void>((resolve) => {
+      const timer = setTimeout(() => {
+        speechEndResolverRef.current = null;
+        nativeSpeechActiveRef.current = false;
+        resolve();
+      }, 2500);
+      speechEndResolverRef.current = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      try {
+        ExpoSpeechRecognitionModule.stop();
+      } catch {
+        clearTimeout(timer);
+        speechEndResolverRef.current = null;
+        nativeSpeechActiveRef.current = false;
+        resolve();
+      }
+    });
+  };
+
   // Check and prompt for microphone permission on mount
   useEffect(() => {
     let active = true;
@@ -98,6 +240,16 @@ export const KuralPronunciationTrainer: React.FC<KuralPronunciationTrainerProps>
     if (meteringTimerRef.current) {
       clearInterval(meteringTimerRef.current);
       meteringTimerRef.current = null;
+    }
+
+    try {
+      if (nativeSpeechActiveRef.current) {
+        nativeSpeechActiveRef.current = false;
+        speechEndResolverRef.current = null;
+        ExpoSpeechRecognitionModule.abort();
+      }
+    } catch {
+      // Ignore native speech abort error
     }
 
     try {
@@ -165,6 +317,7 @@ export const KuralPronunciationTrainer: React.FC<KuralPronunciationTrainerProps>
     setMicWarning(null);
     setAssessmentResult(null);
     setSelectedAkshara(null);
+    setWordComparison(null);
     stopAllCaptureStreams();
 
     return () => {
@@ -192,6 +345,7 @@ export const KuralPronunciationTrainer: React.FC<KuralPronunciationTrainerProps>
     setMicWarning(null);
     setAssessmentResult(null);
     setSelectedAkshara(null);
+    setWordComparison(null);
   };
 
   const handlePromptMicPermission = async (): Promise<boolean> => {
@@ -253,6 +407,13 @@ export const KuralPronunciationTrainer: React.FC<KuralPronunciationTrainerProps>
 
     let anyCaptureStarted = false;
     const win: any = typeof globalThis !== 'undefined' ? globalThis : {};
+
+    // 0. Native iOS / Android Tamil speech-to-text (shows the exact words spoken).
+    // Android allows only one microphone client at a time, so when speech recognition
+    // is running we do not start a parallel AudioStream / AudioRecorder.
+    if (await startNativeSpeechRecognition()) {
+      return true;
+    }
 
     // 1. Native iOS / Android Real-Time PCM AudioStream via expo-audio (SDK 58)
     if (AudioModule?.AudioStream) {
@@ -482,13 +643,19 @@ export const KuralPronunciationTrainer: React.FC<KuralPronunciationTrainerProps>
     if (!isReading) {
       setAssessmentResult(null);
       setSelectedAkshara(null);
+      setWordComparison(null);
       const started = await startMicrophoneAndSpeechCapture();
       if (started) {
+        isReadingRef.current = true;
         setIsReading(true);
       }
     } else {
+      isReadingRef.current = false;
       setIsReading(false);
       setIsAssessing(true);
+
+      // Stop native speech-to-text and wait for the final recognised Tamil words
+      await stopNativeSpeechRecognition();
 
       // Wait briefly (200ms) so SpeechRecognition / AudioRecorder flushes the final spoken word before stopping
       await new Promise((resolve) => setTimeout(resolve, 200));
@@ -554,6 +721,12 @@ export const KuralPronunciationTrainer: React.FC<KuralPronunciationTrainerProps>
     simulateChallenge: boolean;
   }) => {
     setIsAssessing(true);
+    setLiveTranscript(params.spokenText);
+    setWordComparison(
+      !params.simulateChallenge && params.spokenText.trim()
+        ? compareKuralWords(referenceText, params.spokenText)
+        : null
+    );
     try {
       const res = await OlineriService.assessTamilPronunciation(
         referenceText,
@@ -729,11 +902,21 @@ export const KuralPronunciationTrainer: React.FC<KuralPronunciationTrainerProps>
             </View>
 
             {liveTranscript ? (
-              <Text style={[styles.liveHeardText, { color: colors.textSecondary }]}>
-                {isEnglish ? 'Hearing: ' : 'கேட்கும் ஒலி: '}
-                <Text style={{ fontWeight: '700', color: colors.text }}>{liveTranscript}</Text>
+              <View style={[styles.liveTranscriptBox, { borderColor: colors.border }]}>
+                <Text style={[styles.liveHeardLabel, { color: colors.textMuted }]}>
+                  {isEnglish ? 'Hearing (live):' : 'கேட்கும் சொற்கள் (நேரலை):'}
+                </Text>
+                <Text style={[styles.liveHeardWords, { color: colors.text }]}>
+                  {liveTranscript}
+                </Text>
+              </View>
+            ) : (
+              <Text style={[styles.liveHeardText, { color: colors.textMuted }]}>
+                {isEnglish
+                  ? 'Listening… start reciting the Kural in Tamil.'
+                  : 'கேட்டுக்கொண்டிருக்கிறது… குறளைத் தமிழில் வாசிக்கத் தொடங்குங்கள்.'}
               </Text>
-            ) : null}
+            )}
           </View>
         )}
       </View>
@@ -921,7 +1104,7 @@ export const KuralPronunciationTrainer: React.FC<KuralPronunciationTrainerProps>
             />
             <View style={{ flex: 1 }}>
               <Text style={[styles.heardSummaryLabel, { color: colors.textMuted }]}>
-                {isEnglish ? 'Spoken / Recognized Audio:' : 'நீங்கள் வாசித்தது (கேட்ட ஒலி):'}
+                {isEnglish ? 'You said (exact words heard):' : 'நீங்கள் சொன்னது (கேட்ட சொற்கள்):'}
               </Text>
               <Text style={[styles.heardSummaryValue, { color: colors.text }]}>
                 {assessmentResult.recognizedText
@@ -936,6 +1119,78 @@ export const KuralPronunciationTrainer: React.FC<KuralPronunciationTrainerProps>
               </Text>
             </View>
           </View>
+
+          {/* Word-by-word comparison: spoken words vs Thirukkural words */}
+          {wordComparison && (
+            <View
+              style={[
+                styles.wordCompareBox,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+            >
+              <View style={styles.wordCompareHeader}>
+                <Text style={[styles.aksharaSectionTitle, { color: colors.text, flex: 1 }]}>
+                  {isEnglish ? 'Word-by-Word Comparison' : 'சொல்லுக்குச் சொல் ஒப்பீடு'}
+                </Text>
+                <Text
+                  style={[
+                    styles.wordCompareSummary,
+                    { color: getScoreColor(wordComparison.accuracy) },
+                  ]}
+                >
+                  {wordComparison.correctCount}/{wordComparison.totalWords}{' '}
+                  {isEnglish ? 'exact' : 'சரி'} · {wordComparison.accuracy}%
+                </Text>
+              </View>
+
+              {wordComparison.words.map((w, idx) => {
+                const color =
+                  w.status === 'correct'
+                    ? '#16A34A'
+                    : w.status === 'close'
+                    ? '#D97706'
+                    : '#DC2626';
+                const icon =
+                  w.status === 'correct'
+                    ? 'checkmark-circle'
+                    : w.status === 'close'
+                    ? 'alert-circle'
+                    : w.status === 'missing'
+                    ? 'remove-circle'
+                    : 'close-circle';
+                return (
+                  <View
+                    key={`wc-${idx}-${w.referenceWord}`}
+                    style={[styles.wordCompareRow, { borderBottomColor: colors.borderLight }]}
+                  >
+                    <Ionicons name={icon} size={16} color={color} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.wordCompareRef, { color: colors.text }]}>
+                        {w.referenceWord}
+                      </Text>
+                      <Text style={[styles.wordCompareSpoken, { color }]}>
+                        {w.status === 'missing'
+                          ? isEnglish
+                            ? 'Not spoken'
+                            : 'வாசிக்கப்படவில்லை'
+                          : `${isEnglish ? 'You said' : 'நீங்கள் சொன்னது'}: ${w.spokenWord}`}
+                      </Text>
+                    </View>
+                    <Text style={[styles.wordCompareScore, { color }]}>{w.similarity}%</Text>
+                  </View>
+                );
+              })}
+
+              {wordComparison.extraWords.length > 0 && (
+                <Text style={[styles.wordCompareExtra, { color: colors.textSecondary }]}>
+                  {isEnglish ? 'Extra words not in the Kural: ' : 'குறளில் இல்லாத கூடுதல் சொற்கள்: '}
+                  <Text style={{ fontWeight: '700', color: '#DC2626' }}>
+                    {wordComparison.extraWords.join(' ')}
+                  </Text>
+                </Text>
+              )}
+            </View>
+          )}
 
           {/* Overall Score Header */}
           <View style={styles.scoreHeaderRow}>
@@ -1184,6 +1439,65 @@ const styles = StyleSheet.create({
   liveHeardText: {
     fontSize: 12,
     lineHeight: 18,
+  },
+  liveTranscriptBox: {
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderRadius: 10,
+    padding: 10,
+    gap: 4,
+  },
+  liveHeardLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  liveHeardWords: {
+    fontSize: 17,
+    lineHeight: 26,
+    fontWeight: '700',
+  },
+  wordCompareBox: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 12,
+    gap: 2,
+  },
+  wordCompareHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    gap: 8,
+  },
+  wordCompareSummary: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  wordCompareRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  wordCompareRef: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  wordCompareSpoken: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  wordCompareScore: {
+    fontSize: 13,
+    fontWeight: '700',
+    minWidth: 40,
+    textAlign: 'right',
+  },
+  wordCompareExtra: {
+    fontSize: 13,
+    marginTop: 8,
+    lineHeight: 20,
   },
   warningBox: {
     flexDirection: 'row',

@@ -70,6 +70,17 @@
           "recordAudioAndroid": true
         }
       ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "This app uses the microphone to listen to your Thirukkural recitation in Tamil.",
+          "speechRecognitionPermission": "This app converts your Tamil Thirukkural recitation into text to compare it with the original Kural.",
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox",
+            "com.google.android.as"
+          ]
+        }
+      ],
       "expo-font",
       "expo-status-bar",
       "expo-image",
