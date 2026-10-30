@@ -4,11 +4,11 @@ import buildInfo from './buildInfo.json';
 export const APP_CONFIG = {
   name: 'திருக்குறள்',
   nameEnglish: 'Thirukkural',
-  version: '1.1.0',
+  version: '2.0.0',
   buildNumber:
     (Constants.expoConfig?.extra?.buildNumber as string | undefined) ||
     buildInfo.buildNumber ||
-    '1.1.0',
+    '2.0.0',
   author: 'Thiruvalluvar',
   totalKurals: 1330,
   totalChapters: 133,

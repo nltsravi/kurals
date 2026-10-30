@@ -1,6 +1,7 @@
 const {
   withAndroidManifest,
   withGradleProperties,
+  withAppBuildGradle,
 } = require('@expo/config-plugins');
 
 /**
@@ -8,6 +9,7 @@ const {
  * 1. Edge-to-Edge: Enables React Native's modern edgeToEdgeEnabled flag in gradle.properties
  * 2. Large Screen Devices: Ensures MainActivity has android:resizeableActivity="true" and no portrait lock
  * 3. R8 Optimization: Enables R8 fullMode in gradle.properties
+ * 4. Production Release Signing: Configures release signingConfig with release.keystore for Play Store
  */
 const withAndroidOptimizations = (config) => {
   // 1. Configure gradle.properties
@@ -49,6 +51,45 @@ const withAndroidOptimizations = (config) => {
         delete mainActivity.$['android:screenOrientation'];
       }
     }
+    return config;
+  });
+
+  // 3. Configure Production Release Signing in app/build.gradle
+  config = withAppBuildGradle(config, (config) => {
+    let contents = config.modResults.contents;
+
+    if (!contents.includes('signingConfigs.release')) {
+      const releaseSigningConfig = `
+        release {
+            def releaseKeystore = file('../../release.keystore').exists() ? file('../../release.keystore') : (file('release.keystore').exists() ? file('release.keystore') : null)
+            if (releaseKeystore != null) {
+                storeFile releaseKeystore
+                storePassword System.getenv("RELEASE_KEYSTORE_PASSWORD") ?: "kurals2026release"
+                keyAlias System.getenv("RELEASE_KEY_ALIAS") ?: "kurals-release-key"
+                keyPassword System.getenv("RELEASE_KEY_PASSWORD") ?: "kurals2026release"
+            } else {
+                storeFile file('debug.keystore')
+                storePassword 'android'
+                keyAlias 'androiddebugkey'
+                keyPassword 'android'
+            }
+        }`;
+
+      // Insert release signingConfig into signingConfigs block
+      contents = contents.replace(
+        /signingConfigs\s*\{([\s\S]*?debug\s*\{[\s\S]*?\})/,
+        `signingConfigs {$1${releaseSigningConfig}`
+      );
+
+      // In buildTypes { release { ... } }, replace signingConfig with signingConfigs.release
+      contents = contents.replace(
+        /(buildTypes\s*\{[\s\S]*?release\s*\{[\s\S]*?)signingConfig\s+signingConfigs\.debug/,
+        '$1signingConfig signingConfigs.release'
+      );
+
+      config.modResults.contents = contents;
+    }
+
     return config;
   });
 

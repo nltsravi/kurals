@@ -2,7 +2,7 @@
   "expo": {
     "name": "திருக்குறள் - Thirukkural",
     "slug": "thirukkural",
-    "version": "1.1.0",
+    "version": "2.0.0",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "thirukkural",
@@ -17,7 +17,7 @@
     },
     "android": {
       "package": "com.nltsravi.kurals",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#EA7A00",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -104,7 +104,7 @@
       "eas": {
         "projectId": "afdea11a-c55d-45ca-84f2-2ec33747d229"
       },
-      "buildNumber": "789153014202610011.1.0"
+      "buildNumber": "789153014202610012.0.0"
     }
   }
 }

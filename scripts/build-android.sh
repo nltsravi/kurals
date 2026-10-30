@@ -25,6 +25,15 @@ NC='\033[0m' # No Color
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+# Ensure JDK 17 is used for Android builds
+if [ -d "/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home" ]; then
+  export JAVA_HOME="/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home"
+  export PATH="$JAVA_HOME/bin:$PATH"
+elif [ -d "/Applications/Android Studio.app/Contents/jbr/Contents/Home" ]; then
+  export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+  export PATH="$JAVA_HOME/bin:$PATH"
+fi
+
 echo -e "${CYAN}${BOLD}"
 echo "=========================================================="
 echo "  திருக்குறள் (Thirukkural) - Android Play Store Packaging "
@@ -158,9 +167,18 @@ if [ "$BUILD_MODE" = "local" ]; then
   cd ..
 
   AAB_OUTPUT="android/app/build/outputs/bundle/release/app-release.aab"
+  PROD_AAB="thirukkural-v${APP_VERSION}-release.aab"
   if [ -f "$AAB_OUTPUT" ]; then
-    echo -e "${GREEN}${BOLD}✓ Local build successful!${NC}"
+    cp "$AAB_OUTPUT" "$PROD_AAB"
+    echo -e "${GREEN}${BOLD}✓ Local production build successful!${NC}"
     echo -e "AAB file located at: ${CYAN}${AAB_OUTPUT}${NC}"
+    echo -e "Production artifact: ${CYAN}${PROD_AAB}${NC}"
+    
+    # Verify signing certificate
+    if command -v jarsigner >/dev/null 2>&1; then
+      echo -e "${BLUE}Verifying AAB signing certificate...${NC}"
+      jarsigner -verify -certs "$PROD_AAB" | head -5
+    fi
   fi
   exit 0
 fi
