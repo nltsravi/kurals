@@ -17,7 +17,7 @@
     },
     "android": {
       "package": "com.nltsravi.kurals",
-      "versionCode": 3,
+      "versionCode": 6,
       "adaptiveIcon": {
         "backgroundColor": "#EA7A00",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
