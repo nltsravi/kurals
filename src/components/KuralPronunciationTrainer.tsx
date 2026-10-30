@@ -11,10 +11,11 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { requireOptionalNativeModule } from 'expo';
 import { AudioModule, RecordingPresets } from 'expo-audio';
-import {
-  ExpoSpeechRecognitionModule,
-  useSpeechRecognitionEvent,
+import type {
+  ExpoSpeechRecognitionResultEvent,
+  ExpoSpeechRecognitionErrorEvent,
 } from 'expo-speech-recognition';
 import { Kural } from '../types/kural';
 import { useTheme } from '../context/ThemeContext';
@@ -28,6 +29,8 @@ import {
   extractSpecialTamilPhonetics,
   normalizeMicrophonePcm,
 } from '../services/olineriService';
+
+const NativeSpeechModule = requireOptionalNativeModule<any>('ExpoSpeechRecognition');
 
 interface KuralPronunciationTrainerProps {
   kural: Kural;
@@ -95,69 +98,6 @@ export const KuralPronunciationTrainer: React.FC<KuralPronunciationTrainerProps>
     setLiveTranscript(combined);
   };
 
-  useSpeechRecognitionEvent('result', (event) => {
-    if (!nativeSpeechActiveRef.current) return;
-    const top = (event.results?.[0]?.transcript || '').trim();
-    if (event.isFinal) {
-      if (top && !finalTranscriptRef.current.endsWith(top)) {
-        finalTranscriptRef.current = `${finalTranscriptRef.current} ${top}`.trim();
-      }
-      interimTranscriptRef.current = '';
-      const altSet = new Set<string>(alternativesRef.current);
-      for (const r of event.results || []) {
-        if (r?.transcript) altSet.add(r.transcript.trim());
-      }
-      alternativesRef.current = Array.from(altSet);
-    } else {
-      interimTranscriptRef.current = top;
-    }
-    updateCombinedTranscript();
-  });
-
-  useSpeechRecognitionEvent('volumechange', (event) => {
-    if (!nativeSpeechActiveRef.current) return;
-    // Android/iOS report roughly -2..10; map to 0..100 for the mic meter
-    const level = Math.round(Math.max(0, Math.min(10, event.value)) * 10);
-    setMicLevel(level);
-  });
-
-  useSpeechRecognitionEvent('error', (event) => {
-    if (!nativeSpeechActiveRef.current) return;
-    if (event.error === 'no-speech' || event.error === 'aborted') return;
-    speechRecErroredRef.current = true;
-    if (event.error === 'language-not-supported' || event.error === 'service-not-allowed') {
-      setMicWarning(
-        isEnglish
-          ? 'Tamil (ta-IN) speech recognition is not available on this device. Install/enable the Google app and the Tamil voice-typing language, then try again.'
-          : 'இந்தச் சாதனத்தில் தமிழ் (ta-IN) பேச்சு அறிதல் கிடைக்கவில்லை. Google செயலி மற்றும் தமிழ் குரல் தட்டச்சு மொழியை இயக்கி மீண்டும் முயலவும்.'
-      );
-    } else if (event.error === 'network') {
-      setMicWarning(
-        isEnglish
-          ? 'Speech recognition needs a network connection. Please check your internet and try again.'
-          : 'பேச்சு அறிதலுக்கு இணைய இணைப்பு தேவை. இணைய இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.'
-      );
-    }
-  });
-
-  useSpeechRecognitionEvent('end', () => {
-    if (!nativeSpeechActiveRef.current) return;
-    // Older Android versions stop after a pause even in continuous mode — keep listening while reading
-    if (isReadingRef.current && !speechEndResolverRef.current && !speechRecErroredRef.current) {
-      try {
-        ExpoSpeechRecognitionModule.start(buildSpeechOptions());
-        return;
-      } catch {
-        // fall through to finish
-      }
-    }
-    nativeSpeechActiveRef.current = false;
-    setMicLevel(0);
-    const resolve = speechEndResolverRef.current;
-    speechEndResolverRef.current = null;
-    resolve?.();
-  });
-
   const buildSpeechOptions = () => ({
     lang: 'ta-IN',
     interimResults: true,
@@ -172,16 +112,99 @@ export const KuralPronunciationTrainer: React.FC<KuralPronunciationTrainerProps>
     },
   });
 
+  useEffect(() => {
+    if (!NativeSpeechModule?.addListener) return;
+
+    const subResult = NativeSpeechModule.addListener(
+      'result',
+      (event: ExpoSpeechRecognitionResultEvent) => {
+        if (!nativeSpeechActiveRef.current) return;
+        const top = (event.results?.[0]?.transcript || '').trim();
+        if (event.isFinal) {
+          if (top && !finalTranscriptRef.current.endsWith(top)) {
+            finalTranscriptRef.current = `${finalTranscriptRef.current} ${top}`.trim();
+          }
+          interimTranscriptRef.current = '';
+          const altSet = new Set<string>(alternativesRef.current);
+          for (const r of event.results || []) {
+            if (r?.transcript) altSet.add(r.transcript.trim());
+          }
+          alternativesRef.current = Array.from(altSet);
+        } else {
+          interimTranscriptRef.current = top;
+        }
+        updateCombinedTranscript();
+      }
+    );
+
+    const subVolume = NativeSpeechModule.addListener(
+      'volumechange',
+      (event: { value: number }) => {
+        if (!nativeSpeechActiveRef.current) return;
+        // Android/iOS report roughly -2..10; map to 0..100 for the mic meter
+        const level = Math.round(Math.max(0, Math.min(10, event.value)) * 10);
+        setMicLevel(level);
+      }
+    );
+
+    const subError = NativeSpeechModule.addListener(
+      'error',
+      (event: ExpoSpeechRecognitionErrorEvent) => {
+        if (!nativeSpeechActiveRef.current) return;
+        if (event.error === 'no-speech' || event.error === 'aborted') return;
+        speechRecErroredRef.current = true;
+        if (event.error === 'language-not-supported' || event.error === 'service-not-allowed') {
+          setMicWarning(
+            isEnglish
+              ? 'Tamil (ta-IN) speech recognition is not available on this device. Install/enable the Google app and the Tamil voice-typing language, then try again.'
+              : 'இந்தச் சாதனத்தில் தமிழ் (ta-IN) பேச்சு அறிதல் கிடைக்கவில்லை. Google செயலி மற்றும் தமிழ் குரல் தட்டச்சு மொழியை இயக்கி மீண்டும் முயலவும்.'
+          );
+        } else if (event.error === 'network') {
+          setMicWarning(
+            isEnglish
+              ? 'Speech recognition needs a network connection. Please check your internet and try again.'
+              : 'பேச்சு அறிதலுக்கு இணைய இணைப்பு தேவை. இணைய இணைப்பைச் சரிபார்த்து மீண்டும் முயலவும்.'
+          );
+        }
+      }
+    );
+
+    const subEnd = NativeSpeechModule.addListener('end', () => {
+      if (!nativeSpeechActiveRef.current) return;
+      // Older Android versions stop after a pause even in continuous mode — keep listening while reading
+      if (isReadingRef.current && !speechEndResolverRef.current && !speechRecErroredRef.current) {
+        try {
+          NativeSpeechModule.start(buildSpeechOptions());
+          return;
+        } catch {
+          // fall through to finish
+        }
+      }
+      nativeSpeechActiveRef.current = false;
+      setMicLevel(0);
+      const resolve = speechEndResolverRef.current;
+      speechEndResolverRef.current = null;
+      resolve?.();
+    });
+
+    return () => {
+      subResult?.remove?.();
+      subVolume?.remove?.();
+      subError?.remove?.();
+      subEnd?.remove?.();
+    };
+  }, [isEnglish]);
+
   /** Starts on-device Tamil speech-to-text. Returns true if listening started. */
   const startNativeSpeechRecognition = async (): Promise<boolean> => {
-    if (Platform.OS === 'web') return false;
+    if (Platform.OS === 'web' || !NativeSpeechModule) return false;
     try {
-      if (!ExpoSpeechRecognitionModule?.isRecognitionAvailable?.()) return false;
-      const perm = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-      if (!perm.granted) return false;
+      if (!NativeSpeechModule?.isRecognitionAvailable?.()) return false;
+      const perm = await NativeSpeechModule.requestPermissionsAsync();
+      if (!perm?.granted) return false;
       nativeSpeechActiveRef.current = true;
       speechRecActiveRef.current = true;
-      ExpoSpeechRecognitionModule.start(buildSpeechOptions());
+      NativeSpeechModule.start(buildSpeechOptions());
       return true;
     } catch {
       nativeSpeechActiveRef.current = false;
@@ -192,7 +215,7 @@ export const KuralPronunciationTrainer: React.FC<KuralPronunciationTrainerProps>
 
   /** Stops speech-to-text and waits (max 2.5 s) for the final recognised words. */
   const stopNativeSpeechRecognition = async (): Promise<void> => {
-    if (!nativeSpeechActiveRef.current) return;
+    if (!nativeSpeechActiveRef.current || !NativeSpeechModule) return;
     await new Promise<void>((resolve) => {
       const timer = setTimeout(() => {
         speechEndResolverRef.current = null;
@@ -204,7 +227,7 @@ export const KuralPronunciationTrainer: React.FC<KuralPronunciationTrainerProps>
         resolve();
       };
       try {
-        ExpoSpeechRecognitionModule.stop();
+        NativeSpeechModule.stop();
       } catch {
         clearTimeout(timer);
         speechEndResolverRef.current = null;
@@ -246,7 +269,7 @@ export const KuralPronunciationTrainer: React.FC<KuralPronunciationTrainerProps>
       if (nativeSpeechActiveRef.current) {
         nativeSpeechActiveRef.current = false;
         speechEndResolverRef.current = null;
-        ExpoSpeechRecognitionModule.abort();
+        NativeSpeechModule?.abort?.();
       }
     } catch {
       // Ignore native speech abort error
