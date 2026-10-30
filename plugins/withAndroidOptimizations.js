@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const {
   withAndroidManifest,
   withGradleProperties,
@@ -58,15 +60,31 @@ const withAndroidOptimizations = (config) => {
   config = withAppBuildGradle(config, (config) => {
     let contents = config.modResults.contents;
 
+    let storePassword = "kurals2026release";
+    let keyAlias = "kurals-release-key";
+    let keyPassword = "kurals2026release";
+
+    try {
+      const credsPath = path.resolve(config.modRequest.projectRoot, 'credentials.json');
+      if (fs.existsSync(credsPath)) {
+        const creds = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
+        if (creds.android?.keystore) {
+          storePassword = creds.android.keystore.keystorePassword || storePassword;
+          keyAlias = creds.android.keystore.keyAlias || keyAlias;
+          keyPassword = creds.android.keystore.keyPassword || keyPassword;
+        }
+      }
+    } catch {}
+
     if (!contents.includes('signingConfigs.release')) {
       const releaseSigningConfig = `
         release {
             def releaseKeystore = file('../../release.keystore').exists() ? file('../../release.keystore') : (file('release.keystore').exists() ? file('release.keystore') : null)
             if (releaseKeystore != null) {
                 storeFile releaseKeystore
-                storePassword System.getenv("RELEASE_KEYSTORE_PASSWORD") ?: "kurals2026release"
-                keyAlias System.getenv("RELEASE_KEY_ALIAS") ?: "kurals-release-key"
-                keyPassword System.getenv("RELEASE_KEY_PASSWORD") ?: "kurals2026release"
+                storePassword System.getenv("RELEASE_KEYSTORE_PASSWORD") ?: "${storePassword}"
+                keyAlias System.getenv("RELEASE_KEY_ALIAS") ?: "${keyAlias}"
+                keyPassword System.getenv("RELEASE_KEY_PASSWORD") ?: "${keyPassword}"
             } else {
                 storeFile file('debug.keystore')
                 storePassword 'android'
