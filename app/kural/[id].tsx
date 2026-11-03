@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -23,7 +23,7 @@ import { KuralCoupletText } from '../../src/components/KuralCoupletText';
 import { KuralPronunciationTrainer } from '../../src/components/KuralPronunciationTrainer';
 
 export default function KuralDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, action } = useLocalSearchParams<{ id: string; action?: string }>();
   const router = useRouter();
   const { colors, isDark } = useTheme();
   const { t, isEnglish } = useLanguage();
@@ -37,6 +37,12 @@ export default function KuralDetailScreen() {
 
   const kuralNumber = parseInt(id || '1', 10);
   const kural = KuralService.getKuralByNumber(kuralNumber);
+
+  useEffect(() => {
+    if (action === 'share' && kural) {
+      setShowShareModal(true);
+    }
+  }, [action, kural]);
 
   if (!kural) {
     return (

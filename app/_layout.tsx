@@ -9,6 +9,7 @@ import { LearningModeProvider } from '../src/context/LearningModeContext';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { NotificationService } from '../src/services/notificationService';
+import { syncDailyKuralWidget } from '../src/services/dailyKuralService';
 
 import { View } from 'react-native';
 import { AppBottomTabBar } from '../src/components/AppBottomTabBar';
@@ -29,6 +30,7 @@ function RootNavigation() {
   useEffect(() => {
     SplashScreen.hideAsync().catch(() => {});
     NotificationService.initAsync().catch(() => {});
+    syncDailyKuralWidget().catch(() => {});
 
     const sub = NotificationService.addResponseListener((kuralNumber) => {
       if (kuralNumber) {

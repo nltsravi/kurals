@@ -85,6 +85,40 @@
       "expo-status-bar",
       "expo-image",
       [
+        "expo-widgets",
+        {
+          "enableAndroid": true,
+          "groupIdentifier": "group.com.nltsravi.kurals",
+          "widgets": [
+            {
+              "name": "DailyKuralWidget",
+              "displayName": "தினசரி திருக்குறள் (Daily Kural)",
+              "description": "Daily Thirukkural couplet in 4+3 format with share button",
+              "supportedFamilies": [
+                "systemSmall",
+                "systemMedium",
+                "systemLarge"
+              ],
+              "ios": {
+                "supportedFamilies": [
+                  "systemSmall",
+                  "systemMedium",
+                  "systemLarge"
+                ],
+                "initialLayout": "./widgets/DailyKuralWidget.tsx"
+              },
+              "android": {
+                "minWidth": 250,
+                "minHeight": 110,
+                "targetCellWidth": 4,
+                "targetCellHeight": 2,
+                "initialLayout": "./widgets/DailyKuralWidget.tsx"
+              }
+            }
+          ]
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
