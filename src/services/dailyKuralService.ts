@@ -1,3 +1,4 @@
+import { requireOptionalNativeModule } from 'expo';
 import { KuralService } from './kuralService';
 import { formatKuralCouplet } from '../utils/text';
 import { Kural, Chapter } from '../types/kural';
@@ -112,6 +113,11 @@ export function generateDailyKuralTimeline(
  */
 export async function syncDailyKuralWidget(): Promise<boolean> {
   try {
+    const nativeWidgets = requireOptionalNativeModule('ExpoWidgets');
+    if (!nativeWidgets) {
+      return false;
+    }
+
     const { createWidget } = require('expo-widgets');
     const today = getDailyKural();
     const widget = createWidget('DailyKuralWidget');
