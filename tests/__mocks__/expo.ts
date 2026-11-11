@@ -5,3 +5,4 @@ export function requireOptionalNativeModule(moduleName: string) {
 export function requireNativeModule(moduleName: string) {
   throw new Error(`Cannot find native module '${moduleName}'`);
 }
+

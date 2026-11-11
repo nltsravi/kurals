@@ -7,3 +7,4 @@ export function createWidget(name: string, layout?: any, initialProps?: any) {
     getTimeline: jest.fn().mockResolvedValue([]),
   };
 }
+
