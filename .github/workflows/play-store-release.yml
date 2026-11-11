@@ -17,6 +17,10 @@ on:
           - internal
           - alpha
           - beta
+      version_code:
+        description: 'Android Version Code (leave empty to use default)'
+        required: false
+        default: ''
 
 concurrency:
   group: play-store-release-${{ github.ref }}
@@ -85,6 +89,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           PLAY_SERVICE_ACCOUNT_JSON: play-service-account.json
           PLAY_TRACK: ${{ github.event.inputs.track || 'production' }}
+          VERSION_CODE: ${{ github.event.inputs.version_code || '9' }}
         working-directory: android
         run: |
           chmod +x gradlew
